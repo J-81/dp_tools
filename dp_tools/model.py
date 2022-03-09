@@ -345,7 +345,7 @@ class ASSAY(enum.Enum):
     BulkRNASeq = 1
 
 
-@dataclass
+@dataclass(eq = False)
 class BulkRNASeqSample(TemplateSample, CanAttachComponents):
     """ Abstract class for samples """
 
@@ -383,7 +383,7 @@ class BulkRNASeqSample(TemplateSample, CanAttachComponents):
         # additional checks advised
 
 
-@dataclass
+@dataclass(eq = False)
 class BulkRNASeqDataset(TemplateDataset, CanAttachComponents):
 
     base: BaseDataset
