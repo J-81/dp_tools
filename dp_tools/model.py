@@ -285,6 +285,11 @@ class TemplateDataset(abc.ABC):
     def samples(self):
         return self.base.samples
 
+   
+    @property
+    def name(self):
+        return self.base.name 
+
     @abc.abstractmethod
     def validate(self):
         ...
