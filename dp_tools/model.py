@@ -91,13 +91,16 @@ class CanAttachComponents:
         """
         return isinstance(getattr(putative_component, "base", None), BaseComponent)
 
-    def list_components(self):
-        """ Report components, including any empty slots """
+    @property
+    def all_components(self) -> Dict[str, object]:
+        """ Return a dictionary of components, including any empty slots """
+        components = dict()
         for attr, value in self.__dict__.items():
             # check the base, all component bases should be a BaseComponent
             # if 'base' exists, check if it is a component
             if self._is_component(value):
-                print(f"{attr}:{value}")
+                components[attr] = value
+        return components
 
     def attach_component(self, component, attr):
         # ensure this is an expected component by name
