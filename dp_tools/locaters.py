@@ -16,7 +16,7 @@ import logging
 logging.basicConfig(level=logging.DEBUG)
 log = logging.getLogger(__name__)
 
-SEP = "\\\\"
+SEP = "/"
 
 
 def _rIterDir(p: Path) -> List[Path]:
