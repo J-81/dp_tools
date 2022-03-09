@@ -258,12 +258,6 @@ class TemplateDataSystem:
         )
 
 
-@dataclass
-class GLDSDataSystem(TemplateDataSystem):
-
-    base: BaseDataSystem
-
-
 #########################################################################
 # DATASET
 #########################################################################
@@ -331,21 +325,13 @@ class TemplateSample(abc.ABC):
     def name(self):
         return self.base.name
 
-    """ This should be in the mixin
-    # TODO: add type, how to type hint a class in general
-    def attach_sample(self, sample):
-        if not isinstance(sample, self.expected_sample_class):
-            raise TypeError(
-                f"Improper sample attachment class: expected-{self.expected_sample_class} got-{type(sample)}"
-            )
-        if sample.name in self.samples.keys():
-            log.warning(f"Overwriting pre-existing sample: {sample.name}")
-        # attach sample to dataset
-        self.samples[sample.name] = sample
-        # attach dataset to sample
-        sample.dataset = self
-    """
+############################################################################################
+# GLDS SPECIFIC
+############################################################################################
+@dataclass(eq = False)
+class GLDSDataSystem(TemplateDataSystem):
 
+    base: BaseDataSystem
 
 ############################################################################################
 # BULK RNASEQ SPECIFIC
