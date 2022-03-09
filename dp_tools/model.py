@@ -61,7 +61,9 @@ class DataFile:
 
     def __post_init__(self):
         if self.dummy_md5sum:
-            self.md5sum = f"DUMMY:{self._compute_md5sum(str(self.path).encode())}"
+            # generate md5sum based on the path/file name only
+            # this computes extremely fast and is advised for testing
+            self.md5sum = f"DUMMY:{self._compute_md5sum(self.path.name.encode())}"
         else:
             self.md5sum = self._compute_md5sum(self.path.open("rb").read())
 
