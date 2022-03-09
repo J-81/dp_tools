@@ -16,13 +16,15 @@ log = logging.getLogger(__name__)
 from dp_tools.model import (
     BaseComponent,
     BaseSample,
+    BaseDataSystem,
+    BaseDataset,
     BulkRNASeqDataset,
     BulkRNASeqSample,
     DataFile,
     GLDSDataSystem,
     ReadsComponent,
 )
-from dp_tools.metadata import BulkRNASeqMetadata, DummyMetadata
+from dp_tools.metadata import BulkRNASeqMetadata
 from dp_tools.locaters import RawFastq
 
 
@@ -34,12 +36,12 @@ def load_from_bulk_rnaseq_raw_dir(root_path: Path, metadata: BulkRNASeqMetadata)
 
     # create datasystem
     log.info(f"Attempting to load data model for raw directory: {str(root_path)}")
-    dataSystem = GLDSDataSystem(name=root_path.name)
+    dataSystem = GLDSDataSystem( base=BaseDataSystem(name=root_path.name))
     # initate locaters on the root path
     rawFastq = RawFastq(search_root=root_path)
 
     # create dataset
-    dataset = BulkRNASeqDataset(name=root_path.name)
+    dataset = BulkRNASeqDataset(base=BaseDataset(name=root_path.name))
 
     dataSystem.attach_dataset(dataset)
 
@@ -74,8 +76,3 @@ def load_from_bulk_rnaseq_raw_dir(root_path: Path, metadata: BulkRNASeqMetadata)
     dataSystem.validate()
 
     return dataSystem
-
-
-if __name__ == "__main__":
-    ds = load_from_bulk_rnaseq_raw_dir(Path("TestPath"), metadata=DummyMetadata())
-    print(ds)
