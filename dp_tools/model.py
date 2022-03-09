@@ -390,6 +390,10 @@ class BulkRNASeqDataset(TemplateDataset, CanAttachComponents):
     assay_type: str = ASSAY.BulkRNASeq.name
     expected_sample_class = BulkRNASeqSample
 
+    def __post_init__(self):
+        self.base.name = f"{self.base.name}:{self.assay_type}"
+
+
     def validate(self):
         strict_type_checks(self, exceptions=["samples"])
 
