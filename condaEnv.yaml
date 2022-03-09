@@ -1,0 +1,12 @@
+name: dp_tools
+channels:
+   - bioconda
+   - conda-forge
+   - defaults
+dependencies:
+   - python=3.10
+   - pandas
+   - samtools
+   - isatools
+   - pip
+
