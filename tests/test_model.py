@@ -25,6 +25,9 @@ def test_empty_GLDSDataSystem():
     assert dSys.all_samples == set()
     assert dSys.all_components == set()
 
+    # empty dict expected
+    assert dSys.datasets == dict()
+
     dSys.validate()
 
 
@@ -51,7 +54,7 @@ def test_datafile_with_dummy_md5sum(caplog):
     )
 
     datf = model.DataFile(path=target_data_file, dummy_md5sum=True)
-    assert datf.md5sum == "DUMMY:8f3a03aed25aa00f091f3d4fd7fee3c0"
+    assert datf.md5sum == "DUMMY:9127c4b322ba3f1e311bab2832806149"
     assert datf.path == target_data_file
 
 
@@ -84,7 +87,8 @@ def test_bulk_rna_seq_sample(caplog):
     sample.validate()
 
     print("Before attach")
-    sample.list_components()
+    assert isinstance(sample.rawForwardReads, model.EmptyComponent)
+    assert isinstance(sample.rawReverseReads, model.EmptyComponent)
 
     # looks like a component; however, doesn't have the base
     with pytest.raises(TypeError):
@@ -97,21 +101,18 @@ def test_bulk_rna_seq_sample(caplog):
     sample.attach_component(mock_reads, attr="rawForwardReads") 
 
     print("After attach")
-    sample.list_components()
-    1 / 0
+    assert isinstance(sample.rawForwardReads, model.ReadsComponent) # component should now be added
+    assert isinstance(sample.rawReverseReads, model.EmptyComponent)
+
 
 
 def test_bulk_rna_seq_integration():
-    dataset = model.BulkRNASeqDataset()
-    sample = model.BulkRNASeqSample(base=model.BaseSample(name="test_sample_1"))
+    dataset = model.BulkRNASeqDataset(base=model.BaseDataset(name="Test_dataset_1"))
+    sample = model.BulkRNASeqSample(base=model.BaseSample(name="Test_sample_1"))
 
     dataset.attach_sample(sample)
 
-    assert dataset.samples["test_sample_1"] == sample
+    assert dataset.samples["Test_sample_1"] == sample
 
     assert sample.dataset == dataset
-
-
-def test_ingest_truncated_dataset():
-    target_data_root = TEST_DIR / "GLDS-194"
 
