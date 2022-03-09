@@ -16,13 +16,16 @@ def test_abc_inits_fails(caplog):
     with pytest.raises(TypeError):
         model.BaseSample()
 
-    with pytest.raises(TypeError):
-        model.BaseDataset()
 
-    with pytest.raises(TypeError):
-        model.BaseDataSystem()
+def test_empty_GLDSDataSystem():
+    dSys = model.GLDSDataSystem(model.BaseDataSystem(name="GLDS-JJJ"))
 
-    model.GLDSDataSystem(name="GLDS-JJJ")
+    # empty sets expected
+    assert dSys.all_datasets == set()
+    assert dSys.all_samples == set()
+    assert dSys.all_components == set()
+
+    dSys.validate()
 
 
 def test_datafile(caplog):
@@ -52,8 +55,8 @@ def test_datafile_with_dummy_md5sum(caplog):
     assert datf.path == target_data_file
 
 
-def test_bulk_rna_seq_dataset():
-    dataset = model.BulkRNASeqDataset()
+def test_bulk_rna_seq_dataset(caplog):
+    dataset = model.BulkRNASeqDataset(base=model.BaseDataset(name="TestDSet"))
 
     bad_sample = "sample1"
     good_sample = mock.MagicMock(spec=model.BulkRNASeqSample)
@@ -64,18 +67,38 @@ def test_bulk_rna_seq_dataset():
         dataset.attach_sample(bad_sample)
 
     dataset.attach_sample(good_sample)
-    dataset.attach_sample(good_sample)
+
+    # make sure a warning is logged if overwriting a sample
+    with caplog.at_level(0):
+        dataset.attach_sample(good_sample)
+        assert caplog.records[-1].message == "Overwriting pre-existing sample: Sample2"
 
     dataset.validate()
 
-    assert len(dataset.samples) == 1
 
-
-def test_bulk_rna_seq_sample():
+def test_bulk_rna_seq_sample(caplog):
+    caplog.set_level(0)
     sample = model.BulkRNASeqSample(base=model.BaseSample(name="test_sample_1"))
 
     assert sample.name == "test_sample_1"
     sample.validate()
+
+    print("Before attach")
+    sample.list_components()
+
+    # looks like a component; however, doesn't have the base
+    with pytest.raises(TypeError):
+        mock_reads = mock.MagicMock(spec=model.ReadsComponent)
+        sample.attach_component(mock_reads, attr="rawForwardReads")
+
+    # looks like a component and has the proper base (at least a mock of one)
+    mock_reads = mock.MagicMock(spec=model.ReadsComponent)
+    mock_reads.base = mock.MagicMock(spec=model.BaseComponent)
+    sample.attach_component(mock_reads, attr="rawForwardReads") 
+
+    print("After attach")
+    sample.list_components()
+    1 / 0
 
 
 def test_bulk_rna_seq_integration():
