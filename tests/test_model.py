@@ -106,13 +106,40 @@ def test_bulk_rna_seq_sample(caplog):
 
 
 
-def test_bulk_rna_seq_integration():
+def test_bulk_rna_seq_integration(caplog):
+    dataSystem = model.GLDSDataSystem(base=model.BaseDataSystem(name="Test_dataSystem_1"))
     dataset = model.BulkRNASeqDataset(base=model.BaseDataset(name="Test_dataset_1"))
     sample = model.BulkRNASeqSample(base=model.BaseSample(name="Test_sample_1"))
 
     dataset.attach_sample(sample)
 
+
+    # before attachment this should return none
+    assert dataSystem.dataset == None
+
+    dataSystem.attach_dataset(dataset)
+
+    # ensure warning logged during overwrite
+    with caplog.at_level(0):
+        dataSystem.attach_dataset(dataset)
+        assert caplog.records[-1].message == "Overwriting pre-existing dataset: Test_dataset_1:BulkRNASeq"
+
     assert dataset.samples["Test_sample_1"] == sample
 
     assert sample.dataset == dataset
 
+    # test all dataset accessors
+    assert dataSystem.dataset == dataset
+    assert dataSystem.datasets['Test_dataset_1:BulkRNASeq'] == dataset
+    assert dataSystem.all_datasets == set([dataset])
+
+
+    dataset2 = model.BulkRNASeqDataset(base=model.BaseDataset(name="Test_dataset_2"))
+    dataSystem.attach_dataset(dataset2)
+
+    # test all dataset accessors
+    # test all dataset accessors
+    with pytest.raises(ValueError):
+        dataSystem.dataset
+    assert dataSystem.datasets['Test_dataset_1:BulkRNASeq'] == dataset
+    assert dataSystem.all_datasets == set([dataset, dataset2])

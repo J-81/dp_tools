@@ -125,24 +125,22 @@ class CanAttachComponents:
 
         # associate component with sample
         log.debug(f"attaching {self.name} to {component}")
-        component.attach_entity(self)
+        component._attach_entity(self)
         log.debug(f"post attaching {self.name} to {component}")
 
 
 # mixin for attaching samples or datasets or datasystems
-@dataclass
 class CanAttachEntity:
-    entities: dict = field(default_factory=dict)
+    entities: dict = dict()
 
-    def attach_entity(self, entity):
+    def _attach_entity(self, entity):
         self.entities[entity.name] = entity
-
 
 #########################################################################
 # COMPONENTS
 #########################################################################
 @dataclass
-class BaseComponent(CanAttachEntity):
+class BaseComponent:
     """ Class for keeping track of abstract components like Reads, Alignments, and Counts """
 
     # id: str = field(default_factory=get_id)
@@ -150,15 +148,20 @@ class BaseComponent(CanAttachEntity):
     created: datetime.datetime = field(default_factory=datetime.datetime.now)
 
 
+class TemplateComponent:
+
+    def __post_init__(self):
+        strict_type_checks(self)
+
 @dataclass
-class EmptyComponent:
+class EmptyComponent(TemplateComponent):
     """ Class representing an empty component """
 
     base: BaseComponent = BaseComponent(description="This slot is empty")
 
 
 @dataclass
-class ReadsComponent:
+class ReadsComponent(TemplateComponent, CanAttachEntity):
 
     base: BaseComponent
     fastqGZ: DataFile
@@ -167,16 +170,6 @@ class ReadsComponent:
     fastqcReportHTML: Union[DataFile, None] = field(default=None)
     fastqcReportZIP: Union[DataFile, None] = field(default=None)
     trimmingReportTXT: Union[DataFile, None] = field(default=None)
-
-    def __post_init__(self):
-        strict_type_checks(self)
-
-    @property
-    def entities(self):
-        return self.base.entities
-
-    def attach_entity(self, *args, **kwargs):
-        return self.base.attach_entity(*args, **kwargs)
 
 
 #########################################################################
@@ -198,6 +191,16 @@ class TemplateDataSystem:
     """ This abstract base class should serve as a template for new data systems """
 
     allowed_dataset_classes: list
+
+    @property
+    def dataset(self):
+        """ Convenience function when only one dataset is attached """
+        if len(self.base.datasets) == 0:
+            return None
+        elif len(self.base.datasets) == 1:
+            return list(self.base.datasets.values())[0]
+        else:
+            raise ValueError(f"This datasystem has multiple datasets. Use 'datasets' or 'all_datasets' instead to indicate specific dataset")
 
     @property
     def datasets(self):
