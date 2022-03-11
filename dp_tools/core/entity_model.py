@@ -6,8 +6,13 @@ import enum
 import hashlib
 from pathlib import Path
 import uuid
-from typing import Dict, List, Literal, Union
+from typing import Dict, List, Literal, Protocol, Tuple, Union, runtime_checkable
 import logging
+from dp_tools.core.check_model import Flag
+
+import pandas as pd
+
+from dp_tools.core.model_commons import strict_type_checks
 
 logging.basicConfig(level=logging.DEBUG)
 log = logging.getLogger(__name__)
@@ -16,34 +21,6 @@ log = logging.getLogger(__name__)
 def get_id():
     uuid4 = uuid.uuid4()
     return str(uuid4)
-
-
-def strict_type_checks(
-    obj: object, exceptions: List[str] = None, except_nones: List[str] = None
-):
-    # set default empty lists
-    exceptions = exceptions if exceptions else list()
-    except_nones = except_nones if except_nones else list()
-
-    for (name, field_type) in obj.__annotations__.items():
-        pass_conditions = list()
-        if name in exceptions:
-            log.debug(f"Excluding type checking for {name}")
-            continue
-        if name in except_nones:
-            log.debug(f"Allowing 'None' as valid for {name}")
-            pass_conditions.append(not obj.__dict__[name])
-            continue
-        # base type check
-        pass_conditions.append(isinstance(obj.__dict__[name], field_type))
-        if not any(pass_conditions):
-            current_type = type(obj.__dict__[name])
-            raise TypeError(
-                f"The field `{name}` was assigned by `{current_type}` instead of `{field_type}`"
-            )
-
-    log.debug("Strict Type Check is passed successfully")
-
 
 #########################################################################
 # DATAFILE
@@ -60,6 +37,7 @@ class DataFile:
     )  # used to replace md5sum of contents with md5sum of the file name
 
     def __post_init__(self):
+        assert self.path.is_file()
         if self.dummy_md5sum:
             # generate md5sum based on the path/file name only
             # this computes extremely fast and is advised for testing
@@ -73,6 +51,20 @@ class DataFile:
     def _compute_md5sum(self, contents):
         return hashlib.md5(contents).hexdigest()
 
+@dataclass
+class DataDir:
+    """ A class for keeping track of directories
+    Both multiQC and RSEM include examples of things better tracked as directories; however, more granual loading can be achieved with DataFile.
+    """
+
+    path: Path
+
+    def __post_init__(self):
+        assert self.path.is_dir()
+        # finally enforce types check
+        strict_type_checks(self)
+
+
 
 #########################################################################
 # FUNCTIONAL MIXINS
@@ -80,9 +72,20 @@ class DataFile:
 # E.G. Attaching components should work on datasets and samples
 #########################################################################
 
+class MustValidate:
+    """ A mixin to add in a common validation method """
+    @abc.abstractmethod
+    def validate(self) -> List[Flag]:
+        ...
+
+    def _strict_validate(self):
+        flags = self.validate()
+        # check that all returned objects are indeed Flag objects
+        assert all([isinstance(flag, Flag) for flag in flags])
+        return flags
+
+
 # a mixin class
-
-
 class CanAttachComponents:
 
     def _is_component(self, putative_component):
@@ -148,30 +151,21 @@ class BaseComponent:
     created: datetime.datetime = field(default_factory=datetime.datetime.now)
 
 
-class TemplateComponent:
+class TemplateComponent(abc.ABC, MustValidate):
 
     def __post_init__(self):
         strict_type_checks(self)
 
-@dataclass
+
+@dataclass(eq=False)
 class EmptyComponent(TemplateComponent):
     """ Class representing an empty component """
 
     base: BaseComponent = BaseComponent(description="This slot is empty")
 
-
-@dataclass
-class ReadsComponent(TemplateComponent, CanAttachEntity):
-
-    base: BaseComponent
-    fastqGZ: DataFile
-    # id: str = field(default_factory=get_id)
-    multiQCZip: Union[DataFile, None] = field(default=None)
-    fastqcReportHTML: Union[DataFile, None] = field(default=None)
-    fastqcReportZIP: Union[DataFile, None] = field(default=None)
-    trimmingReportTXT: Union[DataFile, None] = field(default=None)
-
-
+    def validate(self) -> List[Tuple]:
+        log.critical("Pending validation implemention")
+        return list()
 #########################################################################
 # DATASYSTEM
 #########################################################################
@@ -187,10 +181,15 @@ class BaseDataSystem:
     datasets: Dict[str, "BaseDataset"] = field(default_factory=dict, repr=False)
 
 
-class TemplateDataSystem:
+class TemplateDataSystem(abc.ABC):
     """ This abstract base class should serve as a template for new data systems """
 
     allowed_dataset_classes: list
+
+    @property
+    def name(self):
+        """ Alias name to from compositioned base to implementation """
+        return self.base.name
 
     @property
     def dataset(self):
@@ -216,7 +215,7 @@ class TemplateDataSystem:
         """ returns a set of all samples """
         all_samples = set()
         for dataset in self.all_datasets:
-            all_samples = all_samples.union(dataset.all_components)
+            all_samples = all_samples.union(set(dataset.samples.values()))
         return all_samples
 
     @property
@@ -225,11 +224,11 @@ class TemplateDataSystem:
         all_components = set()
         # get dataset wise components
         for dataset in self.all_datasets:
-            all_components = all_components.union(dataset.all_components)
+            all_components = all_components.union(dataset.all_components.values())
 
         # get sample wise components
         for sample in self.all_samples:
-            all_components = all_components.union(sample.all_components)
+            all_components = all_components.union(sample.all_components.values())
 
         return all_components
 
@@ -241,11 +240,11 @@ class TemplateDataSystem:
     def validate(self):
         log.info("Running validation at data system level")
         dataset_flags = {
-            dataset.name: dataset.validate() for dataset in self.all_datasets
+            dataset: dataset._strict_validate() for dataset in self.all_datasets
         }  # return of validate should be flags
-        sample_flags = {sample.name: sample.validate() for sample in self.all_samples}
+        sample_flags = {sample: sample._strict_validate() for sample in self.all_samples}
         component_flags = {
-            component.name: component.validate() for component in self.all_components
+            component: component._strict_validate() for component in self.all_components if not isinstance(component, EmptyComponent)
         }
         if not dataset_flags:
             log.warning(f"No datasets found nor validated in entire dataSystem")
@@ -260,6 +259,13 @@ class TemplateDataSystem:
             f"Handing these flags off to TBD: dataset: {dataset_flags}, sample: {sample_flags}, component_flags: {component_flags}"
         )
 
+        self.validation_report = dict()
+        self.validation_report['dataset'] = dataset_flags
+        self.validation_report['sample'] = sample_flags
+        self.validation_report['component'] = component_flags
+
+        # validation report should not perform actions itself
+        # actions might include report generation and raising an Exception
 
 #########################################################################
 # DATASET
@@ -278,7 +284,7 @@ class BaseDataset:
 
 
 # for subclassing
-class TemplateDataset(abc.ABC):
+class TemplateDataset(abc.ABC, MustValidate):
     @property
     @abc.abstractproperty
     def expected_sample_class(self):
@@ -292,10 +298,6 @@ class TemplateDataset(abc.ABC):
     @property
     def name(self):
         return self.base.name 
-
-    @abc.abstractmethod
-    def validate(self):
-        ...
 
     # TODO: add type, how to type hint a class in general
     def attach_sample(self, sample):
@@ -323,11 +325,7 @@ class BaseSample:
     dataset: Union[None, BaseDataset] = field(default=None)
 
 
-class TemplateSample(abc.ABC):
-    @abc.abstractmethod
-    def validate(self):
-        ...
-
+class TemplateSample(abc.ABC, MustValidate):
     # used properties to alias base attributes as needed
     @property
     def name(self):
@@ -339,64 +337,6 @@ class TemplateSample(abc.ABC):
 @dataclass(eq = False)
 class GLDSDataSystem(TemplateDataSystem):
 
-    base: BaseDataSystem
+    base: BaseDataSystem = field(repr=False)
 
-############################################################################################
-# BULK RNASEQ SPECIFIC
-############################################################################################
-class ASSAY(enum.Enum):
-    BulkRNASeq = 1
-
-
-@dataclass(eq = False)
-class BulkRNASeqSample(TemplateSample, CanAttachComponents):
-    """ Abstract class for samples """
-
-    # composition for all samples
-    base: BaseSample
-    assay_type: str = ASSAY.BulkRNASeq.name
-
-    # used for paired end
-    rawForwardReads: Union[EmptyComponent, ReadsComponent] = field(
-        default_factory=EmptyComponent
-    )
-    rawReverseReads: Union[EmptyComponent, ReadsComponent] = field(
-        default_factory=EmptyComponent
-    )
-    trimForwardReads: Union[EmptyComponent, ReadsComponent] = field(
-        default_factory=EmptyComponent
-    )
-    trimReverseReads: Union[EmptyComponent, ReadsComponent] = field(
-        default_factory=EmptyComponent
-    )
-
-    # used for single end
-    rawReads: Union[EmptyComponent, ReadsComponent] = field(
-        default_factory=EmptyComponent
-    )
-    TrimReads: Union[EmptyComponent, ReadsComponent] = field(
-        default_factory=EmptyComponent
-    )
-
-    def __post_init__(self):
-        pass
-
-    def validate(self):
-        strict_type_checks(self)
-        # additional checks advised
-
-
-@dataclass(eq = False)
-class BulkRNASeqDataset(TemplateDataset, CanAttachComponents):
-
-    base: BaseDataset
-    assay_type: str = ASSAY.BulkRNASeq.name
-    expected_sample_class = BulkRNASeqSample
-
-    def __post_init__(self):
-        self.base.name = f"{self.base.name}:{self.assay_type}"
-
-
-    def validate(self):
-        strict_type_checks(self, exceptions=["samples"])
 

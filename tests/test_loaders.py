@@ -1,9 +1,7 @@
 from pathlib import Path
 import os
 
-from dp_tools.loaders import load_from_bulk_rnaseq_raw_dir
-from dp_tools.metadata import Runsheet
-
+from dp_tools.bulkRNASeq.loaders import load_from_bulk_rnaseq_raw_dir
 
 # set for testing
 TEST_DIR = Path(os.environ["TEST_ASSETS_DIR"])
@@ -12,20 +10,13 @@ TEST_DIR = Path(os.environ["TEST_ASSETS_DIR"])
 def test_from_bulk_rnaseq_raw_dir(caplog):
     target_data_dir = TEST_DIR / "GLDS-194"
 
-    target_runsheet = (
-        TEST_DIR
-        / "GLDS-194"
-        / "Metadata"
-        / "AST_autogen_template_RNASeq_RCP_GLDS-194_RNASeq_runsheet.csv"
-    )
-
     caplog.set_level(0)
     ds = load_from_bulk_rnaseq_raw_dir(
-        target_data_dir, metadata=Runsheet(target_runsheet)
+        target_data_dir
     )
 
     # pull dataset
-    dataset = ds.datasets["GLDS-194:BulkRNASeq"]
+    dataset = ds.datasets["GLDS-194__BulkRNASeq"]
 
     assert list(dataset.samples.keys()) == [
         "Mmus_BAL-TAL_LRTN_BSL_Rep1_B7",
@@ -43,5 +34,7 @@ def test_from_bulk_rnaseq_raw_dir(caplog):
         "Mmus_BAL-TAL_LRTN_FLT_Rep5_F10",
     ]
 
-    print("debug")
+    # check expected loaded components
+    assert len(list(ds.dataset.samples["Mmus_BAL-TAL_LRTN_BSL_Rep1_B7"].rawForwardReads.multiQCDir.path.iterdir())) == 2
+    assert len(list(ds.dataset.samples["Mmus_BAL-TAL_LRTN_BSL_Rep1_B7"].rawReverseReads.multiQCDir.path.iterdir())) == 2
 
