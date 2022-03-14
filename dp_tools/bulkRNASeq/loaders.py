@@ -4,6 +4,7 @@ Loaders SHOULD:
   - run validation on the dataSystem object
   - return a dataSystem object
 """
+import os
 from pathlib import Path
 import logging
 from typing import List, Protocol, Union
@@ -31,13 +32,12 @@ from dp_tools.components import ReadsComponent, BulkRNASeqMetadataComponent
 def load_from_bulk_rnaseq_raw_dir(root_path: Path):
     # create datasystem
     log.info(f"Attempting to load data model for raw directory: {str(root_path)}")
-    dataSystem = GLDSDataSystem( base=BaseDataSystem(name=root_path.name))
+    dataSystem = GLDSDataSystem(base=BaseDataSystem(name=root_path.name))
 
     # initate locaters on the root path
     rawFastq = RawFastq(search_root=root_path)
     runsheet = Runsheet(search_root=root_path)
     readsMQC = MultiQCDir(search_root=root_path)
-
 
     # create dataset
     dataset = BulkRNASeqDataset(base=BaseDataset(name=root_path.name))
@@ -46,17 +46,22 @@ def load_from_bulk_rnaseq_raw_dir(root_path: Path):
     # attach dataset components
     dataSystem.dataset.attach_component(
         BulkRNASeqMetadataComponent(
-            base=BaseComponent(
-                    description="Metadata in a runsheet csv file"
-                ), 
-            runsheet=DataFile(runsheet.find(dataSystem.name)), 
-    ), attr="metadata")
+            base=BaseComponent(description="Metadata in a runsheet csv file"),
+            runsheet=DataFile(runsheet.find(dataSystem.name)),
+        ),
+        attr="metadata",
+    )
 
     # alias metadata for convenience
     metadata = dataSystem.dataset.all_components["metadata"]
 
     # create shared sample datafiles
-    datf_readsMQC = DataDir(readsMQC.find(rel_dir=Path("00-RawData/FastQC_Reports"), mqc_label="raw"))
+    datf_readsMQC = DataDir(
+        readsMQC.find(
+            rel_dir=Path.joinpath(Path("00-RawData"), Path("FastQC_Reports")),
+            mqc_label="raw",
+        )
+    )
 
     # create samples
     for sample_name in metadata.samples:
@@ -65,14 +70,14 @@ def load_from_bulk_rnaseq_raw_dir(root_path: Path):
             raw_fwd_reads = ReadsComponent(
                 base=BaseComponent(description="Raw Forward Reads"),
                 fastqGZ=DataFile(rawFastq.find(sample_name, type=("Raw", "Forward"))),
-                multiQCDir=datf_readsMQC
+                multiQCDir=datf_readsMQC,
             )
             raw_rev_reads = ReadsComponent(
                 base=BaseComponent(description="Raw Reverse Reads"),
                 fastqGZ=DataFile(
                     path=rawFastq.find(sample_name, type=("Raw", "Reverse"))
                 ),
-                multiQCDir=datf_readsMQC
+                multiQCDir=datf_readsMQC,
             )
             sample.attach_component(raw_fwd_reads, attr="rawForwardReads")
             sample.attach_component(raw_rev_reads, attr="rawReverseReads")
@@ -82,7 +87,7 @@ def load_from_bulk_rnaseq_raw_dir(root_path: Path):
                 fastqGZ=DataFile(
                     path=rawFastq.find(sample_name, type=("Raw", "Forward"))
                 ),
-                multiQCDir=datf_readsMQC
+                multiQCDir=datf_readsMQC,
             )
             sample.attach_component(raw_reads, attr="rawReads")
         # attach components
