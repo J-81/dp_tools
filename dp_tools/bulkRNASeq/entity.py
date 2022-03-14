@@ -3,17 +3,27 @@
 ############################################################################################
 from dataclasses import dataclass, field
 import enum
-from typing import Union
+from typing import List, Union
+from dp_tools.bulkRNASeq.checks import RAWREADS_0001
+from dp_tools.core.check_model import Flag
 
-from dp_tools.core.entity_model import BaseDataset, BaseSample, CanAttachComponents, EmptyComponent, TemplateDataset, TemplateSample
+from dp_tools.core.entity_model import (
+    BaseDataset,
+    BaseSample,
+    CanAttachComponents,
+    EmptyComponent,
+    TemplateDataset,
+    TemplateSample,
+)
 from dp_tools.core.model_commons import strict_type_checks
 from dp_tools.components import BulkRNASeqMetadataComponent, ReadsComponent
+
 
 class ASSAY(enum.Enum):
     BulkRNASeq = 1
 
 
-@dataclass(eq = False)
+@dataclass(eq=False)
 class BulkRNASeqSample(TemplateSample, CanAttachComponents):
     """ Abstract class for samples """
 
@@ -47,11 +57,15 @@ class BulkRNASeqSample(TemplateSample, CanAttachComponents):
         pass
 
     def validate(self):
+        flags = list()
         strict_type_checks(self)
         # additional checks advised
+        flags.append(RAWREADS_0001.validate(self))
+
+        return flags  # may return empty list
 
 
-@dataclass(eq = False)
+@dataclass(eq=False)
 class BulkRNASeqDataset(TemplateDataset, CanAttachComponents):
 
     base: BaseDataset = field(repr=False)
@@ -65,5 +79,6 @@ class BulkRNASeqDataset(TemplateDataset, CanAttachComponents):
     def __post_init__(self):
         self.base.name = f"{self.base.name}__{self.assay_type}"
 
-    def validate(self):
+    def validate(self) -> List[Flag]:
         strict_type_checks(self, exceptions=["samples"])
+        return list()  # may return empty list
