@@ -64,8 +64,8 @@ def test_bulk_rna_seq_dataset(caplog):
     dataset = BulkRNASeqDataset(base=entity_model.BaseDataset(name="TestDSet"))
 
     bad_sample = "sample1"
-    good_sample = mock.MagicMock(spec=BulkRNASeqSample)
-    good_sample.name = "Sample2"
+    good_sample = BulkRNASeqSample(base=mock.MagicMock(spec=entity_model.BaseSample))
+    good_sample.base.name = "Sample2"
 
     # invalid sample: string
     with pytest.raises(TypeError):
@@ -86,7 +86,7 @@ def test_bulk_rna_seq_sample(caplog):
     sample = BulkRNASeqSample(base=entity_model.BaseSample(name="test_sample_1"))
 
     assert sample.name == "test_sample_1"
-    sample.validate()
+    # sample.validate()
 
     print("Before attach")
     assert isinstance(sample.rawForwardReads, entity_model.EmptyComponent)
@@ -100,21 +100,23 @@ def test_bulk_rna_seq_sample(caplog):
     # looks like a component and has the proper base (at least a mock of one)
     mock_reads = mock.MagicMock(spec=ReadsComponent)
     mock_reads.base = mock.MagicMock(spec=entity_model.BaseComponent)
-    sample.attach_component(mock_reads, attr="rawForwardReads") 
+    sample.attach_component(mock_reads, attr="rawForwardReads")
 
     print("After attach")
-    assert isinstance(sample.rawForwardReads, ReadsComponent) # component should now be added
+    assert isinstance(
+        sample.rawForwardReads, ReadsComponent
+    )  # component should now be added
     assert isinstance(sample.rawReverseReads, entity_model.EmptyComponent)
 
 
-
 def test_bulk_rna_seq_integration(caplog):
-    dataSystem = entity_model.GLDSDataSystem(base=entity_model.BaseDataSystem(name="Test_dataSystem_1"))
+    dataSystem = entity_model.GLDSDataSystem(
+        base=entity_model.BaseDataSystem(name="Test_dataSystem_1")
+    )
     dataset = BulkRNASeqDataset(base=entity_model.BaseDataset(name="Test_dataset_1"))
     sample = BulkRNASeqSample(base=entity_model.BaseSample(name="Test_sample_1"))
 
     dataset.attach_sample(sample)
-
 
     # before attachment this should return none
     assert dataSystem.dataset == None
@@ -124,7 +126,10 @@ def test_bulk_rna_seq_integration(caplog):
     # ensure warning logged during overwrite
     with caplog.at_level(0):
         dataSystem.attach_dataset(dataset)
-        assert caplog.records[-1].message == "Overwriting pre-existing dataset: Test_dataset_1__BulkRNASeq"
+        assert (
+            caplog.records[-1].message
+            == "Overwriting pre-existing dataset: Test_dataset_1__BulkRNASeq"
+        )
 
     assert dataset.samples["Test_sample_1"] == sample
 
@@ -132,9 +137,8 @@ def test_bulk_rna_seq_integration(caplog):
 
     # test all dataset accessors
     assert dataSystem.dataset == dataset
-    assert dataSystem.datasets['Test_dataset_1__BulkRNASeq'] == dataset
+    assert dataSystem.datasets["Test_dataset_1__BulkRNASeq"] == dataset
     assert dataSystem.all_datasets == set([dataset])
-
 
     dataset2 = BulkRNASeqDataset(base=entity_model.BaseDataset(name="Test_dataset_2"))
     dataSystem.attach_dataset(dataset2)
@@ -143,5 +147,5 @@ def test_bulk_rna_seq_integration(caplog):
     # test all dataset accessors
     with pytest.raises(ValueError):
         dataSystem.dataset
-    assert dataSystem.datasets['Test_dataset_1__BulkRNASeq'] == dataset
+    assert dataSystem.datasets["Test_dataset_1__BulkRNASeq"] == dataset
     assert dataSystem.all_datasets == set([dataset, dataset2])
