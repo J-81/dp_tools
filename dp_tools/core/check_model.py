@@ -57,8 +57,8 @@ class Check(abc.ABC):
     def __post_init__(self):
         # ensure checkID is valid
         assert re.match(
-            r"^\D*_\d\d\d\d$", self.id
-        ), "Valid Check ID format: WORD_dddd where d is any digit"
+            r"^(COMPONENT|SAMPLE|DATASET)_\D*_\d\d\d\d$", self.id
+        ), "Valid Check ID format: SCOPE_WORD_dddd where d is any digit. SCOPE must be either 'COMPONENT','SAMPLE' or 'DATASET'"
 
         # ensure check is unique
         assert self.id not in [

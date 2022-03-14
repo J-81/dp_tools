@@ -38,13 +38,13 @@ def test_bulk_rnaseq_raw_data_validation(caplog):
 
     # first, run a check with an unhandled developer exception
     with MonkeyPatch.context() as m:
-        from dp_tools.bulkRNASeq.checks import RAWREADS_0001
+        from dp_tools.bulkRNASeq.checks import SAMPLE_RAWREADS_0001
 
-        m.setattr(RAWREADS_0001, "validate_func", lambda: 1 / 0)
+        m.setattr(SAMPLE_RAWREADS_0001, "validate_func", lambda: 1 / 0)
         ds.validate()
         sample, testcase_flags = list(ds.validation_report["sample"].items())[0]
         testcase_flag = testcase_flags[0]
-        assert testcase_flag.check.id == "RAWREADS_0001"
+        assert testcase_flag.check.id == "SAMPLE_RAWREADS_0001"
         assert testcase_flag.code.value == 91
         assert testcase_flag.message.startswith("An unhandled exception occured in ")
         assert isinstance(sample, BulkRNASeqSample)
@@ -54,7 +54,7 @@ def test_bulk_rnaseq_raw_data_validation(caplog):
         ds.validate()
         sample, testcase_flags = list(ds.validation_report["sample"].items())[0]
         testcase_flag = testcase_flags[0]
-        assert testcase_flag.check.id == "RAWREADS_0001"
+        assert testcase_flag.check.id == "SAMPLE_RAWREADS_0001"
         assert testcase_flag.code.value == 20
         assert testcase_flag.message == "All expected raw read files present"
         assert isinstance(sample, BulkRNASeqSample)

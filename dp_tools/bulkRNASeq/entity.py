@@ -4,7 +4,7 @@
 from dataclasses import dataclass, field
 import enum
 from typing import List, Union
-from dp_tools.bulkRNASeq.checks import RAWREADS_0001
+from dp_tools.bulkRNASeq.checks import SAMPLE_RAWREADS_0001
 from dp_tools.core.check_model import Flag
 
 from dp_tools.core.entity_model import (
@@ -60,7 +60,7 @@ class BulkRNASeqSample(TemplateSample, CanAttachComponents):
         flags = list()
         strict_type_checks(self)
         # additional checks advised
-        flags.append(RAWREADS_0001.validate(self))
+        flags.append(SAMPLE_RAWREADS_0001.validate(self))
 
         return flags  # may return empty list
 
