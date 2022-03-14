@@ -6,9 +6,9 @@ import enum
 import hashlib
 from pathlib import Path
 import uuid
-from typing import Dict, List, Literal, Protocol, Tuple, Union, runtime_checkable
+from typing import Dict, List, Literal, Optional, Protocol, Tuple, Union, runtime_checkable
 import logging
-from dp_tools.core.check_model import Flag
+from dp_tools.core.check_model import Flag, FlagCode
 
 import pandas as pd
 
@@ -21,6 +21,7 @@ log = logging.getLogger(__name__)
 def get_id():
     uuid4 = uuid.uuid4()
     return str(uuid4)
+
 
 #########################################################################
 # DATAFILE
@@ -51,6 +52,7 @@ class DataFile:
     def _compute_md5sum(self, contents):
         return hashlib.md5(contents).hexdigest()
 
+
 @dataclass
 class DataDir:
     """ A class for keeping track of directories
@@ -65,15 +67,16 @@ class DataDir:
         strict_type_checks(self)
 
 
-
 #########################################################################
 # FUNCTIONAL MIXINS
 # THESE MAY IMPART SHARED FUNCTIONALITY ACROSS LEVES
 # E.G. Attaching components should work on datasets and samples
 #########################################################################
 
+
 class MustValidate:
     """ A mixin to add in a common validation method """
+
     @abc.abstractmethod
     def validate(self) -> List[Flag]:
         ...
@@ -82,12 +85,14 @@ class MustValidate:
         flags = self.validate()
         # check that all returned objects are indeed Flag objects
         assert all([isinstance(flag, Flag) for flag in flags])
+        # log a warning if no flags are returned
+        if flags == []:
+            log.warning(f"This object generated no validation flags: {self}")
         return flags
 
 
 # a mixin class
 class CanAttachComponents:
-
     def _is_component(self, putative_component):
         """ Check is the component is a component
         Specifically, check if the base is a BaseComponent
@@ -105,9 +110,20 @@ class CanAttachComponents:
                 components[attr] = value
         return components
 
+    @property
+    def components(self) -> List[object]:
+        """ Return a list of components, EXCLUDING any empty slots """
+        components = list()
+        for attr, value in self.__dict__.items():
+            # check the base, all component bases should be a BaseComponent
+            # if 'base' exists, check if it is a component
+            if self._is_component(value) and not isinstance(value, EmptyComponent):
+                components.append(value)
+        return components
+
     def attach_component(self, component, attr):
         # ensure this is an expected component by name
-        # TODO: replace this with only checking component attrs, 
+        # TODO: replace this with only checking component attrs,
         # perhaps by checking if default is a component since EmptyComponent will return True
         assert hasattr(
             self, attr
@@ -115,10 +131,12 @@ class CanAttachComponents:
 
         # ensure this is a component
         if not self._is_component(component):
-            raise TypeError("Failure: Cannot attach unless object 'base' is a BaseComponent")
+            raise TypeError(
+                "Failure: Cannot attach unless object 'base' is a BaseComponent"
+            )
 
-        # warn if component already attached
-        if getattr(self, attr):
+        # warn if component already attached and not an EmptyComponent
+        if not isinstance(getattr(self, attr), EmptyComponent):
             log.warning(f"Overwriting existing component in slot: {attr}")
 
         # attach component
@@ -139,6 +157,7 @@ class CanAttachEntity:
     def _attach_entity(self, entity):
         self.entities[entity.name] = entity
 
+
 #########################################################################
 # COMPONENTS
 #########################################################################
@@ -152,7 +171,6 @@ class BaseComponent:
 
 
 class TemplateComponent(abc.ABC, MustValidate):
-
     def __post_init__(self):
         strict_type_checks(self)
 
@@ -164,8 +182,10 @@ class EmptyComponent(TemplateComponent):
     base: BaseComponent = BaseComponent(description="This slot is empty")
 
     def validate(self) -> List[Tuple]:
-        log.critical("Pending validation implemention")
-        return list()
+        flag = Flag(self, description="This is an empty component.", code=FlagCode.INFO)
+        return [flag]
+
+
 #########################################################################
 # DATASYSTEM
 #########################################################################
@@ -199,7 +219,9 @@ class TemplateDataSystem(abc.ABC):
         elif len(self.base.datasets) == 1:
             return list(self.base.datasets.values())[0]
         else:
-            raise ValueError(f"This datasystem has multiple datasets. Use 'datasets' or 'all_datasets' instead to indicate specific dataset")
+            raise ValueError(
+                f"This datasystem has multiple datasets. Use 'datasets' or 'all_datasets' instead to indicate specific dataset"
+            )
 
     @property
     def datasets(self):
@@ -237,14 +259,22 @@ class TemplateDataSystem(abc.ABC):
             log.warning(f"Overwriting pre-existing dataset: {dataset.name}")
         self.datasets[dataset.name] = dataset
 
+        # associated dataset to datasystem
+        dataset.dataSystem = self
+
     def validate(self):
         log.info("Running validation at data system level")
         dataset_flags = {
             dataset: dataset._strict_validate() for dataset in self.all_datasets
         }  # return of validate should be flags
-        sample_flags = {sample: sample._strict_validate() for sample in self.all_samples}
+        sample_flags = {
+            sample: sample._strict_validate() for sample in self.all_samples
+        }
+        # return flags solely from non-Empty components
         component_flags = {
-            component: component._strict_validate() for component in self.all_components if not isinstance(component, EmptyComponent)
+            component: component._strict_validate()
+            for component in self.all_components
+            if not isinstance(component, EmptyComponent)
         }
         if not dataset_flags:
             log.warning(f"No datasets found nor validated in entire dataSystem")
@@ -260,12 +290,13 @@ class TemplateDataSystem(abc.ABC):
         )
 
         self.validation_report = dict()
-        self.validation_report['dataset'] = dataset_flags
-        self.validation_report['sample'] = sample_flags
-        self.validation_report['component'] = component_flags
+        self.validation_report["dataset"] = dataset_flags
+        self.validation_report["sample"] = sample_flags
+        self.validation_report["component"] = component_flags
 
         # validation report should not perform actions itself
         # actions might include report generation and raising an Exception
+
 
 #########################################################################
 # DATASET
@@ -285,6 +316,8 @@ class BaseDataset:
 
 # for subclassing
 class TemplateDataset(abc.ABC, MustValidate):
+    dataSystem: TemplateDataSystem = None
+
     @property
     @abc.abstractproperty
     def expected_sample_class(self):
@@ -294,10 +327,9 @@ class TemplateDataset(abc.ABC, MustValidate):
     def samples(self):
         return self.base.samples
 
-   
     @property
     def name(self):
-        return self.base.name 
+        return self.base.name
 
     # TODO: add type, how to type hint a class in general
     def attach_sample(self, sample):
@@ -310,7 +342,7 @@ class TemplateDataset(abc.ABC, MustValidate):
         # attach sample to dataset
         self.samples[sample.name] = sample
         # attach dataset to sample
-        sample.dataset = self
+        sample.base.dataset = self
 
 
 #########################################################################
@@ -331,12 +363,15 @@ class TemplateSample(abc.ABC, MustValidate):
     def name(self):
         return self.base.name
 
+    @property
+    def dataset(self):
+        return self.base.dataset
+
 ############################################################################################
 # GLDS SPECIFIC
 ############################################################################################
-@dataclass(eq = False)
+@dataclass(eq=False)
 class GLDSDataSystem(TemplateDataSystem):
 
     base: BaseDataSystem = field(repr=False)
-
 
