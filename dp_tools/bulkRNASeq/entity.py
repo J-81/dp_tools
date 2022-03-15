@@ -24,7 +24,7 @@ class ASSAY(enum.Enum):
 
 
 @dataclass(eq=False)
-class BulkRNASeqSample(TemplateSample, CanAttachComponents):
+class BulkRNASeqSample(TemplateSample):
     """ Abstract class for samples """
 
     # composition for all samples
@@ -66,7 +66,7 @@ class BulkRNASeqSample(TemplateSample, CanAttachComponents):
 
 
 @dataclass(eq=False)
-class BulkRNASeqDataset(TemplateDataset, CanAttachComponents):
+class BulkRNASeqDataset(TemplateDataset):
 
     base: BaseDataset = field(repr=False)
     assay_type: str = ASSAY.BulkRNASeq.name

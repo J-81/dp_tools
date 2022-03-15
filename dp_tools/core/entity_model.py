@@ -265,7 +265,7 @@ class BaseDataset:
 
 
 # for subclassing
-class TemplateDataset(abc.ABC):
+class TemplateDataset(abc.ABC, CanAttachComponents):
     dataSystem: TemplateDataSystem = None
 
     @property
@@ -294,6 +294,8 @@ class TemplateDataset(abc.ABC):
         # attach dataset to sample
         sample.base.dataset = self
 
+    # extends mixin canAtt
+
 
 #########################################################################
 # SAMPLES
@@ -307,7 +309,7 @@ class BaseSample:
     dataset: Union[None, BaseDataset] = field(default=None)
 
 
-class TemplateSample(abc.ABC):
+class TemplateSample(abc.ABC, CanAttachComponents):
     # used properties to alias base attributes as needed
     @property
     def name(self):
