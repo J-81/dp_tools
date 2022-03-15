@@ -13,6 +13,7 @@ from typing import (
     Optional,
     Protocol,
     Tuple,
+    TypedDict,
     Union,
     runtime_checkable,
 )
@@ -135,16 +136,42 @@ class CanAttachComponents:
 
         # associate component with sample
         log.debug(f"attaching {self.name} to {component}")
-        component._attach_entity(self)
+        component._attach_entity(entity=self, entity_attr=attr)
         log.debug(f"post attaching {self.name} to {component}")
 
+# Dict[attr: str, 'entity': Union['TemplateDataset', 'TemplateSample' ]
+class AttachEntity(TypedDict):
+    attr: str
+    entity: Union['TemplateDataset', 'TemplateSample']
 
 # mixin for attaching samples or datasets or datasystems
 class CanAttachEntity:
-    entities: dict = dict()
+    entities: Dict[str, AttachEntity] = None
+    entityType: str = None
 
-    def _attach_entity(self, entity):
-        self.entities[entity.name] = entity
+    def _attach_entity(self, entity: Union['TemplateDataset', 'TemplateSample' ], entity_attr: str):
+        # create dict if first time for this component
+        if not self.entities:
+            self.entities = dict()
+            if isinstance(entity, TemplateSample):
+                self.entityType = "sample"
+            elif isinstance(entity, TemplateDataset):
+                self.entityType = "dataset"
+            self._entityClass = entity.__class__
+
+        # block mixing entity classes
+        if not isinstance(entity, self._entityClass):
+            raise ValueError(f"Cannot attach entity type: {entity.__class__} after already attaching to entity class: {self._entityClass}")
+        self.entities[entity.name] = {'entity':entity, 'attr': entity_attr}
+
+    @property
+    def dataset(self) -> 'TemplateDataset':
+        match self.entityType:
+            case "sample":
+                dataset = list(self.entities.values())[0]["entity"].dataset
+            case "dataset":
+                dataset = list(self.entities.values())[0]['entity']
+        return dataset
 
 
 #########################################################################
