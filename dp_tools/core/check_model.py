@@ -114,6 +114,11 @@ class Check(abc.ABC):
             flag_desc=self.flag_desc,
         )
 
+    def __str__(self):
+        return f"""ID: {self.id} # of Flags Generated: {len(self.flags)}
+        description: {self.description}
+        """
+
 
 @dataclass
 class Flag:
@@ -137,6 +142,8 @@ class Flag:
         # add to check flags records
         self.check.flags.append(self)
 
+    def __str__(self):
+        return f"Flag (checkID: {self.check.id}, FlagCode: {self.code.name}:{(self.code.value)}, message: {self.message})"
 
 class VVProtocol(abc.ABC):
     """ A abstract protocol for VV """

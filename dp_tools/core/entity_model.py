@@ -247,6 +247,11 @@ class TemplateDataSystem(abc.ABC):
         # associated dataset to datasystem
         dataset.dataSystem = self
 
+    def __str__(self):
+        return f"""
+        DataSystem ({self.__class__}): {self.name}
+        Has Datasets: {self.datasets}
+        """
 
 #########################################################################
 # DATASET
@@ -308,6 +313,15 @@ class TemplateDataset(abc.ABC, CanAttachComponents):
 
         return all_components
 
+    def __str__(self):
+        return f"""
+        Dataset ({self.__class__}): {self.name}
+        Has {len(self.samples)} Samples ({self.expected_sample_class})
+        Dataset Components: {self.all_components}
+        Is Part of DataSystem: {self.dataSystem.name}
+        """
+
+
 #########################################################################
 # SAMPLES
 #########################################################################
@@ -330,6 +344,12 @@ class TemplateSample(abc.ABC, CanAttachComponents):
     def dataset(self):
         return self.base.dataset
 
+    def __str__(self):
+        return f"""
+        Sample ({self.__class__}): {self.name}
+        Sample Components: {self.all_components}
+        Is Part of Dataset: {self.dataset}
+        """
 
 ############################################################################################
 # GLDS SPECIFIC
