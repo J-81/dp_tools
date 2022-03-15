@@ -294,8 +294,19 @@ class TemplateDataset(abc.ABC, CanAttachComponents):
         # attach dataset to sample
         sample.base.dataset = self
 
-    # extends mixin canAtt
+    # extends mixin CanAttachComponents
+    @property
+    def all_non_empty_components_recursive(self):
+        """ returns a set of all components """
+        all_components = set()
+        # get dataset attached components
+        all_components = all_components.union([comp for comp in self.all_components.values() if not isinstance(comp, EmptyComponent)])
 
+        # get sample wise components
+        for sample in self.samples.values():
+            all_components = all_components.union([comp for comp in sample.all_components.values() if not isinstance(comp, EmptyComponent)])
+
+        return all_components
 
 #########################################################################
 # SAMPLES

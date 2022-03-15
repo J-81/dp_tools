@@ -30,8 +30,8 @@ class BulkRNASeq_VVProtocol_RawData(VVProtocol):
 
     def validate_components(self) -> Dict[TemplateComponent, List[Flag]]:
         flags: Dict[TemplateComponent, List[Flag]] = defaultdict(list)
-        # iterate through all components
-        for component in self.dataset.components:
+        # iterate through all components by level
+        for component in self.dataset.all_non_empty_components_recursive:
             log.info(f"Validating component: {component} with type {type(component)}")
             match component:
                 case RawReadsComponent():
