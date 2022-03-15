@@ -29,10 +29,17 @@ from dp_tools.bulkRNASeq.locaters import MultiQCDir, RawFastq, Runsheet
 from dp_tools.components import RawReadsComponent, BulkRNASeqMetadataComponent
 
 
-def load_from_bulk_rnaseq_raw_dir(root_path: Path):
+def load_from_bulk_rnaseq_raw_dir(root_path: Path, dataSystem_name: str = None):
+    # ensure root path exists!
+    if not root_path.is_dir():
+        raise FileNotFoundError(f"Root path doesn't exist!: {root_path}")
+
+    # if not specified, assume root_path name is the dataSystem name
+    if not dataSystem_name:
+        dataSystem_name = root_path.name
     # create datasystem
     log.info(f"Attempting to load data model for raw directory: {str(root_path)}")
-    dataSystem = GLDSDataSystem(base=BaseDataSystem(name=root_path.name))
+    dataSystem = GLDSDataSystem(base=BaseDataSystem(name=dataSystem_name))
 
     # initate locaters on the root path
     rawFastq = RawFastq(search_root=root_path)
@@ -40,14 +47,14 @@ def load_from_bulk_rnaseq_raw_dir(root_path: Path):
     readsMQC = MultiQCDir(search_root=root_path)
 
     # create dataset
-    dataset = BulkRNASeqDataset(base=BaseDataset(name=root_path.name))
+    dataset = BulkRNASeqDataset(base=BaseDataset(name=dataSystem_name))
 
     dataSystem.attach_dataset(dataset)
     # attach dataset components
     dataSystem.dataset.attach_component(
         BulkRNASeqMetadataComponent(
             base=BaseComponent(description="Metadata in a runsheet csv file"),
-            runsheet=DataFile(runsheet.find(dataSystem.name)),
+            runsheet=DataFile(runsheet.find(datasystem_name=dataSystem_name)),
         ),
         attr="metadata",
     )
