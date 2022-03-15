@@ -1,0 +1,7 @@
+from dp_tools.bulkRNASeq.checks import COMPONENT_RAWREADS_0001, COMPONENT_TRIMREADS_0001
+
+
+def test_SAMPLE_RAWREADS_0001():
+    assert COMPONENT_RAWREADS_0001
+    assert COMPONENT_TRIMREADS_0001
+    ...
