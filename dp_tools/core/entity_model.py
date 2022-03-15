@@ -101,6 +101,12 @@ class CanAttachComponents:
         return components
 
     @property
+    def _str_all_components(self) -> Dict[str, object]:
+        """ Return a dictionary of components, including any empty slots """
+        s = "Components:\n\t" +" \n\t".join([f"Attribute '{attr}' --> '{comp.__class__.__name__}'" for attr,comp in self.all_components.items()]) if self.all_components else "No Components. (including empty component slots)"
+        return s
+
+    @property
     def components(self) -> List[object]:
         """ Return a list of components, EXCLUDING any empty slots """
         components = list()
@@ -186,10 +192,17 @@ class BaseComponent:
     created: datetime.datetime = field(default_factory=datetime.datetime.now)
 
 
-class TemplateComponent(abc.ABC):
+class TemplateComponent(abc.ABC, CanAttachEntity):
     def __post_init__(self):
         strict_type_checks(self)
 
+    # TODO: refactor, attached entity related portion should be owned by mixin
+    def __str__(self):
+        attachments_str = "Attached to Entity:\n\t" + "\n\t".join([f'{entity_name} <--AS-- {entity_dict["attr"]}' for entity_name, entity_dict in self.entities.items()]) if self.entities else ""
+        return f"""
+Component: class:{self.__class__.__name__}
+{attachments_str}
+        """
 
 @dataclass(eq=False)
 class EmptyComponent(TemplateComponent):
@@ -275,9 +288,11 @@ class TemplateDataSystem(abc.ABC):
         dataset.dataSystem = self
 
     def __str__(self):
+        dataset_sub_s = '\n\t'.join([dataset.name for dataset in self.datasets.values()])
         return f"""
-        DataSystem ({self.__class__}): {self.name}
-        Has Datasets: {self.datasets}
+DataSystem (class:{self.__class__.__name__}): '{self.name}'
+Has Datasets: 
+    {dataset_sub_s}
         """
 
 #########################################################################
@@ -342,10 +357,11 @@ class TemplateDataset(abc.ABC, CanAttachComponents):
 
     def __str__(self):
         return f"""
-        Dataset ({self.__class__}): {self.name}
-        Has {len(self.samples)} Samples ({self.expected_sample_class})
-        Dataset Components: {self.all_components}
-        Is Part of DataSystem: {self.dataSystem.name}
+Dataset (class:{self.__class__.__name__}): '{self.name}'
+Has {len(self.samples)} Samples (class:{self.expected_sample_class.__name__})
+{self._str_all_components}
+Is Part of DataSystem: 
+    '{self.dataSystem.name}'
         """
 
 
@@ -373,9 +389,10 @@ class TemplateSample(abc.ABC, CanAttachComponents):
 
     def __str__(self):
         return f"""
-        Sample ({self.__class__}): {self.name}
-        Sample Components: {self.all_components}
-        Is Part of Dataset: {self.dataset}
+Sample (class:{self.__class__.__name__}): '{self.name}'
+{self._str_all_components}
+Is Part of Dataset: 
+    '{self.dataset.name if self.dataset else "None"}'
         """
 
 ############################################################################################
