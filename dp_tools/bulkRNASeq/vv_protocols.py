@@ -1,5 +1,8 @@
 from collections import defaultdict
 from typing import Dict, List
+import logging
+log = logging.getLogger(__name__)
+
 from dp_tools.bulkRNASeq.entity import BulkRNASeqDataset, BulkRNASeqSample
 from dp_tools.core.check_model import Flag, VVProtocol
 from dp_tools.bulkRNASeq.checks import (
@@ -29,13 +32,14 @@ class BulkRNASeq_VVProtocol_RawData(VVProtocol):
         flags: Dict[TemplateComponent, List[Flag]] = defaultdict(list)
         # iterate through all components
         for component in self.dataset.components:
+            log.info(f"Validating component: {component} with type {type(component)}")
             match component:
                 case RawReadsComponent():
                     flags[component].append(COMPONENT_RAWREADS_0001.validate(component))
                 case TrimReadsComponent():
-                    flags[component] = list()
+                    flags[component].append(COMPONENT_TRIMREADS_0001.validate(component))
                 case BulkRNASeqMetadataComponent():
                     flags[component] = list()
-                case other_type:
-                    raise TypeError(f"Encountered unhandled component type in VV: {component} with type {component_type}")
+                case _:
+                    raise TypeError(f"Encountered unhandled component type in VV: {component} with type {type(component)}")
         return flags
