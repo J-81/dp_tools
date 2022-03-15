@@ -5,8 +5,19 @@ import abc
 from dataclasses import dataclass, field
 import enum
 import re
-from typing import Callable, ClassVar, Dict, List, Optional, Protocol, Tuple, Union
+from typing import (
+    Callable,
+    ClassVar,
+    Dict,
+    List,
+    Optional,
+)
 import logging
+from dp_tools.core.entity_model import (
+    TemplateComponent,
+    TemplateDataset,
+    TemplateSample,
+)
 
 log = logging.getLogger(__name__)
 
@@ -50,11 +61,19 @@ class Check(abc.ABC):
     validate_func: Optional[Callable]
     # flags associated with this check
     flags: List["Flag"] = field(default_factory=list)
+    config: Dict = field(default_factory=dict)
     allChecks: ClassVar[
         List["Check"]
     ] = list()  # note this is a class attribute list, tracking all checks
 
     def __post_init__(self):
+        # format description with config
+        # All templated fields MUST be in config
+        # All items in config are NOT required
+        # (however, they should be supplied to make the description complete)
+        self._proto_description = self.description
+        self.description = self.description.format(**self.config)
+
         # ensure checkID is valid
         assert re.match(
             r"^(COMPONENT|SAMPLE|DATASET)_\D*_\d\d\d\d$", self.id
@@ -86,6 +105,15 @@ class Check(abc.ABC):
                 check=self,
             )
 
+    def copy_with_new_config(self, id: str, config: dict) -> "Check":
+        return Check(
+            id=id,
+            config=config,
+            description=self._proto_description,
+            validate_func=self.validate_func,
+            flag_desc=self.flag_desc,
+        )
+
 
 @dataclass
 class Flag:
@@ -108,3 +136,41 @@ class Flag:
         strict_type_checks(self)
         # add to check flags records
         self.check.flags.append(self)
+
+
+class VVProtocol(abc.ABC):
+    """ A abstract protocol for VV """
+
+    def __init__(self, dataset):
+        # check on init that dataset is of the right type
+        assert isinstance(
+            dataset, self.expected_dataset_class
+        ), "dataset MUST be of type 'BulkRNASeqDataset' for this protocol"
+        self.dataset = dataset
+        self._flags = {"dataset": dict(), "sample": dict(), "component": dict()}
+
+    @property
+    def flags(self):
+        return self._flags
+
+    @abc.abstractproperty
+    @property
+    def expected_dataset_class(self):
+        return self.expected_dataset_class
+
+    def validate_all(self):
+        self._flags["dataset"].update(self.validate_dataset())
+        self._flags["sample"].update(self.validate_samples())
+        self._flags["component"].update(self.validate_components())
+
+    @abc.abstractmethod
+    def validate_dataset(self) -> Dict[TemplateDataset, List[Flag]]:
+        ...
+
+    @abc.abstractmethod
+    def validate_samples(self) -> Dict[TemplateSample, List[Flag]]:
+        ...
+
+    @abc.abstractmethod
+    def validate_components(self) -> Dict[TemplateComponent, List[Flag]]:
+        ...

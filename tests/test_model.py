@@ -1,6 +1,6 @@
 from pathlib import Path
 from dp_tools.bulkRNASeq.entity import BulkRNASeqDataset, BulkRNASeqSample
-from dp_tools.components.components import ReadsComponent
+from dp_tools.components.components import RawReadsComponent
 from dp_tools.core import entity_model
 import pytest
 import logging
@@ -29,8 +29,6 @@ def test_empty_GLDSDataSystem():
 
     # empty dict expected
     assert dSys.datasets == dict()
-
-    dSys.validate()
 
 
 def test_datafile(caplog):
@@ -94,17 +92,17 @@ def test_bulk_rna_seq_sample(caplog):
 
     # looks like a component; however, doesn't have the base
     with pytest.raises(TypeError):
-        mock_reads = mock.MagicMock(spec=ReadsComponent)
+        mock_reads = mock.MagicMock(spec=RawReadsComponent)
         sample.attach_component(mock_reads, attr="rawForwardReads")
 
     # looks like a component and has the proper base (at least a mock of one)
-    mock_reads = mock.MagicMock(spec=ReadsComponent)
+    mock_reads = mock.MagicMock(spec=RawReadsComponent)
     mock_reads.base = mock.MagicMock(spec=entity_model.BaseComponent)
     sample.attach_component(mock_reads, attr="rawForwardReads")
 
     print("After attach")
     assert isinstance(
-        sample.rawForwardReads, ReadsComponent
+        sample.rawForwardReads, RawReadsComponent
     )  # component should now be added
     assert isinstance(sample.rawReverseReads, entity_model.EmptyComponent)
 

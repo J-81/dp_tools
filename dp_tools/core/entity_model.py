@@ -6,9 +6,17 @@ import enum
 import hashlib
 from pathlib import Path
 import uuid
-from typing import Dict, List, Literal, Optional, Protocol, Tuple, Union, runtime_checkable
+from typing import (
+    Dict,
+    List,
+    Literal,
+    Optional,
+    Protocol,
+    Tuple,
+    Union,
+    runtime_checkable,
+)
 import logging
-from dp_tools.core.check_model import Flag, FlagCode
 
 import pandas as pd
 
@@ -72,25 +80,6 @@ class DataDir:
 # THESE MAY IMPART SHARED FUNCTIONALITY ACROSS LEVES
 # E.G. Attaching components should work on datasets and samples
 #########################################################################
-
-
-class MustValidate:
-    """ A mixin to add in a common validation method """
-
-    @abc.abstractmethod
-    def validate(self) -> List[Flag]:
-        ...
-
-    def _strict_validate(self):
-        flags = self.validate()
-        # check that all returned objects are indeed Flag objects
-        assert all([isinstance(flag, Flag) for flag in flags])
-        # log a warning if no flags are returned
-        if flags == []:
-            log.warning(f"This object generated no validation flags: {self}")
-        return flags
-
-
 # a mixin class
 class CanAttachComponents:
     def _is_component(self, putative_component):
@@ -170,7 +159,7 @@ class BaseComponent:
     created: datetime.datetime = field(default_factory=datetime.datetime.now)
 
 
-class TemplateComponent(abc.ABC, MustValidate):
+class TemplateComponent(abc.ABC):
     def __post_init__(self):
         strict_type_checks(self)
 
@@ -180,10 +169,6 @@ class EmptyComponent(TemplateComponent):
     """ Class representing an empty component """
 
     base: BaseComponent = BaseComponent(description="This slot is empty")
-
-    def validate(self) -> List[Tuple]:
-        flag = Flag(self, description="This is an empty component.", code=FlagCode.INFO)
-        return [flag]
 
 
 #########################################################################
@@ -262,41 +247,6 @@ class TemplateDataSystem(abc.ABC):
         # associated dataset to datasystem
         dataset.dataSystem = self
 
-    def validate(self):
-        log.info("Running validation at data system level")
-        dataset_flags = {
-            dataset: dataset._strict_validate() for dataset in self.all_datasets
-        }  # return of validate should be flags
-        sample_flags = {
-            sample: sample._strict_validate() for sample in self.all_samples
-        }
-        # return flags solely from non-Empty components
-        component_flags = {
-            component: component._strict_validate()
-            for component in self.all_components
-            if not isinstance(component, EmptyComponent)
-        }
-        if not dataset_flags:
-            log.warning(f"No datasets found nor validated in entire dataSystem")
-        if not sample_flags:
-            log.warning(f"No samples found nor validated in entire dataSystem")
-        if not component_flags:
-            log.warning(f"No components found nor validated in entire dataSystem")
-
-        # TODO: iterate through flags and check if anything should raise an exitcode
-        # maybe hand these flags off to a halt assessor?
-        log.debug(
-            f"Handing these flags off to TBD: dataset: {dataset_flags}, sample: {sample_flags}, component_flags: {component_flags}"
-        )
-
-        self.validation_report = dict()
-        self.validation_report["dataset"] = dataset_flags
-        self.validation_report["sample"] = sample_flags
-        self.validation_report["component"] = component_flags
-
-        # validation report should not perform actions itself
-        # actions might include report generation and raising an Exception
-
 
 #########################################################################
 # DATASET
@@ -315,7 +265,7 @@ class BaseDataset:
 
 
 # for subclassing
-class TemplateDataset(abc.ABC, MustValidate):
+class TemplateDataset(abc.ABC):
     dataSystem: TemplateDataSystem = None
 
     @property
@@ -357,7 +307,7 @@ class BaseSample:
     dataset: Union[None, BaseDataset] = field(default=None)
 
 
-class TemplateSample(abc.ABC, MustValidate):
+class TemplateSample(abc.ABC):
     # used properties to alias base attributes as needed
     @property
     def name(self):
@@ -367,6 +317,7 @@ class TemplateSample(abc.ABC, MustValidate):
     def dataset(self):
         return self.base.dataset
 
+
 ############################################################################################
 # GLDS SPECIFIC
 ############################################################################################
@@ -374,4 +325,3 @@ class TemplateSample(abc.ABC, MustValidate):
 class GLDSDataSystem(TemplateDataSystem):
 
     base: BaseDataSystem = field(repr=False)
-
