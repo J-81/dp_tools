@@ -11,6 +11,8 @@ from typing import (
     Dict,
     List,
     Optional,
+    Tuple,
+    Union,
 )
 import logging
 from dp_tools.core.entity_model import (
@@ -18,6 +20,7 @@ from dp_tools.core.entity_model import (
     TemplateDataset,
     TemplateSample,
 )
+import pandas as pd
 
 log = logging.getLogger(__name__)
 
@@ -181,3 +184,56 @@ class VVProtocol(abc.ABC):
     @abc.abstractmethod
     def validate_components(self) -> Dict[TemplateComponent, List[Flag]]:
         ...
+    ###################################################################################################################
+    # EXPORT RELATED METHODS (POST VALIDATION)
+    ###################################################################################################################
+    def flags_to_df(self, schema="default") -> pd.DataFrame:
+        log.debug("Extracting info into schema {schema} records")
+        match schema:
+            # default dataframe format
+            # entity_index, flag_code, checkID, message
+            # tuple[str, str, str, str], int, str, str
+            case "default":
+                records = list()
+                for entity_type in ["dataset","sample","component"]:
+                    for entity, flags in self.flags[entity_type].items():
+                        record_partial = {"entity_index": self._get_entity_index(entity)}
+                        for flag in flags:
+                            record_full = record_partial | {"flag_code": flag.code.value, "check_id": flag.check.id, "message": flag.message}
+                            records.append(record_full)
+            # verbose dataframe format
+            # entity_index, flag_code, message, checkID, checkDescription
+            # tuple[str, str, str, str], int, str, str
+            case "verbose":
+                records = list()
+                for entity_type in ["dataset","sample","component"]:
+                    for entity, flags in self.flags[entity_type].items():
+                        record_partial = {"entity_index": self._get_entity_index(entity)}
+                        for flag in flags:
+                            record_full = record_partial | {"flag_code": flag.code.value, "message": flag.message, "check_id": flag.check.id, "check_description": flag.check.description}
+                            records.append(record_full)
+            case _:
+                raise ValueError(f"Schema: {schema} not defined")
+        log.debug("Exporting records to dataframe")
+        # set up datafrom with simple index
+        df = pd.DataFrame.from_records(data=records).set_index("entity_index")
+        # convert into multiIndex
+        df.index = pd.MultiIndex.from_tuples(df.index, names=['DataSystem','Dataset','Sample','Component'])
+        return df
+    
+    def _get_entity_index(self, entity: Union[TemplateDataset, TemplateSample, TemplateComponent]) -> Tuple[str, str, str, str]:
+        match entity:
+            case TemplateDataset():
+                entity_index = (entity.dataSystem.name, entity.name, "", "")
+            case TemplateSample():
+                entity_index = (entity.dataset.dataSystem.name, entity.dataset.name, entity.name, "")
+            case TemplateComponent(entityType='sample'):
+                sample_entities = ",".join([sample for sample in entity.entities])
+                attr_index = ",".join([d['attr'] for d in entity.entities.values()])
+                entity_index = (entity.dataset.dataSystem.name, entity.dataset.name, sample_entities, attr_index)
+            case TemplateComponent(entityType='dataset'):
+                attr_index = ",".join([d['attr'] for d in entity.entities.values()])
+                entity_index = (entity.dataset.dataSystem.name, entity.dataset.name, "", attr_index)
+            case _:
+                raise ValueError("Unable to extract entity index from : {entity}")
+        return entity_index
