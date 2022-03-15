@@ -10,7 +10,6 @@ import pandas as pd
 from dp_tools.core.model_commons import strict_type_checks
 from dp_tools.core.entity_model import (
     BaseComponent,
-    CanAttachEntity,
     DataDir,
     DataFile,
     TemplateComponent,
@@ -18,7 +17,7 @@ from dp_tools.core.entity_model import (
 
 
 @dataclass(eq=False)
-class RawReadsComponent(TemplateComponent, CanAttachEntity):
+class RawReadsComponent(TemplateComponent):
 
     fastqGZ: DataFile
     base: BaseComponent = field(repr=False)
@@ -29,7 +28,7 @@ class RawReadsComponent(TemplateComponent, CanAttachEntity):
 
 
 @dataclass(eq=False)
-class TrimReadsComponent(TemplateComponent, CanAttachEntity):
+class TrimReadsComponent(TemplateComponent):
 
     fastqGZ: DataFile
     base: BaseComponent = field(repr=False)
@@ -41,7 +40,7 @@ class TrimReadsComponent(TemplateComponent, CanAttachEntity):
 
 
 @dataclass(eq=False)
-class BulkRNASeqMetadataComponent(TemplateComponent, CanAttachEntity):
+class BulkRNASeqMetadataComponent(TemplateComponent):
 
     base: BaseComponent = field(repr=False)
     runsheet: Union[DataFile, None] = field(default=None)
