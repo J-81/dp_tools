@@ -26,7 +26,7 @@ from dp_tools.core.entity_model import (
 
 from dp_tools.bulkRNASeq.entity import BulkRNASeqDataset, BulkRNASeqSample
 from dp_tools.bulkRNASeq.locaters import MultiQCDir, RawFastq, Runsheet
-from dp_tools.components import ReadsComponent, BulkRNASeqMetadataComponent
+from dp_tools.components import RawReadsComponent, BulkRNASeqMetadataComponent
 
 
 def load_from_bulk_rnaseq_raw_dir(root_path: Path):
@@ -67,12 +67,12 @@ def load_from_bulk_rnaseq_raw_dir(root_path: Path):
     for sample_name in metadata.samples:
         sample = BulkRNASeqSample(BaseSample(name=sample_name))
         if metadata.paired_end:
-            raw_fwd_reads = ReadsComponent(
+            raw_fwd_reads = RawReadsComponent(
                 base=BaseComponent(description="Raw Forward Reads"),
                 fastqGZ=DataFile(rawFastq.find(sample_name, type=("Raw", "Forward"))),
                 multiQCDir=datf_readsMQC,
             )
-            raw_rev_reads = ReadsComponent(
+            raw_rev_reads = RawReadsComponent(
                 base=BaseComponent(description="Raw Reverse Reads"),
                 fastqGZ=DataFile(
                     path=rawFastq.find(sample_name, type=("Raw", "Reverse"))
@@ -82,7 +82,7 @@ def load_from_bulk_rnaseq_raw_dir(root_path: Path):
             sample.attach_component(raw_fwd_reads, attr="rawForwardReads")
             sample.attach_component(raw_rev_reads, attr="rawReverseReads")
         else:
-            raw_reads = ReadsComponent(
+            raw_reads = RawReadsComponent(
                 base=BaseComponent(description="Raw Reads"),
                 fastqGZ=DataFile(
                     path=rawFastq.find(sample_name, type=("Raw", "Forward"))
