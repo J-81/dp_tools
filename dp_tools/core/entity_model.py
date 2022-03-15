@@ -61,6 +61,8 @@ class DataFile:
     def _compute_md5sum(self, contents):
         return hashlib.md5(contents).hexdigest()
 
+    def __str__(self):
+        return f"{self.__class__.__name__}(path={self.path})"
 
 @dataclass
 class DataDir:
@@ -75,6 +77,8 @@ class DataDir:
         # finally enforce types check
         strict_type_checks(self)
 
+    def __str__(self):
+        return f"{self.__class__.__name__}(path={self.path})"
 
 #########################################################################
 # FUNCTIONAL MIXINS
@@ -199,8 +203,10 @@ class TemplateComponent(abc.ABC, CanAttachEntity):
     # TODO: refactor, attached entity related portion should be owned by mixin
     def __str__(self):
         attachments_str = "Attached to Entity:\n\t" + "\n\t".join([f'{entity_name} <--AS-- {entity_dict["attr"]}' for entity_name, entity_dict in self.entities.items()]) if self.entities else ""
+        data_str = "Has Data Assets (listed by attribute name):\n\t" + "\n\t".join([f"'{attr}' :{data}" for attr, data in self.__dict__.items() if any([isinstance(data, DataDir), isinstance(data, DataFile)])]) if self.__dict__ else ""
         return f"""
 Component: class:{self.__class__.__name__}
+{data_str}
 {attachments_str}
         """
 
