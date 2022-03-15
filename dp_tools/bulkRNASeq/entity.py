@@ -16,7 +16,7 @@ from dp_tools.core.entity_model import (
     TemplateSample,
 )
 from dp_tools.core.model_commons import strict_type_checks
-from dp_tools.components import BulkRNASeqMetadataComponent, ReadsComponent
+from dp_tools.components import BulkRNASeqMetadataComponent, RawReadsComponent, TrimReadsComponent
 
 
 class ASSAY(enum.Enum):
@@ -32,24 +32,24 @@ class BulkRNASeqSample(TemplateSample, CanAttachComponents):
     assay_type: str = ASSAY.BulkRNASeq.name
 
     # used for paired end
-    rawForwardReads: Union[EmptyComponent, ReadsComponent] = field(
+    rawForwardReads: Union[EmptyComponent, RawReadsComponent] = field(
         default_factory=EmptyComponent
     )
-    rawReverseReads: Union[EmptyComponent, ReadsComponent] = field(
+    rawReverseReads: Union[EmptyComponent, RawReadsComponent] = field(
         default_factory=EmptyComponent
     )
-    trimForwardReads: Union[EmptyComponent, ReadsComponent] = field(
+    trimForwardReads: Union[EmptyComponent, TrimReadsComponent] = field(
         default_factory=EmptyComponent
     )
-    trimReverseReads: Union[EmptyComponent, ReadsComponent] = field(
+    trimReverseReads: Union[EmptyComponent, TrimReadsComponent] = field(
         default_factory=EmptyComponent
     )
 
     # used for single end
-    rawReads: Union[EmptyComponent, ReadsComponent] = field(
+    rawReads: Union[EmptyComponent, RawReadsComponent] = field(
         default_factory=EmptyComponent
     )
-    TrimReads: Union[EmptyComponent, ReadsComponent] = field(
+    TrimReads: Union[EmptyComponent, TrimReadsComponent] = field(
         default_factory=EmptyComponent
     )
 
