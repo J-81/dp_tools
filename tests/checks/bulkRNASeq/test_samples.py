@@ -4,22 +4,22 @@
 from unittest.mock import MagicMock
 from pytest import MonkeyPatch
 
-from dp_tools.bulkRNASeq.checks import RAWREADS_0001
+from dp_tools.bulkRNASeq.checks import SAMPLE_RAWREADS_0001
 from dp_tools.bulkRNASeq.entity import BulkRNASeqSample
-from dp_tools.components.components import ReadsComponent
+from dp_tools.components.components import RawReadsComponent
 from dp_tools.core import check_model
 
 
-def test_RAWREADS_0001():
+def test_SAMPLE_RAWREADS_0001():
     # check attribute tests
-    assert RAWREADS_0001.id == "RAWREADS_0001"
+    assert SAMPLE_RAWREADS_0001.id == "SAMPLE_RAWREADS_0001"
 
     # for paired end fails
     with MonkeyPatch.context() as m:
         m.setattr(check_model, "ALLOWED_DEV_EXCEPTIONS", (SystemExit))
         mockSample = MagicMock(spec=BulkRNASeqSample)
         mockSample.dataset.metadata.paired_end = True
-        flag = RAWREADS_0001.validate(sample=mockSample)
+        flag = SAMPLE_RAWREADS_0001.validate(sample=mockSample)
         assert flag.code == check_model.FlagCode.HALT1
         assert (
             flag.message
@@ -31,7 +31,7 @@ def test_RAWREADS_0001():
         m.setattr(check_model, "ALLOWED_DEV_EXCEPTIONS", (SystemExit))
         mockSample = MagicMock(spec=BulkRNASeqSample)
         mockSample.dataset.metadata.paired_end = False
-        flag = RAWREADS_0001.validate(sample=mockSample)
+        flag = SAMPLE_RAWREADS_0001.validate(sample=mockSample)
         assert flag.code == check_model.FlagCode.HALT1
         assert flag.message == "Missing expected components: ['rawReads']"
 
@@ -39,10 +39,10 @@ def test_RAWREADS_0001():
     with MonkeyPatch.context() as m:
         m.setattr(check_model, "ALLOWED_DEV_EXCEPTIONS", (SystemExit))
         mockSample = MagicMock(spec=BulkRNASeqSample)
-        mockSample.rawForwardReads = MagicMock(spec=ReadsComponent)
-        mockSample.rawReverseReads = MagicMock(spec=ReadsComponent)
+        mockSample.rawForwardReads = MagicMock(spec=RawReadsComponent)
+        mockSample.rawReverseReads = MagicMock(spec=RawReadsComponent)
         mockSample.dataset.metadata.paired_end = True
-        flag = RAWREADS_0001.validate(sample=mockSample)
+        flag = SAMPLE_RAWREADS_0001.validate(sample=mockSample)
         assert flag.code == check_model.FlagCode.GREEN
         assert flag.message == "All expected raw read files present"
 
@@ -50,8 +50,8 @@ def test_RAWREADS_0001():
     with MonkeyPatch.context() as m:
         m.setattr(check_model, "ALLOWED_DEV_EXCEPTIONS", (SystemExit))
         mockSample = MagicMock(spec=BulkRNASeqSample)
-        mockSample.rawReads = MagicMock(spec=ReadsComponent)
+        mockSample.rawReads = MagicMock(spec=RawReadsComponent)
         mockSample.dataset.metadata.paired_end = False
-        flag = RAWREADS_0001.validate(sample=mockSample)
+        flag = SAMPLE_RAWREADS_0001.validate(sample=mockSample)
         assert flag.code == check_model.FlagCode.GREEN
         assert flag.message == "All expected raw read files present"
