@@ -49,7 +49,7 @@ class BulkRNASeqSample(TemplateSample):
     rawReads: Union[EmptyComponent, RawReadsComponent] = field(
         default_factory=EmptyComponent
     )
-    TrimReads: Union[EmptyComponent, TrimReadsComponent] = field(
+    trimReads: Union[EmptyComponent, TrimReadsComponent] = field(
         default_factory=EmptyComponent
     )
 
