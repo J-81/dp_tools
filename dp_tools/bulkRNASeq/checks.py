@@ -1,6 +1,8 @@
 import gzip
 import logging
+from pathlib import Path
 from dp_tools.components.components import RawReadsComponent
+from dp_tools.core.entity_model import DataDir, DataFile
 
 log = logging.getLogger(__name__)
 
@@ -60,18 +62,42 @@ def _validate_func_COMPONENT_READS(self: Check, component) -> Flag:
     for any read
     :param component: A ReadsComponent
     """
-    file = component
+    # assume passing first
+    # overwrite if flag conditions met
+    code = FlagCode.GREEN
+
+    # Subcheck: 1 ( can trigger HALT1 )
+    # check if expected files exist first
+    missing_files = list()
+    lines_with_issues = list()
+    i = 0
+
+    for expected_file in self.config["expected_data_files"]:
+        try:
+            # check the attribute is exists and is of the proper type     
+            assert any([isinstance(getattr(component, expected_file), DataFile), isinstance(getattr(component, expected_file), DataDir)])
+            # check the path exists
+            assert getattr(component, expected_file).path.exists()
+        except AssertionError:
+            code = FlagCode.HALT1
+            missing_files.append(expected_file)
+
+    # check if exiting makes sense before next checks
+    if code != FlagCode.GREEN:
+        return Flag(
+            check=self, code=code, message_args={"lines_with_issues": lines_with_issues, 'last_line_checked': i, 'missing_files':missing_files}
+        )
+
+    # subcheck: 2 ( can trigger HALT2,HALT3 )
+    # check fastq.gz file looks correct
+    file = component.fastqGZ.path
     count_lines_to_check = self.config["lines_to_check"]
-    expected_files = self.config["expected_data_files"]
 
     if count_lines_to_check == -1:
         count_lines_to_check = float("inf")
 
-    lines_with_issues = list()
-
-    # check for expected files
-
     # truncated files raise EOFError
+    # catch this as HALT3
     try:
         with gzip.open(file, "rb") as f:
             for i, line in enumerate(f):
@@ -92,20 +118,21 @@ def _validate_func_COMPONENT_READS(self: Check, component) -> Flag:
                 if i % 20_000_000 == 0:
                     log.debug(f"Checked {i} lines for {file}")
                     pass
-        if len(lines_with_issues) != 0:
-            code = FlagCode.GREEN
-        else:
+        if not len(lines_with_issues) == 0:
             code = FlagCode.HALT2
-    except EOFError:
+    except (EOFError, gzip.BadGzipFile):
         code = FlagCode.HALT3
+
+    # return flag
     return Flag(
-        check=self, code=code, message_args={"lines_with_issues": lines_with_issues}
+        check=self, code=code, message_args={"lines_with_issues": lines_with_issues, 'last_line_checked': i, 'missing_files':missing_files}
     )
 
 
 COMPONENT_RAWREADS_0001 = Check(
     config={
         "lines_to_check": 200_000_000,
+        # attributes names
         "expected_data_files": [
             "fastqGZ",
             "multiQCDir",
@@ -124,7 +151,7 @@ COMPONENT_RAWREADS_0001 = Check(
         FlagCode.GREEN: "Component passes all validation requirements.",
         FlagCode.HALT1: "Missing expected files: {missing_files}",
         FlagCode.HALT2: "Fastq.gz file has issues on lines: {lines_with_issues}",
-        FlagCode.HALT3: "Corrupted Fastq.gz file suspected: {last_line_checked}",
+        FlagCode.HALT3: "Corrupted Fastq.gz file suspected, last line number encountered: {last_line_checked}",
     },
     validate_func=_validate_func_COMPONENT_READS,
 )
