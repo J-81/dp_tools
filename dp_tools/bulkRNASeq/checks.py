@@ -169,3 +169,30 @@ COMPONENT_TRIMREADS_0001 = COMPONENT_RAWREADS_0001.copy_with_new_config(
         ],
     },
 )
+
+DATASET_RAWREADS_0001 = Check(
+    config={
+        "lines_to_check": 200_000_000,
+        # attributes names
+        "expected_data_files": [
+            "fastqGZ",
+            "multiQCDir",
+            "fastqcReportHTML",
+            "fastqcReportZIP",
+        ],
+    },
+    id="DATASET_RAWREADS_0001",
+    description=(
+        "Confirms that all read components (e.g. rawForwardReads, trimmedReads) should include the following: "
+        "Datafiles of the format: {expected_data_files} related to the reads component. "
+        "Additionally, the following checks are performed for each file type: \n"
+        "\tfastq.gz: First {lines_to_check} lines are checked for correct format. "
+    ),
+    flag_desc={
+        FlagCode.GREEN: "Component passes all validation requirements.",
+        FlagCode.HALT1: "Missing expected files: {missing_files}",
+        FlagCode.HALT2: "Fastq.gz file has issues on lines: {lines_with_issues}",
+        FlagCode.HALT3: "Corrupted Fastq.gz file suspected, last line number encountered: {last_line_checked}",
+    },
+    validate_func=_validate_func_COMPONENT_READS,
+)
