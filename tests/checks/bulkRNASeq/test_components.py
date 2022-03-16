@@ -6,7 +6,7 @@ import os
 from pathlib import Path
 from unittest.mock import MagicMock
 from dp_tools.bulkRNASeq.checks import COMPONENT_RAWREADS_0001, COMPONENT_TRIMREADS_0001
-from dp_tools.bulkRNASeq.loaders import load_from_bulk_rnaseq_raw_dir
+from dp_tools.bulkRNASeq.loaders import load_BulkRNASeq_STAGE_00
 from dp_tools.core import check_model
 from dp_tools.core.entity_model import DataFile
 
@@ -19,7 +19,7 @@ TEST_DIR = Path(os.environ["TEST_ASSETS_DIR"])
 
 def test_COMPONENT_READS_0001():
     target_data_dir = TEST_DIR / "GLDS-194"
-    ds = load_from_bulk_rnaseq_raw_dir(target_data_dir)
+    ds = load_BulkRNASeq_STAGE_00(target_data_dir)
     
     test_component = list(ds.dataset.samples.values())[0].rawForwardReads
 
@@ -56,7 +56,7 @@ def test_COMPONENT_READS_0001():
 
 def test_COMPONENT_TRIMREADS_0001():
     target_data_dir = TEST_DIR / "GLDS-194"
-    ds = load_from_bulk_rnaseq_raw_dir(target_data_dir)
+    ds = load_BulkRNASeq_STAGE_00(target_data_dir)
     
     test_component = list(ds.dataset.samples.values())[0].rawForwardReads
 

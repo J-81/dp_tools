@@ -5,7 +5,7 @@ import os
 from pytest import MonkeyPatch
 from dp_tools.bulkRNASeq.entity import BulkRNASeqSample
 
-from dp_tools.bulkRNASeq.loaders import load_from_bulk_rnaseq_raw_dir
+from dp_tools.bulkRNASeq.loaders import load_BulkRNASeq_STAGE_00
 from dp_tools.bulkRNASeq.vv_protocols import BulkRNASeq_VVProtocol_RawData
 
 # set for testing
@@ -18,7 +18,7 @@ def test_bulk_rnaseq_raw_data_validation(caplog):
     target_data_dir = TEST_DIR / "GLDS-194"
 
     caplog.set_level(CAPLEVEL)
-    ds = load_from_bulk_rnaseq_raw_dir(target_data_dir)
+    ds = load_BulkRNASeq_STAGE_00(target_data_dir)
     vv_protocol = BulkRNASeq_VVProtocol_RawData(dataset=ds.dataset)
 
     with caplog.at_level(CAPLEVEL):
