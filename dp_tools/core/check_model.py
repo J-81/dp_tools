@@ -5,6 +5,7 @@ import abc
 from dataclasses import dataclass, field
 import enum
 import re
+import traceback
 from typing import (
     Callable,
     ClassVar,
@@ -36,21 +37,21 @@ class FlagCode(enum.Enum):
 
     DEV_HANDLED = 90  # should be used when an error occurs due to developer related mistakes, rather than from the correctly loaded data
     DEV_UNHANDLED = 91  # should never be used directly, instead this should catch unhandled exceptions in the validate function
-    HALT1 = 80
-    HALT2 = 80
-    HALT3 = 80
-    HALT4 = 80
-    HALT5 = 80
-    RED1 = 50
-    RED2 = 50
-    RED3 = 50
-    RED4 = 50
-    RED5 = 50
-    YELLOW1 = 30
-    YELLOW2 = 30
-    YELLOW3 = 30
-    YELLOW4 = 30
-    YELLOW5 = 30
+    HALT1 = 81
+    HALT2 = 82
+    HALT3 = 83
+    HALT4 = 84
+    HALT5 = 85
+    RED1 = 51
+    RED2 = 52
+    RED3 = 53
+    RED4 = 54
+    RED5 = 55
+    YELLOW1 = 31
+    YELLOW2 = 32
+    YELLOW3 = 33
+    YELLOW4 = 34
+    YELLOW5 = 35
     GREEN = 20
     INFO = 10
 
@@ -93,7 +94,7 @@ class Check(abc.ABC):
         # add flag description for unhandled developer exception flags
         self.flag_desc[
             FlagCode.DEV_UNHANDLED
-        ] = "An unhandled exception occured in {function}: {e}"
+        ] = "An unhandled exception occured in {function}: {e}.\n{full_traceback}"
 
     def validate(self, *args, **kwargs):
         try:
@@ -104,7 +105,7 @@ class Check(abc.ABC):
             )
             return Flag(
                 code=FlagCode.DEV_UNHANDLED,
-                message_args={"function": self.validate_func, "e": e},
+                message_args={"function": self.validate_func, "e": e, "full_traceback": traceback.format_exc()},
                 check=self,
             )
 
@@ -188,7 +189,7 @@ class VVProtocol(abc.ABC):
     # EXPORT RELATED METHODS (POST VALIDATION)
     ###################################################################################################################
     def flags_to_df(self, schema="default") -> pd.DataFrame:
-        log.debug("Extracting info into schema {schema} records")
+        log.debug(f"Extracting info into schema {schema} records")
         match schema:
             # default dataframe format
             # entity_index, flag_code, checkID, message
@@ -202,15 +203,15 @@ class VVProtocol(abc.ABC):
                             record_full = record_partial | {"flag_code": flag.code.value, "check_id": flag.check.id, "message": flag.message}
                             records.append(record_full)
             # verbose dataframe format
-            # entity_index, flag_code, message, checkID, checkDescription
-            # tuple[str, str, str, str], int, str, str
+            # entity_index, flag_enum, flag_code, message, checkID, checkDescription
+            # tuple[str, str, str, str], str, int, str, str
             case "verbose":
                 records = list()
                 for entity_type in ["dataset","sample","component"]:
                     for entity, flags in self.flags[entity_type].items():
                         record_partial = {"entity_index": self._get_entity_index(entity)}
                         for flag in flags:
-                            record_full = record_partial | {"flag_code": flag.code.value, "message": flag.message, "check_id": flag.check.id, "check_description": flag.check.description}
+                            record_full = record_partial | {"flag_name": flag.code.name,"flag_code": flag.code.value, "message": flag.message, "check_id": flag.check.id, "check_description": flag.check.description}
                             records.append(record_full)
             case _:
                 raise ValueError(f"Schema: {schema} not defined")
@@ -235,5 +236,5 @@ class VVProtocol(abc.ABC):
                 attr_index = ",".join([d['attr'] for d in entity.entities.values()])
                 entity_index = (entity.dataset.dataSystem.name, entity.dataset.name, "", attr_index)
             case _:
-                raise ValueError("Unable to extract entity index from : {entity}")
+                raise ValueError(f"Unable to extract entity index from : {entity}")
         return entity_index
