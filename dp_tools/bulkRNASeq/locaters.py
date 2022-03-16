@@ -134,7 +134,7 @@ class Runsheet:
         return found[0]
 
 
-class RawFastq:
+class Fastq:
     RE_PRE_FORMAT = {
         "Raw": {
             "Forward": os.path.join(
