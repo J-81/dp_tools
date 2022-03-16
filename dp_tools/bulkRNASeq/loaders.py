@@ -25,7 +25,7 @@ from dp_tools.core.entity_model import (
 )
 
 from dp_tools.bulkRNASeq.entity import BulkRNASeqDataset, BulkRNASeqSample
-from dp_tools.bulkRNASeq.locaters import MultiQCDir, RawFastq, Runsheet
+from dp_tools.bulkRNASeq.locaters import FastqcReport, MultiQCDir, RawFastq, Runsheet
 from dp_tools.components import RawReadsComponent, BulkRNASeqMetadataComponent
 
 
@@ -45,6 +45,7 @@ def load_from_bulk_rnaseq_raw_dir(root_path: Path, dataSystem_name: str = None):
     rawFastq = RawFastq(search_root=root_path)
     runsheet = Runsheet(search_root=root_path)
     readsMQC = MultiQCDir(search_root=root_path)
+    fastqcReport = FastqcReport(search_root=root_path)
 
     # create dataset
     dataset = BulkRNASeqDataset(base=BaseDataset(name=dataSystem_name))
@@ -78,6 +79,8 @@ def load_from_bulk_rnaseq_raw_dir(root_path: Path, dataSystem_name: str = None):
                 base=BaseComponent(description="Raw Forward Reads"),
                 fastqGZ=DataFile(rawFastq.find(sample_name, type=("Raw", "Forward"))),
                 multiQCDir=datf_readsMQC,
+                fastqcReportHTML=DataFile(path=fastqcReport.find(sample_name=sample_name, ext="html", type=("Raw", "Forward"))),
+                fastqcReportZIP=DataFile(path=fastqcReport.find(sample_name=sample_name, ext="zip", type=("Raw", "Forward")))
             )
             raw_rev_reads = RawReadsComponent(
                 base=BaseComponent(description="Raw Reverse Reads"),
@@ -85,6 +88,8 @@ def load_from_bulk_rnaseq_raw_dir(root_path: Path, dataSystem_name: str = None):
                     path=rawFastq.find(sample_name, type=("Raw", "Reverse"))
                 ),
                 multiQCDir=datf_readsMQC,
+                fastqcReportHTML=DataFile(path=fastqcReport.find(sample_name=sample_name, ext="html", type=("Raw", "Reverse"))),
+                fastqcReportZIP=DataFile(path=fastqcReport.find(sample_name=sample_name, ext="zip", type=("Raw", "Reverse")))
             )
             sample.attach_component(raw_fwd_reads, attr="rawForwardReads")
             sample.attach_component(raw_rev_reads, attr="rawReverseReads")
@@ -95,6 +100,8 @@ def load_from_bulk_rnaseq_raw_dir(root_path: Path, dataSystem_name: str = None):
                     path=rawFastq.find(sample_name, type=("Raw", "Forward"))
                 ),
                 multiQCDir=datf_readsMQC,
+                fastqcReportHTML=DataFile(path=fastqcReport.find(sample_name=sample_name, ext="html", type=("Raw", "Forward"))),
+                fastqcReportZIP=DataFile(path=fastqcReport.find(sample_name=sample_name, ext="zip", type=("Raw", "Forward")))
             )
             sample.attach_component(raw_reads, attr="rawReads")
         # attach components

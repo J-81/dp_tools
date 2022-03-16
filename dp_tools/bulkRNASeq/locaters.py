@@ -57,6 +57,49 @@ class MultiQCDir:
         ), f"One and only find target should occur. Found: {found}. Pattern: {pattern}"
         return found[0]
 
+class FastqcReport:
+    RE_PRE_FORMAT = {
+        "Raw": {
+            "Forward": os.path.join(
+                "00-RawData", "FastQC_Reports", "{sample_name}_R1_raw.fastqc.{ext}"
+            ),
+            "Reverse": os.path.join(
+                "00-RawData", "FastQC_Reports", "{sample_name}_R2_raw.fastqc.{ext}"
+            ),
+        },
+        "Trimmed": {
+            "Forward": os.path.join(
+                "01-TG_Preproc", "FastQC_Reports", "{sample_name}_R1_trimmed.fastqc.{ext}"
+            ),
+            "Reverse": os.path.join(
+                "01-TG_Preproc", "FastQC_Reports", "{sample_name}_R2_trimmed.fastqc.{ext}"
+            ),
+        },
+    }
+
+    def __init__(self, search_root: Path):
+        self.search_root = search_root
+
+    def find(self, sample_name: str, type: Tuple[str, str], ext: str) -> Path:
+        found = list()
+        # replace needed for regex to interpret regex escape characters AFTER interpretting python escape characters
+        # (i.e. accomodate windows using the same separator as the escape char)
+        pattern = (
+            self.RE_PRE_FORMAT[type[0]][type[1]]
+            .format(sample_name=sample_name, ext=ext)
+            .replace("\\", r"\\")
+        )
+        log.debug(f"Locating raw fastqgz file {sample_name} with pattern: {pattern}")
+
+        for i, p in enumerate(_rIterDir(self.search_root)):
+            if re.match(pattern, str(p.relative_to(self.search_root))):
+                found.append(p)
+
+        # Here is where additional validation should occur if the main found resource is a path (e.g. the RSEM stat folder)
+        assert (
+            len(found) == 1
+        ), f"One and only find target should occur. Found: {found}. Pattern: {pattern}"
+        return found[0]
 
 class Runsheet:
     # replace needed for regex to interpret regex escape characters AFTER interpretting python escape characters
