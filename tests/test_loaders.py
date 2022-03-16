@@ -1,7 +1,7 @@
 from pathlib import Path
 import os
 
-from dp_tools.bulkRNASeq.loaders import load_from_bulk_rnaseq_raw_dir
+from dp_tools.bulkRNASeq.loaders import load_BulkRNASeq_STAGE_00, load_BulkRNASeq_STAGE_01
 import pytest
 
 # set for testing
@@ -11,7 +11,7 @@ def test_from_bulk_rnaseq_with_bad_rootdir():
     target_data_dir = TEST_DIR / "GLDS-48_BUTWITHTYPOS"
 
     with pytest.raises(FileNotFoundError):
-        ds = load_from_bulk_rnaseq_raw_dir(
+        ds = load_BulkRNASeq_STAGE_00(
             target_data_dir,
             dataSystem_name = "GLDS-48"
         )
@@ -22,7 +22,7 @@ def test_from_bulk_rnaseq_raw_dir_single(caplog):
     target_data_dir = TEST_DIR / "GLDS-48_PostDemultiplex"
 
     caplog.set_level(0)
-    ds = load_from_bulk_rnaseq_raw_dir(
+    ds = load_BulkRNASeq_STAGE_00(
         target_data_dir,
         dataSystem_name = "GLDS-48"
     )
@@ -43,7 +43,7 @@ def test_from_bulk_rnaseq_raw_dir_paired(caplog):
     target_data_dir = TEST_DIR / "GLDS-207_PostDemultiplex"
 
     caplog.set_level(0)
-    ds = load_from_bulk_rnaseq_raw_dir(
+    ds = load_BulkRNASeq_STAGE_00(
         target_data_dir,
         dataSystem_name = "GLDS-207"
     )
@@ -59,3 +59,29 @@ def test_from_bulk_rnaseq_raw_dir_paired(caplog):
     for sample_name in ds.dataset.samples:
         assert len(list(ds.dataset.samples[sample_name].rawForwardReads.multiQCDir.path.iterdir())) == 2
         assert len(list(ds.dataset.samples[sample_name].rawReverseReads.multiQCDir.path.iterdir())) == 2
+
+def test_from_bulk_rnaseq_STAGE_01(caplog):
+    """ Tests loader for state after demultiplexing for single end study """
+    target_data_dir = TEST_DIR / "GLDS-207_TruncatedProcessed/"
+
+    caplog.set_level(0)
+    ds = load_BulkRNASeq_STAGE_01(*load_BulkRNASeq_STAGE_00(
+        target_data_dir,
+        dataSystem_name = "GLDS-207",
+        stack = True
+    ))
+
+    # pull dataset
+    dataset = ds.datasets["GLDS-207__BulkRNASeq"]
+
+    assert list(dataset.samples.keys()) == [
+        'KCNQ370_Female_Ground_Control-01', 'KCNQ370_Female_Ground_Control-02', 'KCNQ370_Female_Ground_Control-03', 'KCNQ370_Female_Ground_Control-04', 'KCNQ97_Female_Ground_Control-05', 'KCNQ97_Female_Ground_Control-06', 'KCNQ97_Female_Ground_Control-07', 'KCNQ97_Female_Ground_Control-08', 'Sei_ts1-Female_Ground_Control-09', 'Sei_ts1-Female_Ground_Control-10', 'Sei_ts1-Female_Ground_Control-11', 'Sei_ts1-Female_Ground_Control-12', 'CS-Female_Ground_Control-13', 'CS-Female_Ground_Control-14', 'CS-Female_Ground_Control-15', 'CS-Female_Ground_Control-16', 'KCNQ370_Female_Space_Flown-17', 'KCNQ370_Female_Space_Flown-18', 'KCNQ370_Female_Space_Flown-19', 'KCNQ370_Female_Space_Flown-20', 'KCNQ97_Female_Space_Flown-21', 'KCNQ97_Female_Space_Flown-22', 'KCNQ97_Female_Space_Flown-23', 'KCNQ97_Female_Space_Flown-24', 'Sei_ts1-Female_Space_Flown-25', 'Sei_ts1-Female_Space_Flown-26', 'Sei_ts1-Female_Space_Flown-27', 'Sei_ts1-Female_Space_Flown-28', 'CS-Female_Space_Flown-29', 'CS-Female_Space_Flown-30', 'CS-Female_Space_Flown-31', 'CS-Female_Space_Flown-32'
+    ]
+
+    # check expected loaded components [raw directory]
+    for sample_name in ds.dataset.samples:
+        assert len(list(ds.dataset.samples[sample_name].rawForwardReads.multiQCDir.path.iterdir())) == 2
+        assert len(list(ds.dataset.samples[sample_name].rawReverseReads.multiQCDir.path.iterdir())) == 2
+        assert len(list(ds.dataset.samples[sample_name].trimForwardReads.multiQCDir.path.iterdir())) == 2
+        assert len(list(ds.dataset.samples[sample_name].trimReverseReads.multiQCDir.path.iterdir())) == 2
+    1/0
