@@ -60,7 +60,7 @@ def test_from_bulk_rnaseq_raw_dir_paired(caplog):
         assert len(list(ds.dataset.samples[sample_name].rawForwardReads.multiQCDir.path.iterdir())) == 2
         assert len(list(ds.dataset.samples[sample_name].rawReverseReads.multiQCDir.path.iterdir())) == 2
 
-def test_from_bulk_rnaseq_STAGE_01(caplog):
+def test_from_bulk_rnaseq_STAGE_01_paired(caplog):
     """ Tests loader for state after demultiplexing for single end study """
     target_data_dir = TEST_DIR / "GLDS-207_TruncatedProcessed/"
 
@@ -84,4 +84,25 @@ def test_from_bulk_rnaseq_STAGE_01(caplog):
         assert len(list(ds.dataset.samples[sample_name].rawReverseReads.multiQCDir.path.iterdir())) == 2
         assert len(list(ds.dataset.samples[sample_name].trimForwardReads.multiQCDir.path.iterdir())) == 2
         assert len(list(ds.dataset.samples[sample_name].trimReverseReads.multiQCDir.path.iterdir())) == 2
-    1/0
+
+def test_bulk_rnaseq_STAGE_01_single(caplog):
+    """ Tests loader for state after demultiplexing for single end study """
+    target_data_dir = TEST_DIR / "GLDS-48_TruncatedProcessed"
+
+    caplog.set_level(0)
+    ds = load_BulkRNASeq_STAGE_01(*load_BulkRNASeq_STAGE_00(
+        target_data_dir,
+        dataSystem_name = "GLDS-48",
+        stack = True
+    ))
+
+    # pull dataset
+    dataset = ds.datasets["GLDS-48__BulkRNASeq"]
+
+    assert list(dataset.samples.keys()) == [
+        'Mmus_C57-6J_LVR_GC_I_Rep1_M31', 'Mmus_C57-6J_LVR_GC_I_Rep2_M32', 'Mmus_C57-6J_LVR_FLT_I_Rep1_M21', 'Mmus_C57-6J_LVR_FLT_I_Rep2_M22', 'Mmus_C57-6J_LVR_GC_C_Rep1_M36', 'Mmus_C57-6J_LVR_GC_C_Rep2_M37', 'Mmus_C57-6J_LVR_GC_C_Rep3_M38', 'Mmus_C57-6J_LVR_GC_C_Rep4_M39', 'Mmus_C57-6J_LVR_GC_C_Rep5_M40', 'Mmus_C57-6J_LVR_FLT_C_Rep1_M25', 'Mmus_C57-6J_LVR_FLT_C_Rep2_M26', 'Mmus_C57-6J_LVR_FLT_C_Rep3_M27', 'Mmus_C57-6J_LVR_FLT_C_Rep4_M28', 'Mmus_C57-6J_LVR_FLT_C_Rep5_M30'
+    ]
+
+    # check expected loaded components [raw directory]
+    assert len(list(ds.dataset.samples['Mmus_C57-6J_LVR_GC_I_Rep1_M31'].rawReads.multiQCDir.path.iterdir())) == 2
+    assert len(list(ds.dataset.samples['Mmus_C57-6J_LVR_GC_I_Rep1_M31'].trimReads.multiQCDir.path.iterdir())) == 2
