@@ -38,14 +38,14 @@ def _validate_func_SAMPLE_RAWREADS_0001(self: Check, sample: TemplateSample) -> 
 
     # check parity
     if all([check_read_parity, code == FlagCode.GREEN]):
-        if not sample.rawForwardReads.count == sample.rawReverseReads.count:
+        if not sample.rawForwardReads.total_sequences == sample.rawReverseReads.total_sequences:
             code = FlagCode.HALT2
 
     return Flag(
         check=self, code=code, message_args={
             "missing_components": missing_components,            
-            'forward_read_count': sample.rawForwardReads.count if code == FlagCode.HALT2 else None, 
-            'reverse_read_count': sample.rawReverseReads.count if code == FlagCode.HALT2 else None}
+            'forward_read_count': sample.rawForwardReads.total_sequences if code == FlagCode.HALT2 else None, 
+            'reverse_read_count': sample.rawReverseReads.total_sequences if code == FlagCode.HALT2 else None}
     )
 
 
