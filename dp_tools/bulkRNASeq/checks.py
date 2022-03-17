@@ -2,18 +2,24 @@ import gzip
 import logging
 from pathlib import Path
 from dp_tools.components.components import RawReadsComponent
-from dp_tools.core.entity_model import DataDir, DataFile
+from dp_tools.core.entity_model import DataDir, DataFile, TemplateDataset, TemplateSample
 
 log = logging.getLogger(__name__)
 
 from dp_tools.core.check_model import Check, Flag, FlagCode
 
 
-def _validate_func_SAMPLE_RAWREADS_0001(self: Check, sample) -> Flag:
+def _validate_func_SAMPLE_RAWREADS_0001(self: Check, sample: TemplateSample) -> Flag:
+    # assume passing unless a flag condition arises
+    code = FlagCode.GREEN
+
+    # set branching informative parameters based on layout
     if sample.dataset.metadata.paired_end:
         expected_components = ["rawForwardReads", "rawReverseReads"]
+        check_read_parity = True
     else:
         expected_components = ["rawReads"]
+        check_read_parity = False
 
     missing_components = list()
     unexpected_components = list()
@@ -29,10 +35,17 @@ def _validate_func_SAMPLE_RAWREADS_0001(self: Check, sample) -> Flag:
 
     if missing_components:
         code = FlagCode.HALT1
-    else:
-        code = FlagCode.GREEN
+
+    # check parity
+    if all([check_read_parity, code == FlagCode.GREEN]):
+        if not sample.rawForwardReads.count == sample.rawReverseReads.count:
+            code = FlagCode.HALT2
+
     return Flag(
-        check=self, code=code, message_args={"missing_components": missing_components}
+        check=self, code=code, message_args={
+            "missing_components": missing_components,            
+            'forward_read_count': sample.rawForwardReads.count if code == FlagCode.HALT2 else None, 
+            'reverse_read_count': sample.rawReverseReads.count if code == FlagCode.HALT2 else None}
     )
 
 
@@ -44,10 +57,12 @@ SAMPLE_RAWREADS_0001 = Check(
         "For paired end studies, this means both rawForwardReads and rawReverseReads "
         "Are attached components. For single end studies, "
         "this means the rawReads component is attached. "
+        "For paired end studies, confirms that forward and reverse read counts match."
     ),
     flag_desc={
         FlagCode.GREEN: "All expected raw read files present",
         FlagCode.HALT1: "Missing expected components: {missing_components}",
+        FlagCode.HALT2: "Forward and reverse reads counts differ. Forward: ({forward_read_count}) Reverse: ({reverse_read_count})",
         FlagCode.DEV_HANDLED: "Searched for component, but component was not expected by entity model: {unexpected_components}",
     },
     validate_func=_validate_func_SAMPLE_RAWREADS_0001,
@@ -125,7 +140,13 @@ def _validate_func_COMPONENT_READS(self: Check, component) -> Flag:
 
     # return flag
     return Flag(
-        check=self, code=code, message_args={"lines_with_issues": lines_with_issues, 'last_line_checked': i, 'missing_files':missing_files}
+        check=self, 
+        code=code, 
+        message_args={
+            "lines_with_issues": lines_with_issues, 
+            'last_line_checked': i, 
+            'missing_files':missing_files
+            }
     )
 
 
@@ -170,6 +191,10 @@ COMPONENT_TRIMREADS_0001 = COMPONENT_RAWREADS_0001.copy_with_new_config(
     },
 )
 
+def _validate_func_DATASET_READS(self: Check, dataset: TemplateDataset):
+    ...
+    print("h")
+
 DATASET_RAWREADS_0001 = Check(
     config={
         "lines_to_check": 200_000_000,
@@ -183,8 +208,11 @@ DATASET_RAWREADS_0001 = Check(
     },
     id="DATASET_RAWREADS_0001",
     description=(
-        "Confirms that all read components (e.g. rawForwardReads, trimmedReads) should include the following: "
-        "Datafiles of the format: {expected_data_files} related to the reads component. "
+        "Performs a validation across all samples' raw reads "
+        "Specifically, checks for any sample-wise outliers in the following metrics: "
+        "\n\t fastqGZ file size, read counts. "
+        "\Also, checks for any sample-wise outliers in the following metrics with the read sets: "
+        "\n\t read counts. "
         "Additionally, the following checks are performed for each file type: \n"
         "\tfastq.gz: First {lines_to_check} lines are checked for correct format. "
     ),
@@ -194,5 +222,19 @@ DATASET_RAWREADS_0001 = Check(
         FlagCode.HALT2: "Fastq.gz file has issues on lines: {lines_with_issues}",
         FlagCode.HALT3: "Corrupted Fastq.gz file suspected, last line number encountered: {last_line_checked}",
     },
-    validate_func=_validate_func_COMPONENT_READS,
+    validate_func=_validate_func_DATASET_READS,
+)
+
+DATASET_TRIMREADS_0001 = DATASET_RAWREADS_0001.copy_with_new_config(
+    id="DATASET_TRIMREADS_0001",
+    config={
+        "lines_to_check": 200_000_000,
+        "expected_data_files": [
+            "fastqGZ",
+            "multiQCDir",
+            "fastqcReportHTML",
+            "fastqcReportZIP",
+            "trimmingReportTXT",
+        ],
+    },
 )
