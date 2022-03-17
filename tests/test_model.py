@@ -1,20 +1,11 @@
-from pathlib import Path
 from dp_tools.bulkRNASeq.entity import BulkRNASeqDataset, BulkRNASeqSample
 from dp_tools.components.components import RawReadsComponent
 from dp_tools.core import entity_model
 import pytest
-import logging
 from unittest import mock
 
-import os
 
-# set for testing
-TEST_DIR = Path(os.environ["TEST_ASSETS_DIR"])
-
-
-def test_abc_inits_fails(caplog):
-    caplog.set_level(logging.DEBUG)
-
+def test_abc_init_fails():
     with pytest.raises(TypeError):
         entity_model.BaseSample()
 
@@ -31,34 +22,19 @@ def test_empty_GLDSDataSystem():
     assert dSys.datasets == dict()
 
 
-def test_datafile(caplog):
-    target_data_file = (
-        TEST_DIR
-        / "GLDS-194"
-        / "Metadata"
-        / "AST_autogen_template_RNASeq_RCP_GLDS-194_RNASeq_runsheet.csv"
-    )
-
-    datf = entity_model.DataFile(path=target_data_file)
+def test_datafile(glds194_runsheetPath):
+    datf = entity_model.DataFile(path=glds194_runsheetPath)
     assert datf.md5sum == "ef85ec532b3e74b720131b3f5430443d"
-    assert datf.path == target_data_file
+    assert datf.path == glds194_runsheetPath
 
 
-def test_datafile_with_dummy_md5sum(caplog):
-    target_data_file = (
-        TEST_DIR
-        / "GLDS-194"
-        / "00-RawData"
-        / "Fastq"
-        / "Mmus_BAL-TAL_LRTN_BSL_Rep1_B7_R1_raw.fastq.gz"
-    )
-
-    datf = entity_model.DataFile(path=target_data_file, dummy_md5sum=True)
-    assert datf.md5sum == "DUMMY:9127c4b322ba3f1e311bab2832806149"
-    assert datf.path == target_data_file
+def test_datafile_with_dummy_md5sum(glds194_runsheetPath):
+    datf = entity_model.DataFile(path=glds194_runsheetPath, dummy_md5sum=True)
+    assert datf.md5sum == "DUMMY:a5bfa1c912584b8a58e0fb9a56178778"
+    assert datf.path == glds194_runsheetPath
 
 
-def test_bulk_rna_seq_dataset(caplog):
+def test_bulkRNASeq_dataset(caplog):
     dataset = BulkRNASeqDataset(base=entity_model.BaseDataset(name="TestDSet"))
 
     bad_sample = "sample1"
@@ -79,7 +55,7 @@ def test_bulk_rna_seq_dataset(caplog):
     dataset.validate()
 
 
-def test_bulk_rna_seq_sample(caplog):
+def test_bulkRNASeq_sample(caplog):
     caplog.set_level(0)
     sample = BulkRNASeqSample(base=entity_model.BaseSample(name="test_sample_1"))
 
@@ -107,7 +83,7 @@ def test_bulk_rna_seq_sample(caplog):
     assert isinstance(sample.rawReverseReads, entity_model.EmptyComponent)
 
 
-def test_bulk_rna_seq_integration(caplog):
+def test_bulkRNASeq_full_noComponents(caplog):
     dataSystem = entity_model.GLDSDataSystem(
         base=entity_model.BaseDataSystem(name="Test_dataSystem_1")
     )
