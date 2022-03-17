@@ -65,13 +65,13 @@ def typo_test_dir():
     return TEST_DIR / "GLDS-48_BUTWITHTYPOS"
 
 
-def test_bulk_rnaseq_with_bad_rootdir(typo_test_dir):
+def test_bulkRNASeq_with_bad_rootdir(typo_test_dir):
 
     with pytest.raises(FileNotFoundError):
         ds = load_BulkRNASeq_STAGE_00(typo_test_dir, dataSystem_name="GLDS-48")
 
 
-def test_bulk_rnaseq_STAGE00_single(caplog, glds48_test_dir, glds48_sample_names):
+def test_bulkRNASeq_STAGE00_single(caplog, glds48_test_dir, glds48_sample_names):
     """ Tests loader for state after demultiplexing for single end study """
 
     caplog.set_level(0)
@@ -87,7 +87,7 @@ def test_bulk_rnaseq_STAGE00_single(caplog, glds48_test_dir, glds48_sample_names
         assert len(list(sample.rawReads.multiQCDir.path.iterdir())) == 2
 
 
-def test_bulk_rnaseq_STAGE00_paired(caplog, glds194_test_dir, glds194_sample_names):
+def test_bulkRNASeq_STAGE00_paired(caplog, glds194_test_dir, glds194_sample_names):
     """ Tests loader for state after demultiplexing for single end study """
 
     caplog.set_level(0)
@@ -104,7 +104,7 @@ def test_bulk_rnaseq_STAGE00_paired(caplog, glds194_test_dir, glds194_sample_nam
         assert len(list(sample.rawReverseReads.multiQCDir.path.iterdir())) == 2
 
 
-def test_bulk_rnaseq_STAGE01_single(caplog, glds48_test_dir, glds48_sample_names):
+def test_bulkRNASeq_STAGE01_single(caplog, glds48_test_dir, glds48_sample_names):
     """ Tests loader for state after demultiplexing for single end study """
 
     caplog.set_level(0)
@@ -125,7 +125,7 @@ def test_bulk_rnaseq_STAGE01_single(caplog, glds48_test_dir, glds48_sample_names
         assert len(list(sample.trimReads.multiQCDir.path.iterdir())) == 2
 
 
-def test_bulk_rnaseq_STAGE01_paired(caplog, glds194_test_dir):
+def test_bulkRNASeq_STAGE01_paired(caplog, glds194_test_dir):
     """ Tests loader for state after demultiplexing for single end study """
 
     caplog.set_level(0)
