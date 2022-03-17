@@ -47,7 +47,8 @@ class DataFile:
     )  # used to replace md5sum of contents with md5sum of the file name
 
     def __post_init__(self):
-        assert self.path.is_file()
+        if not self.path.is_file():
+            raise FileNotFoundError(f"Cannot create DataFile with non-existent file: {self.path}")
         if self.dummy_md5sum:
             # generate md5sum based on the path/file name only
             # this computes extremely fast and is advised for testing
