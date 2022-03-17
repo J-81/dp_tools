@@ -1,11 +1,12 @@
 from dataclasses import dataclass, field
-from typing import List, Tuple, Union
+from typing import Dict, List, Tuple, Union
 
 import logging
 
 log = logging.getLogger(__name__)
 
 import pandas as pd
+import multiqc
 
 from dp_tools.core.model_commons import strict_type_checks
 from dp_tools.core.entity_model import (
@@ -14,10 +15,27 @@ from dp_tools.core.entity_model import (
     DataFile,
     TemplateComponent,
 )
+from dp_tools.core.utilites.multiqc_tools import format_as_dataframe, get_general_stats
 
+class ReadsComponent(TemplateComponent):
+    _count: int
+    # TODO: refine this type hint
+    _mqc_data: dict
+
+    @property
+    def count(self):
+        if not getattr(self,'_count'):
+            self._count = self.mqc_data
+        return self._count
+    
+    @property
+    def mqc_general_stats(self) -> Dict:
+        if not getattr(self,'_mqc_data'):
+            self._mqc_data = get_general_stats(multiqc.run(analysis_dir = [self.fastqcReportZIP.path], no_report=True, no_data_dir=True, plots_interactive=True))
+        return self._mqc_data
 
 @dataclass(eq=False)
-class RawReadsComponent(TemplateComponent):
+class RawReadsComponent(ReadsComponent):
 
     fastqGZ: DataFile
     base: BaseComponent = field(repr=False)
@@ -28,7 +46,7 @@ class RawReadsComponent(TemplateComponent):
 
 
 @dataclass(eq=False)
-class TrimReadsComponent(TemplateComponent):
+class TrimReadsComponent(ReadsComponent):
 
     fastqGZ: DataFile
     base: BaseComponent = field(repr=False)
