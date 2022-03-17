@@ -8,5 +8,6 @@ dependencies:
    - pandas
    - samtools
    - isatools
+   - multiqc
    - pip
 
