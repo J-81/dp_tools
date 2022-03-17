@@ -1,4 +1,5 @@
 from collections import defaultdict
+import enum
 from typing import Dict, List
 import logging
 log = logging.getLogger(__name__)
@@ -8,24 +9,40 @@ from dp_tools.core.check_model import Flag, VVProtocol
 from dp_tools.bulkRNASeq.checks import (
     COMPONENT_RAWREADS_0001,
     COMPONENT_TRIMREADS_0001,
+    DATASET_RAWREADS_0001,
+    DATASET_TRIMREADS_0001,
     SAMPLE_RAWREADS_0001,
 )
 from dp_tools.core.entity_model import TemplateComponent
 from dp_tools.components import BulkRNASeqMetadataComponent, RawReadsComponent, TrimReadsComponent
 
+class STAGE(enum.Enum):
+    Demultiplexed = 0
+    Reads_PreProcessed = 1
+    GenomeAligned = 2
+    GeneCounted = 3
+    DGE = 4
+
+    # allow comparing stages
+    # used to check if a sufficient stage has been achieved
+    def __ge__(self, other):
+        return self.value >= other.value
+
 
 class BulkRNASeq_VVProtocol_RawData(VVProtocol):
     expected_dataset_class = BulkRNASeqDataset
+    stage: STAGE = STAGE.Demultiplexed
 
     def validate_dataset(self) -> Dict[BulkRNASeqDataset, List[Flag]]:
         flags: Dict[BulkRNASeqDataset, List[Flag]] = defaultdict(list)
-        flags[self.dataset] = list()
+        if self.stage >= STAGE.Demultiplexed: flags[self.dataset].append(DATASET_RAWREADS_0001.validate(self.dataset))
+        if self.stage >= STAGE.Reads_PreProcessed: flags[self.dataset].append(DATASET_TRIMREADS_0001.validate(self.dataset))
         return flags
 
     def validate_samples(self) -> Dict[BulkRNASeqSample, List[Flag]]:
         flags: Dict[BulkRNASeqSample, List[Flag]] = defaultdict(list)
         for sample in self.dataset.samples.values():
-            flags[sample].append(SAMPLE_RAWREADS_0001.validate(sample=sample))
+            if self.stage >= STAGE.Demultiplexed: flags[sample].append(SAMPLE_RAWREADS_0001.validate(sample=sample))
         return flags
 
     def validate_components(self) -> Dict[TemplateComponent, List[Flag]]:
@@ -35,9 +52,9 @@ class BulkRNASeq_VVProtocol_RawData(VVProtocol):
             log.info(f"Validating component: {component} with type {type(component)}")
             match component:
                 case RawReadsComponent():
-                    flags[component].append(COMPONENT_RAWREADS_0001.validate(component))
+                    if self.stage >= STAGE.Demultiplexed: flags[component].append(COMPONENT_RAWREADS_0001.validate(component))
                 case TrimReadsComponent():
-                    flags[component].append(COMPONENT_TRIMREADS_0001.validate(component))
+                    if self.stage >= STAGE.Reads_PreProcessed: flags[component].append(COMPONENT_TRIMREADS_0001.validate(component))
                 case BulkRNASeqMetadataComponent():
                     flags[component] = list()
                 case _:
