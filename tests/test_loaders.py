@@ -46,27 +46,6 @@ def test_bulkRNASeq_STAGE00_paired(caplog, glds194_test_dir, glds194_sample_name
         assert len(list(sample.rawReverseReads.multiQCDir.path.iterdir())) == 2
 
 
-def test_bulkRNASeq_STAGE01_single(caplog, glds48_test_dir, glds48_sample_names):
-    """ Tests loader for state after demultiplexing for single end study """
-
-    caplog.set_level(0)
-    ds = load_BulkRNASeq_STAGE_01(
-        *load_BulkRNASeq_STAGE_00(
-            glds48_test_dir, dataSystem_name="GLDS-48", stack=True
-        )
-    )
-
-    # pull dataset
-    dataset = ds.datasets["GLDS-48__BulkRNASeq"]
-
-    assert list(dataset.samples.keys()) == glds48_sample_names
-
-    # check expected loaded components [raw directory]
-    for sample in ds.dataset.samples.values():
-        assert len(list(sample.rawReads.multiQCDir.path.iterdir())) == 2
-        assert len(list(sample.trimReads.multiQCDir.path.iterdir())) == 2
-
-
 def test_bulkRNASeq_STAGE01_paired(caplog, glds194_test_dir):
     """ Tests loader for state after demultiplexing for single end study """
 
@@ -103,3 +82,47 @@ def test_bulkRNASeq_STAGE01_paired(caplog, glds194_test_dir):
         assert len(list(sample.trimForwardReads.multiQCDir.path.iterdir())) == 2
         assert len(list(sample.trimReverseReads.multiQCDir.path.iterdir())) == 2
 
+
+def test_bulkRNASeq_STAGE01_single(caplog, glds48_test_dir, glds48_sample_names):
+    """ Tests loader for state after demultiplexing for single end study """
+
+    caplog.set_level(0)
+    ds = load_BulkRNASeq_STAGE_01(
+        *load_BulkRNASeq_STAGE_00(
+            glds48_test_dir, dataSystem_name="GLDS-48", stack=True
+        )
+    )
+
+    # pull dataset
+    dataset = ds.datasets["GLDS-48__BulkRNASeq"]
+
+    assert list(dataset.samples.keys()) == glds48_sample_names
+
+    # check expected loaded components [raw directory]
+    for sample in ds.dataset.samples.values():
+        assert len(list(sample.rawReads.multiQCDir.path.iterdir())) == 2
+        assert len(list(sample.trimReads.multiQCDir.path.iterdir())) == 2
+
+
+def test_bulkRNASeq_STAGE02_paired(caplog, glds194_test_dir):
+    raise NotImplementedError
+
+
+def test_bulkRNASeq_STAGE02_single(caplog, glds48_test_dir, glds48_sample_names):
+    raise NotImplementedError
+
+
+def test_bulkRNASeq_STAGE03_paired(caplog, glds194_test_dir):
+    raise NotImplementedError
+
+
+def test_bulkRNASeq_STAGE03_single(caplog, glds48_test_dir, glds48_sample_names):
+    raise NotImplementedError
+
+
+def test_bulkRNASeq_STAGE04_paired(caplog, glds194_test_dir):
+    raise NotImplementedError
+
+
+def test_bulkRNASeq_STAGE04_single(caplog, glds48_test_dir, glds48_sample_names):
+    raise NotImplementedError

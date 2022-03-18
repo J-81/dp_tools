@@ -13,19 +13,15 @@ from dp_tools.core.entity_model import DataFile
 
 from pytest import MonkeyPatch
 
-# set for testing
-TEST_DIR = Path(os.environ["TEST_ASSETS_DIR"])
 
-    
-def test_COMPONENT_READS_0001():
-    target_data_dir = TEST_DIR / "GLDS-194"
-    ds = load_BulkRNASeq_STAGE_00(target_data_dir)
-    
+def test_COMPONENT_RAWREADS_0001_paired(glds194_dataSystem_STAGE00):
+    ds = glds194_dataSystem_STAGE00
+
     test_component = list(ds.dataset.samples.values())[0].rawForwardReads
 
     # expected GREEN
     flag = COMPONENT_RAWREADS_0001.validate(test_component)
-    assert flag.code.name == 'GREEN'
+    assert flag.code.name == "GREEN"
 
     # expected HALT1
     with MonkeyPatch.context() as m:
@@ -33,12 +29,12 @@ def test_COMPONENT_READS_0001():
         m.setattr(test_component, "fastqGZ", None)
         m.setattr(test_component, "fastqcReportZIP", None)
         flag = COMPONENT_RAWREADS_0001.validate(test_component)
-        assert flag.code.name == 'HALT1'
+        assert flag.code.name == "HALT1"
         assert flag.message == "Missing expected files: ['fastqGZ', 'fastqcReportZIP']"
 
     # expected HALT2
     # TODO: requires a true truncated test file or something similar
-    #with MonkeyPatch.context() as m:
+    # with MonkeyPatch.context() as m:
     #    m.setattr(gzip, "open", lambda: raise EOFError)
     #    flag = COMPONENT_RAWREADS_0001.validate(test_component)
     #    assert flag.code.name == 'HALT2'
@@ -46,40 +42,80 @@ def test_COMPONENT_READS_0001():
     # expected HALT3
     with MonkeyPatch.context() as m:
         m.setattr(check_model, "ALLOWED_DEV_EXCEPTIONS", (SystemExit))
-        mock_path = io.BytesIO(b'bad file contents')
+        mock_path = io.BytesIO(b"bad file contents")
         mock_path.exists = lambda: True
         test_component_monkey_patch = copy.deepcopy(test_component)
         test_component_monkey_patch.fastqGZ.path = mock_path
         flag = COMPONENT_RAWREADS_0001.validate(test_component_monkey_patch)
-        assert flag.code.name == 'HALT3'
-        assert flag.message == "Corrupted Fastq.gz file suspected, last line number encountered: 0"
+        assert flag.code.name == "HALT3"
+        assert (
+            flag.message
+            == "Corrupted Fastq.gz file suspected, last line number encountered: 0"
+        )
 
-def test_COMPONENT_TRIMREADS_0001():
-    target_data_dir = TEST_DIR / "GLDS-194"
-    ds = load_BulkRNASeq_STAGE_00(target_data_dir)
-    
-    test_component = list(ds.dataset.samples.values())[0].rawForwardReads
+def test_COMPONENT_RAWREADS_0001_single(glds48_dataSystem_STAGE00):
+    ds = glds48_dataSystem_STAGE00
 
-    # TODO: remove after implementing trimReads
-    test_component.trimmingReportTXT = MagicMock(spec=DataFile)
-    test_component.trimmingReportTXT.path = MagicMock(spec=Path)
-    test_component.trimmingReportTXT.path.exists = lambda: True
+    test_component = list(ds.dataset.samples.values())[0].rawReads
 
     # expected GREEN
-    flag = COMPONENT_TRIMREADS_0001.validate(test_component)
-    assert flag.code.name == 'GREEN'
+    with MonkeyPatch.context() as m:
+        m.setattr(check_model, "ALLOWED_DEV_EXCEPTIONS", (SystemExit))
+        flag = COMPONENT_RAWREADS_0001.validate(test_component)
+        assert flag.code.name == "GREEN"
+
+    # expected HALT1
+    with MonkeyPatch.context() as m:
+        m.setattr(check_model, "ALLOWED_DEV_EXCEPTIONS", (SystemExit))
+        m.setattr(test_component, "fastqGZ", None)
+        m.setattr(test_component, "fastqcReportZIP", None)
+        flag = COMPONENT_RAWREADS_0001.validate(test_component)
+        assert flag.code.name == "HALT1"
+        assert flag.message == "Missing expected files: ['fastqGZ', 'fastqcReportZIP']"
+
+    # expected HALT2
+    # TODO: requires a true truncated test file or something similar
+    # with MonkeyPatch.context() as m:
+    #    m.setattr(gzip, "open", lambda: raise EOFError)
+    #    flag = COMPONENT_RAWREADS_0001.validate(test_component)
+    #    assert flag.code.name == 'HALT2'
+
+    # expected HALT3
+    with MonkeyPatch.context() as m:
+        m.setattr(check_model, "ALLOWED_DEV_EXCEPTIONS", (SystemExit))
+        mock_path = io.BytesIO(b"bad file contents")
+        mock_path.exists = lambda: True
+        test_component_monkey_patch = copy.deepcopy(test_component)
+        test_component_monkey_patch.fastqGZ.path = mock_path
+        flag = COMPONENT_RAWREADS_0001.validate(test_component_monkey_patch)
+        assert flag.code.name == "HALT3"
+        assert (
+            flag.message
+            == "Corrupted Fastq.gz file suspected, last line number encountered: 0"
+        )
+
+def test_COMPONENT_TRIMREADS_0001_paired(glds194_dataSystem_STAGE01):
+    ds = glds194_dataSystem_STAGE01
+
+    test_component = list(ds.dataset.samples.values())[0].trimForwardReads
+
+    # expected GREEN
+    with MonkeyPatch.context() as m:
+        m.setattr(check_model, "ALLOWED_DEV_EXCEPTIONS", (SystemExit))
+        flag = COMPONENT_TRIMREADS_0001.validate(test_component)
+        assert flag.code.name == "GREEN"
 
     # expected HALT1
     with MonkeyPatch.context() as m:
         m.setattr(check_model, "ALLOWED_DEV_EXCEPTIONS", (SystemExit))
         m.setattr(test_component, "trimmingReportTXT", None)
         flag = COMPONENT_TRIMREADS_0001.validate(test_component)
-        assert flag.code.name == 'HALT1'
+        assert flag.code.name == "HALT1"
         assert flag.message == "Missing expected files: ['trimmingReportTXT']"
 
     # expected HALT2
     # TODO: requires a true truncated test file or something similar
-    #with MonkeyPatch.context() as m:
+    # with MonkeyPatch.context() as m:
     #    m.setattr(gzip, "open", lambda: raise EOFError)
     #    flag = COMPONENT_RAWREADS_0001.validate(test_component)
     #    assert flag.code.name == 'HALT2'
@@ -87,10 +123,79 @@ def test_COMPONENT_TRIMREADS_0001():
     # expected HALT3
     with MonkeyPatch.context() as m:
         m.setattr(check_model, "ALLOWED_DEV_EXCEPTIONS", (SystemExit))
-        mock_path = io.BytesIO(b'bad file contents')
+        mock_path = io.BytesIO(b"bad file contents")
         mock_path.exists = lambda: True
         test_component_monkey_patch = copy.deepcopy(test_component)
         test_component_monkey_patch.fastqGZ.path = mock_path
         flag = COMPONENT_TRIMREADS_0001.validate(test_component_monkey_patch)
-        assert flag.code.name == 'HALT3'
-        assert flag.message == "Corrupted Fastq.gz file suspected, last line number encountered: 0"
+        assert flag.code.name == "HALT3"
+        assert (
+            flag.message
+            == "Corrupted Fastq.gz file suspected, last line number encountered: 0"
+        )
+
+
+
+def test_COMPONENT_TRIMREADS_0001_single(glds48_dataSystem_STAGE01):
+    ds = glds48_dataSystem_STAGE01
+
+    test_component = list(ds.dataset.samples.values())[0].trimReads
+
+    # expected GREEN
+    with MonkeyPatch.context() as m:
+        m.setattr(check_model, "ALLOWED_DEV_EXCEPTIONS", (SystemExit))
+        flag = COMPONENT_TRIMREADS_0001.validate(test_component)
+        assert flag.code.name == "GREEN"
+
+    # expected HALT1
+    with MonkeyPatch.context() as m:
+        m.setattr(check_model, "ALLOWED_DEV_EXCEPTIONS", (SystemExit))
+        m.setattr(test_component, "trimmingReportTXT", None)
+        flag = COMPONENT_TRIMREADS_0001.validate(test_component)
+        assert flag.code.name == "HALT1"
+        assert flag.message == "Missing expected files: ['trimmingReportTXT']"
+
+    # expected HALT2
+    # TODO: requires a true truncated test file or something similar
+    # with MonkeyPatch.context() as m:
+    #    m.setattr(gzip, "open", lambda: raise EOFError)
+    #    flag = COMPONENT_RAWREADS_0001.validate(test_component)
+    #    assert flag.code.name == 'HALT2'
+
+    # expected HALT3
+    with MonkeyPatch.context() as m:
+        m.setattr(check_model, "ALLOWED_DEV_EXCEPTIONS", (SystemExit))
+        mock_path = io.BytesIO(b"bad file contents")
+        mock_path.exists = lambda: True
+        test_component_monkey_patch = copy.deepcopy(test_component)
+        test_component_monkey_patch.fastqGZ.path = mock_path
+        flag = COMPONENT_TRIMREADS_0001.validate(test_component_monkey_patch)
+        assert flag.code.name == "HALT3"
+        assert (
+            flag.message
+            == "Corrupted Fastq.gz file suspected, last line number encountered: 0"
+        )
+
+def test_COMPONENT_GENOMEALIGNMENTS_0001_paired(glds194_dataSystem_STAGE01):
+    raise NotImplementedError
+
+def test_COMPONENT_GENOMEALIGNMENTS_0001_single(glds48_dataSystem_STAGE01):
+    raise NotImplementedError
+
+def test_COMPONENT_RSEQCANALYSIS_0001_paired(glds194_dataSystem_STAGE01):
+    raise NotImplementedError
+
+def test_COMPONENT_RSEQCANALYSIS_0001_single(glds48_dataSystem_STAGE01):
+    raise NotImplementedError
+
+def test_COMPONENT_GENECOUNTS_0001_paired(glds194_dataSystem_STAGE01):
+    raise NotImplementedError
+
+def test_COMPONENT_GENECOUNTS_0001_single(glds48_dataSystem_STAGE01):
+    raise NotImplementedError
+
+def test_COMPONENT_DIFFERENTIALGENEEXPRESSION_0001_paired(glds194_dataSystem_STAGE01):
+    raise NotImplementedError
+
+def test_COMPONENT_DIFFERENTIALGENEEXPRESSION_0001_single(glds48_dataSystem_STAGE01):
+    raise NotImplementedError

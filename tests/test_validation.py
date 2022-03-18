@@ -12,7 +12,7 @@ from dp_tools.bulkRNASeq.vv_protocols import BulkRNASeq_VVProtocol_RawData
 TEST_DIR = Path(os.environ["TEST_ASSETS_DIR"])
 
 
-def test_bulk_rnaseq_raw_data_validation(caplog):
+def test_bulkRNASeq_STAGE00_validation_paired(caplog, glds194_dataSystem_STAGE00):
     """ This tests validation as it would be run on dataset after demultiplexing """
     CAPLEVEL = 20
     target_data_dir = TEST_DIR / "GLDS-207_TruncatedProcessed"
@@ -69,7 +69,7 @@ def test_bulk_rnaseq_raw_data_validation(caplog):
             #       Reads : 1 per component
             assert len(df) == len(ds.dataset.samples)*3
 
-def test_bulk_rnaseq_full_validation(caplog):
+def test_bulkRNASeq_STAGE00_validation_single(caplog, glds48_dataSystem_STAGE00):
     """ This tests validation as it would be run on dataset after demultiplexing """
     CAPLEVEL = 20
     target_data_dir = TEST_DIR / "GLDS-207_TruncatedProcessed"
@@ -125,3 +125,27 @@ def test_bulk_rnaseq_full_validation(caplog):
             #   Component checks 
             #       Reads : 1 per component (4 per sample)
             assert len(df) == len(ds.dataset.samples)*5
+
+def test_bulkRNASeq_STAGE01_validation_paired(caplog, glds194_dataSystem_STAGE00):
+    raise NotImplementedError
+
+def test_bulkRNASeq_STAGE01_validation_single(caplog, glds48_dataSystem_STAGE00):
+    raise NotImplementedError
+
+def test_bulkRNASeq_STAGE02_validation_paired(caplog, glds194_dataSystem_STAGE00):
+    raise NotImplementedError
+
+def test_bulkRNASeq_STAGE02_validation_single(caplog, glds48_dataSystem_STAGE00):
+    raise NotImplementedError
+
+def test_bulkRNASeq_STAGE03_validation_paired(caplog, glds194_dataSystem_STAGE00):
+    raise NotImplementedError
+
+def test_bulkRNASeq_STAGE03_validation_single(caplog, glds48_dataSystem_STAGE00):
+    raise NotImplementedError
+
+def test_bulkRNASeq_STAGE04_validation_paired(caplog, glds194_dataSystem_STAGE00):
+    raise NotImplementedError
+
+def test_bulkRNASeq_STAGE04_validation_single(caplog, glds48_dataSystem_STAGE00):
+    raise NotImplementedError

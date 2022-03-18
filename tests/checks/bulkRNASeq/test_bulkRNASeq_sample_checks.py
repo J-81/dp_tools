@@ -1,6 +1,4 @@
 """ Tests for specific validation checks """
-
-
 from unittest.mock import MagicMock
 from pytest import MonkeyPatch
 
@@ -10,7 +8,7 @@ from dp_tools.components.components import RawReadsComponent
 from dp_tools.core import check_model
 
 
-def test_SAMPLE_RAWREADS_0001():
+def test_SAMPLE_RAWREADS_0001_paired():
     # check attribute tests
     assert SAMPLE_RAWREADS_0001.id == "SAMPLE_RAWREADS_0001"
 
@@ -19,9 +17,9 @@ def test_SAMPLE_RAWREADS_0001():
         m.setattr(check_model, "ALLOWED_DEV_EXCEPTIONS", (SystemExit))
         mockSample = MagicMock(spec=BulkRNASeqSample)
         mockForward = MagicMock(spec=RawReadsComponent)
-        mockForward.count = 100
+        mockForward.mqcData = {"FastQC": {"General_Stats": {"Total Sequences": 100}}}
         mockReverse = MagicMock(spec=RawReadsComponent)
-        mockReverse.count = 100
+        mockReverse.mqcData = {"FastQC": {"General_Stats": {"Total Sequences": 100}}}
         mockSample.dataset.metadata.paired_end = True
         flag = SAMPLE_RAWREADS_0001.validate(sample=mockSample)
         assert flag.code == check_model.FlagCode.HALT1
@@ -43,9 +41,9 @@ def test_SAMPLE_RAWREADS_0001():
     with MonkeyPatch.context() as m:
         m.setattr(check_model, "ALLOWED_DEV_EXCEPTIONS", (SystemExit))
         mockForward = MagicMock(spec=RawReadsComponent)
-        mockForward.count = 100
+        mockForward.mqcData = {"FastQC": {"General_Stats": {"Total Sequences": 100}}}
         mockReverse = MagicMock(spec=RawReadsComponent)
-        mockReverse.count = 100
+        mockReverse.mqcData = {"FastQC": {"General_Stats": {"Total Sequences": 100}}}
         mockSample.rawForwardReads = mockForward
         mockSample.rawReverseReads = mockReverse
         mockSample.dataset.metadata.paired_end = True
@@ -57,15 +55,18 @@ def test_SAMPLE_RAWREADS_0001():
     with MonkeyPatch.context() as m:
         m.setattr(check_model, "ALLOWED_DEV_EXCEPTIONS", (SystemExit))
         mockForward = MagicMock(spec=RawReadsComponent)
-        mockForward.count = 500
+        mockForward.mqcData = {"FastQC": {"General_Stats": {"Total Sequences": 500}}}
         mockReverse = MagicMock(spec=RawReadsComponent)
-        mockReverse.count = 100
+        mockReverse.mqcData = {"FastQC": {"General_Stats": {"Total Sequences": 100}}}
         mockSample.rawForwardReads = mockForward
         mockSample.rawReverseReads = mockReverse
         mockSample.dataset.metadata.paired_end = True
         flag = SAMPLE_RAWREADS_0001.validate(sample=mockSample)
         assert flag.code == check_model.FlagCode.HALT2
-        assert flag.message == "Forward and reverse reads counts differ. Forward: (500) Reverse: (100)"
+        assert (
+            flag.message
+            == "Forward and reverse reads counts differ. Forward: (500) Reverse: (100)"
+        )
 
     # for single end passes
     with MonkeyPatch.context() as m:
@@ -76,3 +77,47 @@ def test_SAMPLE_RAWREADS_0001():
         flag = SAMPLE_RAWREADS_0001.validate(sample=mockSample)
         assert flag.code == check_model.FlagCode.GREEN
         assert flag.message == "All expected raw read files present"
+
+
+def test_SAMPLE_RAWREADS_0001_single():
+    raise NotImplementedError
+
+
+def test_SAMPLE_TRIMREADS_0001_paired():
+    raise NotImplementedError
+
+
+def test_SAMPLE_TRIMREADS_0001_single():
+    raise NotImplementedError
+
+
+def test_SAMPLE_GENOMEALIGNMENTS_0001_paired():
+    raise NotImplementedError
+
+
+def test_SAMPLE_GENOMEALIGNMENTS_0001_single():
+    raise NotImplementedError
+
+
+def test_SAMPLE_GENECOUNTS_0001_paired():
+    raise NotImplementedError
+
+
+def test_SAMPLE_GENECOUNTS_0001_single():
+    raise NotImplementedError
+
+
+def test_SAMPLE_RSEQCANALYSIS_0001_paired():
+    raise NotImplementedError
+
+
+def test_SAMPLE_RSEQCANALYSIS_0001_single():
+    raise NotImplementedError
+
+
+def test_SAMPLE_GENECOUNTS_0001_paired():
+    raise NotImplementedError
+
+
+def test_SAMPLE_GENECOUNTS_0001_single():
+    raise NotImplementedError
