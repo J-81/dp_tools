@@ -40,15 +40,17 @@ class MultiQCDir:
         found = list()
         # replace needed for regex to interpret regex escape characters AFTER interpretting python escape characters
         # (i.e. accomodate windows using the same separator as the escape char)
-        pattern = self.EXACT_PATH_FORMAT.format(rel_dir=str(rel_dir), mqc_label=mqc_label).replace(
-        "\\", r"\\"
-    )
+        pattern = self.EXACT_PATH_FORMAT.format(
+            rel_dir=str(rel_dir), mqc_label=mqc_label
+        ).replace("\\", r"\\")
         log.debug(
             f"Locating multiQC direcotry {type(self).__name__} with pattern: {pattern}"
         )
 
         putative_found = self.search_root / pattern
-        assert putative_found.exists(), f"Target does not exist. Expected: {putative_found}. Pattern: {pattern}"
+        assert (
+            putative_found.exists()
+        ), f"Target does not exist. Expected: {putative_found}. Pattern: {pattern}"
         found.append(putative_found)
 
         # Here is where additional validation should occur if the main found resource is a path (e.g. the RSEM stat folder)
@@ -56,6 +58,48 @@ class MultiQCDir:
             len(found) == 1
         ), f"One and only find target should occur. Found: {found}. Pattern: {pattern}"
         return found[0]
+
+
+class TrimmingReport:
+    EXACT_PATH_FORMAT = {
+        "Forward": os.path.join(
+            "01-TG_Preproc",
+            "Trimming_Reports",
+            "{sample_name}_R1_raw.fastq.gz_trimming_report.txt",
+        ),
+        "Reverse": os.path.join(
+            "01-TG_Preproc",
+            "Trimming_Reports",
+            "{sample_name}_R2_raw.fastq.gz_trimming_report.txt",
+        ),
+    }
+
+    def __init__(self, search_root: Path):
+        self.search_root = search_root
+
+    def find(self, sample_name: str, type: str) -> Path:
+        found = list()
+        # replace needed for regex to interpret regex escape characters AFTER interpretting python escape characters
+        # (i.e. accomodate windows using the same separator as the escape char)
+        pattern = (
+            self.EXACT_PATH_FORMAT[type]
+            .format(sample_name=sample_name)
+            .replace("\\", r"\\")
+        )
+        log.debug(f"Locating file with pattern: {pattern}")
+
+        putative_found = self.search_root / pattern
+        assert (
+            putative_found.exists()
+        ), f"Target does not exist. Expected: {putative_found}. Pattern: {pattern}"
+        found.append(putative_found)
+
+        # Here is where additional validation should occur if the main found resource is a path (e.g. the RSEM stat folder)
+        assert (
+            len(found) == 1
+        ), f"One and only find target should occur. Found: {found}. Pattern: {pattern}"
+        return found[0]
+
 
 class FastqcReport:
     EXACT_PATH_FORMAT = {
@@ -69,10 +113,14 @@ class FastqcReport:
         },
         "Trimmed": {
             "Forward": os.path.join(
-                "01-TG_Preproc", "FastQC_Reports", "{sample_name}_R1_trimmed_fastqc.{ext}"
+                "01-TG_Preproc",
+                "FastQC_Reports",
+                "{sample_name}_R1_trimmed_fastqc.{ext}",
             ),
             "Reverse": os.path.join(
-                "01-TG_Preproc", "FastQC_Reports", "{sample_name}_R2_trimmed_fastqc.{ext}"
+                "01-TG_Preproc",
+                "FastQC_Reports",
+                "{sample_name}_R2_trimmed_fastqc.{ext}",
             ),
         },
     }
@@ -92,7 +140,9 @@ class FastqcReport:
         log.debug(f"Locating raw fastqgz file {sample_name} with pattern: {pattern}")
 
         putative_found = self.search_root / pattern
-        assert putative_found.exists(), f"Target does not exist. Expected: {putative_found}. Pattern: {pattern}"
+        assert (
+            putative_found.exists()
+        ), f"Target does not exist. Expected: {putative_found}. Pattern: {pattern}"
         found.append(putative_found)
 
         # Here is where additional validation should occur if the main found resource is a path (e.g. the RSEM stat folder)
@@ -100,6 +150,7 @@ class FastqcReport:
             len(found) == 1
         ), f"One and only find target should occur. Found: {found}. Pattern: {pattern}"
         return found[0]
+
 
 class Runsheet:
     # replace needed for regex to interpret regex escape characters AFTER interpretting python escape characters
@@ -120,7 +171,9 @@ class Runsheet:
         )
 
         putative_found = self.search_root / pattern
-        assert putative_found.exists(), f"Target does not exist. Expected: {putative_found}. Pattern: {pattern}"
+        assert (
+            putative_found.exists()
+        ), f"Target does not exist. Expected: {putative_found}. Pattern: {pattern}"
         found.append(putative_found)
 
         # Here is where additional validation should occur if the main found resource is a path (e.g. the RSEM stat folder)
@@ -128,6 +181,7 @@ class Runsheet:
             len(found) == 1
         ), f"One and only find target should occur. Found: {found}. Pattern: {pattern}"
         return found[0]
+
 
 class Fastq:
     EXACT_PATH_FORMAT = {
@@ -164,7 +218,9 @@ class Fastq:
         log.debug(f"Locating raw fastqgz file {sample_name} with pattern: {pattern}")
 
         putative_found = self.search_root / pattern
-        assert putative_found.exists(), f"Target does not exist. Expected: {putative_found}. Pattern: {pattern}"
+        assert (
+            putative_found.exists()
+        ), f"Target does not exist. Expected: {putative_found}. Pattern: {pattern}"
         found.append(putative_found)
 
         # for i, p in enumerate(_rIterDir(self.search_root)):
