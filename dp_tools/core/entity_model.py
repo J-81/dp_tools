@@ -11,6 +11,7 @@ from typing import (
     List,
     Literal,
     Optional,
+    OrderedDict,
     Protocol,
     Tuple,
     TypedDict,
@@ -20,8 +21,10 @@ from typing import (
 import logging
 
 import pandas as pd
+import multiqc
 
 from dp_tools.core.model_commons import strict_type_checks
+from dp_tools.core.utilites.multiqc_tools import format_plots_as_dataframe, get_general_stats
 
 logging.basicConfig(level=logging.DEBUG)
 log = logging.getLogger(__name__)
@@ -188,6 +191,33 @@ class CanAttachEntity:
 #########################################################################
 # COMPONENTS
 #########################################################################
+# type hint definitions
+SampleLevelDict = OrderedDict[  # samples level
+    "str",  # denotes sample name
+    OrderedDict["str", float],  # key:value level, e.g. 'percent_gc': 52.0
+]
+
+GeneralStatsDict = Dict["str", SampleLevelDict]  # modules level  # denotes module name
+
+GeneralStatsDictForComponent = OrderedDict[  # samples level
+    "str",  # denotes sample name
+    OrderedDict["str", float],  # key:value level, e.g. 'percent_gc': 52.0
+]
+
+DataAsset = Union[DataDir, DataFile, Path]
+
+# model dict types
+TopLevelMQC = Dict[str, 'ModuleLevelMQC']
+
+class ModuleLevelMQC(TypedDict):
+    General_Stats: Dict[str, Union[int, float]] # holds general stat values
+    Plots: Dict[str, pd.DataFrame] # holds plotname: dataframe
+
+# define type hint
+class MQCTargetDict(TypedDict):
+    mqc_modules: List[str] # Module names to run
+    target: DataAsset
+
 @dataclass
 class BaseComponent:
     """ Class for keeping track of abstract components like Reads, Alignments, and Counts """
@@ -198,6 +228,13 @@ class BaseComponent:
 
 
 class TemplateComponent(abc.ABC, CanAttachEntity):
+    # TODO: refine this type hint
+    _mqc_data: dict
+    _mqcData: Union[Dict, bool] # only set to false for EmptyComponent
+    # _mqc_modules_limit: List[str] = [
+    #     "FastQC"
+    # ]  # optional but speeds up multiqc processing time slightly and can constrain modules if desired
+    
     def __post_init__(self):
         strict_type_checks(self)
 
@@ -211,12 +248,103 @@ Component: class:{self.__class__.__name__}
 {attachments_str}
         """
 
+    
+    @property
+    def _mqc_targets(self) -> List[MQCTargetDict]:
+        """ A list of all components that have a multiQC module available for parsing 
+        This is determined using the metadata field, specifically 'mqc_parse'
+        """
+        all_targets = list()
+        # iterate through all dataclass fields
+        for field_attr, field in self.__dataclass_fields__.items():
+            # check that data asset is field-metadata marked
+            if (mqc_modules := field.metadata.get("mqc_parse")):
+                target: MQCTargetDict = {'mqc_modules':mqc_modules, 'target': getattr(self, field_attr)}
+                all_targets.append(target)
+        return all_targets
+
+    @property
+    def mqcData(self) -> ModuleLevelMQC:
+        if getattr(self, "_mqcData", None) == None:
+            # extract mqcData
+            self._mqcData = ModuleLevelMQC()
+            for mqc_target in self._mqc_targets:
+                log.debug(f"Extracting multiqc data for {mqc_target}")
+                self.__extract_mqcData(mqc_target)
+        return self._mqcData
+
+    def __extract_mqcData(self, mqc_target: MQCTargetDict):
+        """ Populates data for a specific target for
+        Includes both general stats and plots.
+        Can include multiple modules as designated in the mqc_target dictionary.
+        """
+        # run MQC
+        # skip if the target doesn't exist (e.g. an unattached data asset)
+        if not mqc_target['target']:
+            log.warning(f"{mqc_target['target']} designated as a mqc target, but data asset was missing")
+            return
+        mqc_ret = multiqc.run(
+            analysis_dir=[mqc_target['target'].path],
+            no_report=True,
+            no_data_dir=True,
+            plots_interactive=True,  # ensure data is robustly populated (otherwise flat plots result in missing extractable data)
+            module=[
+                module.lower() for module in mqc_target['mqc_modules']
+            ],  # module names here are always lowercase
+        )
+
+        # extract and set general stats
+        general_stats = get_general_stats(mqc_ret)
+        for module_name, samplewise_dict in general_stats.items():
+            # init dict if needed
+            # TODO: replace with default dict on toplevel init
+            if not self._mqcData.get(module_name):
+                self._mqcData[module_name]: ModuleLevelMQC = dict() # type: ignore
+
+            # assert only one mqc-sample generated
+            assert len(list(samplewise_dict.values())) == 1, "For unshared logs, this is a true issue.  This will break on shared logs"
+            # remove sample layer on assignment (instead sample is implicit in component entity)
+            self._mqcData[module_name]['General_Stats'] = list(samplewise_dict.values())[0]
+
+        # extract and set plot data
+        df_mqc = format_plots_as_dataframe(mqc_ret)
+
+        for gb_name, df_gb in df_mqc.groupby(level=[0,1], axis='columns'):
+            # clean dataframe
+            # remove row index (redundant with entity ownership)
+            df_gb.reset_index(inplace=True, drop=True)
+
+            # remove top two levels of multindex (these are redundant with gb_name)
+            df_gb = df_gb.droplevel(level=[0,1], axis='columns')
+            
+            # init dict if needed
+            # TODO: replace with default dict on toplevel init
+            if not self._mqcData.get(module_name):
+                self._mqcData[module_name]: ModuleLevelMQC = dict() # type: ignore
+            if not self._mqcData[module_name].get("Plots"):
+                self._mqcData[module_name]["Plots"] = dict()
+
+            # clean name
+            # first remove module name as that is a higher key making it redundant
+            remove_substr = f"{module_name}: "
+            gb_name = (gb_name[0].replace(remove_substr, ""), gb_name[1].replace(remove_substr, ""))
+
+            # Second level of name may indicate subplot (e.g. adapter columns)
+            # clean name if the second level is just a copy of the first
+            if gb_name[0] == gb_name[1]:
+                gb_name = gb_name[0]
+            else:
+                gb_name = f"{gb_name[0]}:Subplot:{gb_name[1].replace(gb_name[0],'')}"
+
+            # remove sample layer on assignment (instead sample is implicit in component entity)
+            self._mqcData[module_name]['Plots'][gb_name] = df_gb
+
 @dataclass(eq=False)
 class EmptyComponent(TemplateComponent):
     """ Class representing an empty component """
 
     base: BaseComponent = BaseComponent(description="This slot is empty")
-
+    _mqcData: bool = False # only set to false for EmptyComponent
 
 #########################################################################
 # DATASYSTEM
