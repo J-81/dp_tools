@@ -1,6 +1,7 @@
 import gzip
 import logging
 from pathlib import Path
+from typing import List
 from dp_tools.components.components import RawReadsComponent
 from dp_tools.core.entity_model import DataDir, DataFile, TemplateDataset, TemplateSample
 
@@ -83,8 +84,8 @@ def _validate_func_COMPONENT_READS(self: Check, component) -> Flag:
 
     # Subcheck: 1 ( can trigger HALT1 )
     # check if expected files exist first
-    missing_files = list()
-    lines_with_issues = list()
+    missing_files: List[Path] = list()
+    lines_with_issues: List[int] = list()
     i = 0
 
     for expected_file in self.config["expected_data_files"]:
