@@ -3,6 +3,8 @@ from pathlib import Path
 from dp_tools.bulkRNASeq.loaders import (
     load_BulkRNASeq_STAGE_00,
     load_BulkRNASeq_STAGE_01,
+    load_BulkRNASeq_STAGE_02,
+    load_BulkRNASeq_STAGE_0201,
 )
 import pytest
 
@@ -105,12 +107,118 @@ def test_bulkRNASeq_STAGE01_single(caplog, glds48_test_dir, glds48_sample_names)
 
 
 def test_bulkRNASeq_STAGE02_paired(caplog, glds194_test_dir):
-    raise NotImplementedError
+    ds = load_BulkRNASeq_STAGE_02(
+        *load_BulkRNASeq_STAGE_01(
+            *load_BulkRNASeq_STAGE_00(
+                glds194_test_dir, dataSystem_name="GLDS-194", stack=True
+            ),
+            stack=True
+        )
+    )
+
+    # pull dataset
+    dataset = ds.datasets["GLDS-194__BulkRNASeq"]
+
+    assert list(dataset.samples.keys()) == [
+        "Mmus_BAL-TAL_LRTN_BSL_Rep1_B7",
+        "Mmus_BAL-TAL_RRTN_BSL_Rep2_B8",
+        "Mmus_BAL-TAL_RRTN_BSL_Rep3_B9",
+        "Mmus_BAL-TAL_RRTN_BSL_Rep4_B10",
+        "Mmus_BAL-TAL_LRTN_GC_Rep1_G6",
+        "Mmus_BAL-TAL_LRTN_GC_Rep2_G8",
+        "Mmus_BAL-TAL_LRTN_GC_Rep3_G9",
+        "Mmus_BAL-TAL_RRTN_GC_Rep4_G10",
+        "Mmus_BAL-TAL_LRTN_FLT_Rep1_F6",
+        "Mmus_BAL-TAL_LRTN_FLT_Rep2_F7",
+        "Mmus_BAL-TAL_LRTN_FLT_Rep3_F8",
+        "Mmus_BAL-TAL_LRTN_FLT_Rep4_F9",
+        "Mmus_BAL-TAL_LRTN_FLT_Rep5_F10",
+    ]
+
+    # check expected loaded components [raw directory]
+    for sample in ds.dataset.samples.values():
+        assert len(list(sample.rawForwardReads.multiQCDir.path.iterdir())) == 2
+        assert len(list(sample.rawReverseReads.multiQCDir.path.iterdir())) == 2
+        assert len(list(sample.trimForwardReads.multiQCDir.path.iterdir())) == 2
+        assert len(list(sample.trimReverseReads.multiQCDir.path.iterdir())) == 2
 
 
 def test_bulkRNASeq_STAGE02_single(caplog, glds48_test_dir, glds48_sample_names):
-    raise NotImplementedError
+    ds = load_BulkRNASeq_STAGE_02(
+        *load_BulkRNASeq_STAGE_01(
+            *load_BulkRNASeq_STAGE_00(
+                glds48_test_dir, dataSystem_name="GLDS-48", stack=True
+            ),
+            stack=True
+        )
+    )
 
+    # pull dataset
+    dataset = ds.datasets["GLDS-48__BulkRNASeq"]
+
+    assert list(dataset.samples.keys()) == glds48_sample_names
+
+    # check expected loaded components [raw directory]
+    for sample in ds.dataset.samples.values():
+        assert len(list(sample.rawReads.multiQCDir.path.iterdir())) == 2
+        assert len(list(sample.trimReads.multiQCDir.path.iterdir())) == 2
+
+
+def test_bulkRNASeq_STAGE0201_paired(caplog, glds194_test_dir):
+    ds = load_BulkRNASeq_STAGE_0201(*load_BulkRNASeq_STAGE_02(
+        *load_BulkRNASeq_STAGE_01(
+            *load_BulkRNASeq_STAGE_00(
+                glds194_test_dir, dataSystem_name="GLDS-194", stack=True
+            ),
+            stack=True
+        ), stack=True
+    ))
+
+    # pull dataset
+    dataset = ds.datasets["GLDS-194__BulkRNASeq"]
+
+    assert list(dataset.samples.keys()) == [
+        "Mmus_BAL-TAL_LRTN_BSL_Rep1_B7",
+        "Mmus_BAL-TAL_RRTN_BSL_Rep2_B8",
+        "Mmus_BAL-TAL_RRTN_BSL_Rep3_B9",
+        "Mmus_BAL-TAL_RRTN_BSL_Rep4_B10",
+        "Mmus_BAL-TAL_LRTN_GC_Rep1_G6",
+        "Mmus_BAL-TAL_LRTN_GC_Rep2_G8",
+        "Mmus_BAL-TAL_LRTN_GC_Rep3_G9",
+        "Mmus_BAL-TAL_RRTN_GC_Rep4_G10",
+        "Mmus_BAL-TAL_LRTN_FLT_Rep1_F6",
+        "Mmus_BAL-TAL_LRTN_FLT_Rep2_F7",
+        "Mmus_BAL-TAL_LRTN_FLT_Rep3_F8",
+        "Mmus_BAL-TAL_LRTN_FLT_Rep4_F9",
+        "Mmus_BAL-TAL_LRTN_FLT_Rep5_F10",
+    ]
+
+    # check expected loaded components [raw directory]
+    for sample in ds.dataset.samples.values():
+        assert len(list(sample.rawForwardReads.multiQCDir.path.iterdir())) == 2
+        assert len(list(sample.rawReverseReads.multiQCDir.path.iterdir())) == 2
+        assert len(list(sample.trimForwardReads.multiQCDir.path.iterdir())) == 2
+        assert len(list(sample.trimReverseReads.multiQCDir.path.iterdir())) == 2
+
+def test_bulkRNASeq_STAGE0201_single(caplog, glds48_test_dir, glds48_sample_names):
+    ds = load_BulkRNASeq_STAGE_0201(*load_BulkRNASeq_STAGE_02(
+        *load_BulkRNASeq_STAGE_01(
+            *load_BulkRNASeq_STAGE_00(
+                glds48_test_dir, dataSystem_name="GLDS-48", stack=True
+            ),
+            stack=True
+        ), stack=True
+    ))
+
+    # pull dataset
+    dataset = ds.datasets["GLDS-48__BulkRNASeq"]
+
+    assert list(dataset.samples.keys()) == glds48_sample_names
+
+    # check expected loaded components [raw directory]
+    for sample in ds.dataset.samples.values():
+        assert len(list(sample.rawReads.multiQCDir.path.iterdir())) == 2
+        assert len(list(sample.trimReads.multiQCDir.path.iterdir())) == 2
 
 def test_bulkRNASeq_STAGE03_paired(caplog, glds194_test_dir):
     raise NotImplementedError

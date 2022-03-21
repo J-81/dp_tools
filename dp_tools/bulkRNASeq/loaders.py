@@ -10,7 +10,11 @@ import logging
 from typing import List, Protocol, Union
 
 import pandas as pd
-from dp_tools.components.components import TrimReadsComponent
+from dp_tools.components.components import (
+    GenomeAlignments,
+    RSeQCAnalysis,
+    TrimReadsComponent,
+)
 
 logging.basicConfig(
     level=logging.DEBUG, format="%(asctime)s %(levelname)-8s %(message)s"
@@ -30,10 +34,22 @@ from dp_tools.core.entity_model import (
 
 from dp_tools.bulkRNASeq.entity import BulkRNASeqDataset, BulkRNASeqSample
 from dp_tools.bulkRNASeq.locaters import (
+    AlignedSortedByCoordBam,
+    AlignedSortedByCoordResortedBam,
+    AlignedSortedByCoordResortedBamIndex,
+    AlignedToTranscriptomeBam,
     FastqcReport,
+    GeneBodyCoverageOut,
+    InferExperimentOut,
+    InnerDistanceOut,
+    LogFinal,
+    LogFull,
+    LogProgress,
     MultiQCDir,
     Fastq,
+    ReadDistributionOut,
     Runsheet,
+    SjTab,
     TrimmingReport,
 )
 from dp_tools.components import RawReadsComponent, BulkRNASeqMetadataComponent
@@ -257,6 +273,155 @@ def load_BulkRNASeq_STAGE_01(
                 ),
             )
             sample.attach_component(trim_reads, attr="trimReads")
+
+    # return dataSystem only if not being used in a loading stack
+    if stack:
+        return root_path, dataSystem
+    else:
+        return dataSystem
+
+
+def load_BulkRNASeq_STAGE_02(
+    root_path: Path, dataSystem: TemplateDataSystem, stack: bool = False
+):
+    """Load data that should be present into stage 02 (GenomeAlignment)
+
+    :param dataSystem: The dataSystem as loaded through STAGE 02
+    :type dataSystem: TemplateDataSystem
+    """
+    # ensure root path exists!
+    if not root_path.is_dir():
+        raise FileNotFoundError(f"Root path doesn't exist!: {root_path}")
+
+    # log about datasystem being built upon
+    log.info(f"Loading STAGE 01 BulkRNASeq data into: \n\t{dataSystem}")
+
+    # initate locaters on the root path
+    txBam = AlignedToTranscriptomeBam(search_root=root_path)
+    coordBam = AlignedSortedByCoordBam(search_root=root_path)
+    coordBamResort = AlignedSortedByCoordResortedBam(search_root=root_path)
+    coordBamResortIndex = AlignedSortedByCoordResortedBamIndex(search_root=root_path)
+    logFinal = LogFinal(search_root=root_path)
+    logProgress = LogProgress(search_root=root_path)
+    logFull = LogFull(search_root=root_path)
+    sjTab = SjTab(search_root=root_path)
+    readsMQC = MultiQCDir(search_root=root_path)
+
+    # alias for convenience
+    dataset = dataSystem.dataset
+
+    # create shared sample datafiles
+    datf_alignMQC = DataDir(
+        readsMQC.find(
+            rel_dir=Path.joinpath(Path("02-STAR_Alignment")), mqc_label="align",
+        )
+    )
+
+    # update samples
+    for sample_name, sample in dataset.samples.items():
+        # attach txBam
+        genomeAlignments = GenomeAlignments(
+            base=BaseComponent(description="Genome alignments"),
+            alignedToTranscriptomeBam=DataFile(
+                path=txBam.find(sample_name=sample_name)
+            ),
+            alignedSortedByCoordBam=DataFile(
+                path=coordBam.find(sample_name=sample_name)
+            ),
+            alignedSortedByCoordResortedBam=DataFile(
+                path=coordBamResort.find(sample_name=sample_name)
+            ),
+            alignedSortedByCoordResortedBamIndex=DataFile(
+                path=coordBamResortIndex.find(sample_name=sample_name)
+            ),
+            logFinal=DataFile(path=logFinal.find(sample_name=sample_name)),
+            logProgress=DataFile(path=logProgress.find(sample_name=sample_name)),
+            logFull=DataFile(path=logFull.find(sample_name=sample_name)),
+            sjTab=DataFile(path=sjTab.find(sample_name=sample_name)),
+            multiQCDir=datf_alignMQC,
+        )
+        sample.attach_component(genomeAlignments, attr="genomeAlignments")
+
+    # return dataSystem only if not being used in a loading stack
+    if stack:
+        return root_path, dataSystem
+    else:
+        return dataSystem
+
+
+def load_BulkRNASeq_STAGE_0201(
+    root_path: Path, dataSystem: TemplateDataSystem, stack: bool = False
+):
+    """Load data that should be present into stage 0201 (RSeQCAnalysis)
+
+    :param dataSystem: The dataSystem as loaded through STAGE 0201
+    :type dataSystem: TemplateDataSystem
+    """
+    # ensure root path exists!
+    if not root_path.is_dir():
+        raise FileNotFoundError(f"Root path doesn't exist!: {root_path}")
+
+    # log about datasystem being built upon
+    log.info(f"Loading STAGE 0201 BulkRNASeq data into: \n\t{dataSystem}")
+
+    # initate locaters on the root path
+    gbOut = GeneBodyCoverageOut(search_root=root_path)
+    ieOut = InferExperimentOut(search_root=root_path)
+    idOut = InnerDistanceOut(search_root=root_path)
+    rdOut = ReadDistributionOut(search_root=root_path)
+    mQC = MultiQCDir(search_root=root_path)
+
+    # alias for convenience
+    dataset = dataSystem.dataset
+    metadata = dataset.metadata
+
+    # create shared sample datafiles
+    gbMQC = DataDir(
+        mQC.find(
+            rel_dir=Path("RSeQC_Analyses") / "02_genebody_coverage",
+            mqc_label="geneBody_cov",
+        )
+    )
+    ieMQC = DataDir(
+        mQC.find(
+            rel_dir=Path("RSeQC_Analyses") / "03_infer_experiment",
+            mqc_label="infer_exp",
+        )
+    )
+    # idMQC moved to metadata controlled block
+    rdMQC = DataDir(
+        mQC.find(
+            rel_dir=Path("RSeQC_Analyses") / "05_read_distribution",
+            mqc_label="read_dist",
+        )
+    )
+
+    # update samples
+    for sample_name, sample in dataset.samples.items():
+        # create common component
+        genomeAlignments = RSeQCAnalysis(
+            base=BaseComponent(
+                description="RSeQC Analysis based on reads aligned to genome in context of gene annotations"
+            ),
+            geneBodyCoverageMultiQCDir=gbMQC,
+            geneBodyCoverageOut=DataDir(path=gbOut.find(sample_name=sample_name)),
+            inferExperimentMultiQCDir=ieMQC,
+            inferExperimentOut=DataFile(path=ieOut.find(sample_name=sample_name)),
+            readDistributionMultiQCDir=rdMQC,
+            readDistributionOut=DataFile(path=rdOut.find(sample_name=sample_name)),
+        )
+        # add pair end specific datafile
+        if metadata.paired_end:
+            genomeAlignments.innerDistanceMultiQCDir = DataDir(
+                mQC.find(
+                    rel_dir=Path("RSeQC_Analyses") / "04_inner_distance",
+                    mqc_label="inner_dist",
+                )
+            )
+            genomeAlignments.innerDistanceOut = DataDir(
+                path=idOut.find(sample_name=sample_name)
+            )
+        sample.attach_component(genomeAlignments, attr="genomeAlignments")
 
     # return dataSystem only if not being used in a loading stack
     if stack:
