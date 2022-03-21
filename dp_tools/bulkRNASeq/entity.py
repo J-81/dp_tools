@@ -5,6 +5,7 @@ from dataclasses import dataclass, field
 import enum
 from typing import List, Union
 from dp_tools.bulkRNASeq.checks import SAMPLE_RAWREADS_0001
+from dp_tools.components.components import GenomeAlignments, RSeQCAnalysis
 from dp_tools.core.check_model import Flag
 
 from dp_tools.core.entity_model import (
@@ -16,7 +17,11 @@ from dp_tools.core.entity_model import (
     TemplateSample,
 )
 from dp_tools.core.model_commons import strict_type_checks
-from dp_tools.components import BulkRNASeqMetadataComponent, RawReadsComponent, TrimReadsComponent
+from dp_tools.components import (
+    BulkRNASeqMetadataComponent,
+    RawReadsComponent,
+    TrimReadsComponent,
+)
 
 
 class ASSAY(enum.Enum):
@@ -50,6 +55,14 @@ class BulkRNASeqSample(TemplateSample):
         default_factory=EmptyComponent
     )
     trimReads: Union[EmptyComponent, TrimReadsComponent] = field(
+        default_factory=EmptyComponent
+    )
+
+    # used for both single end and paired end
+    genomeAlignments: Union[EmptyComponent, GenomeAlignments] = field(
+        default_factory=EmptyComponent
+    )
+    rSeQCAnalysis: Union[EmptyComponent, RSeQCAnalysis] = field(
         default_factory=EmptyComponent
     )
 
