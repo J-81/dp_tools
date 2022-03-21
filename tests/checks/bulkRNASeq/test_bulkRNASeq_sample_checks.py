@@ -10,18 +10,19 @@ from dp_tools.core import check_model
 
 def test_SAMPLE_RAWREADS_0001_paired():
     # check attribute tests
-    assert SAMPLE_RAWREADS_0001.id == "SAMPLE_RAWREADS_0001"
+    testCheck = SAMPLE_RAWREADS_0001()
+    assert testCheck.id == "SAMPLE_RAWREADS_0001"
 
     # for paired end fails
     with MonkeyPatch.context() as m:
         m.setattr(check_model, "ALLOWED_DEV_EXCEPTIONS", (SystemExit))
         mockSample = MagicMock(spec=BulkRNASeqSample)
         mockForward = MagicMock(spec=RawReadsComponent)
-        mockForward.mqcData = {"FastQC": {"General_Stats": {"Total Sequences": 100}}}
+        mockForward.mqcData = {"FastQC": {"General_Stats": {"total_sequences": 100}}}
         mockReverse = MagicMock(spec=RawReadsComponent)
-        mockReverse.mqcData = {"FastQC": {"General_Stats": {"Total Sequences": 100}}}
+        mockReverse.mqcData = {"FastQC": {"General_Stats": {"total_sequences": 100}}}
         mockSample.dataset.metadata.paired_end = True
-        flag = SAMPLE_RAWREADS_0001.validate(sample=mockSample)
+        flag = testCheck.validate(sample=mockSample)
         assert flag.code == check_model.FlagCode.HALT1
         assert (
             flag.message
@@ -33,7 +34,7 @@ def test_SAMPLE_RAWREADS_0001_paired():
         m.setattr(check_model, "ALLOWED_DEV_EXCEPTIONS", (SystemExit))
         mockSample = MagicMock(spec=BulkRNASeqSample)
         mockSample.dataset.metadata.paired_end = False
-        flag = SAMPLE_RAWREADS_0001.validate(sample=mockSample)
+        flag = testCheck.validate(sample=mockSample)
         assert flag.code == check_model.FlagCode.HALT1
         assert flag.message == "Missing expected components: ['rawReads']"
 
@@ -41,13 +42,13 @@ def test_SAMPLE_RAWREADS_0001_paired():
     with MonkeyPatch.context() as m:
         m.setattr(check_model, "ALLOWED_DEV_EXCEPTIONS", (SystemExit))
         mockForward = MagicMock(spec=RawReadsComponent)
-        mockForward.mqcData = {"FastQC": {"General_Stats": {"Total Sequences": 100}}}
+        mockForward.mqcData = {"FastQC": {"General_Stats": {"total_sequences": 100}}}
         mockReverse = MagicMock(spec=RawReadsComponent)
-        mockReverse.mqcData = {"FastQC": {"General_Stats": {"Total Sequences": 100}}}
+        mockReverse.mqcData = {"FastQC": {"General_Stats": {"total_sequences": 100}}}
         mockSample.rawForwardReads = mockForward
         mockSample.rawReverseReads = mockReverse
         mockSample.dataset.metadata.paired_end = True
-        flag = SAMPLE_RAWREADS_0001.validate(sample=mockSample)
+        flag = testCheck.validate(sample=mockSample)
         assert flag.code == check_model.FlagCode.GREEN
         assert flag.message == "All expected raw read files present"
 
@@ -55,13 +56,13 @@ def test_SAMPLE_RAWREADS_0001_paired():
     with MonkeyPatch.context() as m:
         m.setattr(check_model, "ALLOWED_DEV_EXCEPTIONS", (SystemExit))
         mockForward = MagicMock(spec=RawReadsComponent)
-        mockForward.mqcData = {"FastQC": {"General_Stats": {"Total Sequences": 500}}}
+        mockForward.mqcData = {"FastQC": {"General_Stats": {"total_sequences": 500}}}
         mockReverse = MagicMock(spec=RawReadsComponent)
-        mockReverse.mqcData = {"FastQC": {"General_Stats": {"Total Sequences": 100}}}
+        mockReverse.mqcData = {"FastQC": {"General_Stats": {"total_sequences": 100}}}
         mockSample.rawForwardReads = mockForward
         mockSample.rawReverseReads = mockReverse
         mockSample.dataset.metadata.paired_end = True
-        flag = SAMPLE_RAWREADS_0001.validate(sample=mockSample)
+        flag = testCheck.validate(sample=mockSample)
         assert flag.code == check_model.FlagCode.HALT2
         assert (
             flag.message
@@ -74,7 +75,7 @@ def test_SAMPLE_RAWREADS_0001_paired():
         mockSample = MagicMock(spec=BulkRNASeqSample)
         mockSample.rawReads = MagicMock(spec=RawReadsComponent)
         mockSample.dataset.metadata.paired_end = False
-        flag = SAMPLE_RAWREADS_0001.validate(sample=mockSample)
+        flag = testCheck.validate(sample=mockSample)
         assert flag.code == check_model.FlagCode.GREEN
         assert flag.message == "All expected raw read files present"
 
