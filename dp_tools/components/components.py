@@ -57,6 +57,7 @@ class BulkRNASeqMetadataComponent(TemplateComponent):
         init=False
     )  # NOTE: List[str] is a more precise type hint; however, this breaks strict type checking: https://bugs.python.org/issue44529
     paired_end: bool = field(init=False)
+    has_ercc: bool = field(init=False)
 
     def __post_init__(self):
         if self.runsheet:
@@ -67,6 +68,9 @@ class BulkRNASeqMetadataComponent(TemplateComponent):
             )  # explicit conversion from pandas series to standard list
             self.paired_end = bool(
                 self.df["paired_end"].unique()[0]
+            )  # explicit conversion from numpy bool to standard bool
+            self.has_ercc = bool(
+                self.df["has_ERCC"].unique()[0]
             )  # explicit conversion from numpy bool to standard bool
 
         strict_type_checks(self)
@@ -102,7 +106,7 @@ class GeneCounts(TemplateComponent):
 
 @dataclass(eq=False)
 class DatasetGeneCounts(TemplateComponent):
-    
+
     base: BaseComponent = field(repr=False)
     numNonZero: Union[DataFile, None] = field(default=None)
     unnormalizedCounts: Union[DataFile, None] = field(default=None)
@@ -131,24 +135,20 @@ class RSeQCAnalysis(TemplateComponent):
 
 
 @dataclass(eq=False)
+class NormalizedGeneCounts(TemplateComponent):
+
+    base: BaseComponent = field(repr=False)
+    erccNormalizedCountsCSV: Union[DataFile, None] = field(default=None)
+    normalizedCountsCSV: Union[DataFile, None] = field(default=None)
+    sampleTableCSV: Union[DataFile, None] = field(default=None)
+    unnormalizedCountsCSV: Union[DataFile, None] = field(default=None)
+
+
+@dataclass(eq=False)
 class DifferentialGeneExpression(TemplateComponent):
 
     base: BaseComponent = field(repr=False)
-    runsheet: Union[DataFile, None] = field(default=None)
-    samples: List = field(
-        init=False
-    )  # NOTE: List[str] is a more precise type hint; however, this breaks strict type checking: https://bugs.python.org/issue44529
-    paired_end: bool = field(init=False)
-
-    def __post_init__(self):
-        if self.runsheet:
-            # extract runsheet as dataframe
-            self.df = pd.read_csv(self.runsheet.path)
-            self.samples = list(
-                self.df["sample_name"]
-            )  # explicit conversion from pandas series to standard list
-            self.paired_end = bool(
-                self.df["paired_end"].unique()[0]
-            )  # explicit conversion from numpy bool to standard bool
-
-        strict_type_checks(self)
+    contrastsCSV: Union[DataFile, None] = field(default=None)
+    annotatedTableCSV: Union[DataFile, None] = field(default=None)
+    visualizationTableCSV: Union[DataFile, None] = field(default=None)
+    visualizationPCATablCSV: Union[DataFile, None] = field(default=None)
