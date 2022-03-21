@@ -59,13 +59,12 @@ class FlagCode(enum.Enum):
 @dataclass
 class Check(abc.ABC):
 
-    description: str
-    id: str
-    flag_desc: Dict[int, str]
-    validate_func: Optional[Callable]
+    description: ClassVar[str]
+    id: ClassVar[str]
+    flag_desc: ClassVar[Dict[int, str]]
     # flags associated with this check
     flags: List["Flag"] = field(default_factory=list)
-    config: Dict = field(default_factory=dict)
+    config: ClassVar[Dict] = dict() # set as empty dict if a check doesn't need config
     allChecks: ClassVar[
         List["Check"]
     ] = list()  # note this is a class attribute list, tracking all checks
@@ -94,18 +93,22 @@ class Check(abc.ABC):
         # add flag description for unhandled developer exception flags
         self.flag_desc[
             FlagCode.DEV_UNHANDLED
-        ] = "An unhandled exception occured in {function}: {e}.\n{full_traceback}"
+        ] = "An unhandled exception occured in {function} with args '{args}' and kwargs: '{kwargs}': {e}.\n{full_traceback}"
+
+    @abc.abstractmethod
+    def validate_func(self) -> 'Flag':
+        raise NotImplementedError
 
     def validate(self, *args, **kwargs):
         try:
-            return self.validate_func(self, *args, **kwargs)
+            return self.validate_func(*args, **kwargs)
         except ALLOWED_DEV_EXCEPTIONS as e:
             log.critical(
                 f"Developer exception raised during a validation function for check: {self}"
             )
             return Flag(
                 code=FlagCode.DEV_UNHANDLED,
-                message_args={"function": self.validate_func, "e": e, "full_traceback": traceback.format_exc()},
+                message_args={"function": self.validate_func, "e": e, "full_traceback": traceback.format_exc(), "args": args, "kwargs": kwargs},
                 check=self,
             )
 
