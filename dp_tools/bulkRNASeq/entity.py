@@ -7,8 +7,10 @@ from typing import List, Union
 from dp_tools.bulkRNASeq.checks import SAMPLE_RAWREADS_0001
 from dp_tools.components.components import (
     DatasetGeneCounts,
+    DifferentialGeneExpression,
     GeneCounts,
     GenomeAlignments,
+    NormalizedGeneCounts,
     RSeQCAnalysis,
 )
 from dp_tools.core.check_model import Flag
@@ -100,6 +102,10 @@ class BulkRNASeqDataset(TemplateDataset):
     geneCounts: Union[EmptyComponent, DatasetGeneCounts] = field(
         default_factory=EmptyComponent
     )
+
+    normalizedGeneCounts: Union[EmptyComponent, NormalizedGeneCounts] = field(default_factory=EmptyComponent)
+    differentialGeneExpression: Union[EmptyComponent, DifferentialGeneExpression] = field(default_factory=EmptyComponent)
+    differentialGeneExpressionERCC: Union[EmptyComponent, DifferentialGeneExpression] = field(default_factory=EmptyComponent)
 
     def __post_init__(self):
         self.base.name = f"{self.base.name}__{self.assay_type}"
