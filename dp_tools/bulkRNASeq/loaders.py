@@ -12,8 +12,10 @@ from typing import List, Protocol, Union
 import pandas as pd
 from dp_tools.components.components import (
     DatasetGeneCounts,
+    DifferentialGeneExpression,
     GeneCounts,
     GenomeAlignments,
+    NormalizedGeneCounts,
     RSeQCAnalysis,
     TrimReadsComponent,
 )
@@ -40,6 +42,9 @@ from dp_tools.bulkRNASeq.locaters import (
     AlignedSortedByCoordResortedBam,
     AlignedSortedByCoordResortedBamIndex,
     AlignedToTranscriptomeBam,
+    AnnotatedTableCSV,
+    ContrastsCSV,
+    ERCCNormalizedCountsCSV,
     FastqcReport,
     GeneBodyCoverageOut,
     GenesResults,
@@ -51,13 +56,18 @@ from dp_tools.bulkRNASeq.locaters import (
     LogProgress,
     MultiQCDir,
     Fastq,
+    NormalizedCountsCSV,
     NumNonZero,
     RSEMStat,
     RSEMUnnormalizedCounts,
     ReadDistributionOut,
     Runsheet,
+    SampleTableCSV,
     SjTab,
     TrimmingReport,
+    UnnormalizedCountsCSV,
+    VisualizationPCATableCSV,
+    VisualizationTableCSV,
 )
 from dp_tools.components import RawReadsComponent, BulkRNASeqMetadataComponent
 
@@ -488,6 +498,90 @@ def load_BulkRNASeq_STAGE_03(
             statDir=DataDir(rs.find(sample_name=sample_name)),
         )
         sample.attach_component(geneCounts, attr="geneCounts")
+
+    # return dataSystem only if not being used in a loading stack
+    if stack:
+        return root_path, dataSystem
+    else:
+        return dataSystem
+
+
+def load_BulkRNASeq_STAGE_04(
+    root_path: Path, dataSystem: TemplateDataSystem, stack: bool = False
+):
+    """Load data that should be present into stage 03 (RSEM Counts)
+
+    :param dataSystem: The dataSystem as loaded through STAGE 03
+    :type dataSystem: TemplateDataSystem
+    """
+    # ensure root path exists!
+    if not root_path.is_dir():
+        raise FileNotFoundError(f"Root path doesn't exist!: {root_path}")
+
+    # log about datasystem being built upon
+    log.info(f"Loading STAGE 03 BulkRNASeq data into: \n\t{dataSystem}")
+
+    # initate locaters on the root path
+    enc = ERCCNormalizedCountsCSV(search_root=root_path)
+    nc = NormalizedCountsCSV(search_root=root_path)
+    st = SampleTableCSV(search_root=root_path)
+    uc = UnnormalizedCountsCSV(search_root=root_path)
+    contrasts = ContrastsCSV(search_root=root_path)
+    at = AnnotatedTableCSV(search_root=root_path)
+    vt = VisualizationTableCSV(search_root=root_path)
+    vpt = VisualizationPCATableCSV(search_root=root_path)
+
+    # alias for convenience
+    dataset = dataSystem.dataset
+
+    # create shared sample datafiles
+    ...
+
+    # update dataset
+    # first
+    dataset.attach_component(
+        NormalizedGeneCounts(
+            base=BaseComponent(description="Normalized counts from Deseq2"),
+            # erccNormalizedCountsCSV=DataFile(enc.find()), moved to ERCC block
+            normalizedCountsCSV=DataFile(nc.find()),
+            sampleTableCSV=DataFile(st.find()),
+            unnormalizedCountsCSV=DataFile(uc.find()),
+        ),
+        attr="normalizedGeneCounts",
+    )
+    dataset.attach_component(
+        DifferentialGeneExpression(
+            base=BaseComponent(description="Normalized counts from Deseq2"),
+            contrastsCSV=DataFile(contrasts.find()),
+            annotatedTableCSV=DataFile(at.find()),
+            visualizationTableCSV=DataFile(vt.find()),
+            visualizationPCATablCSV=DataFile(vpt.find()),
+        ),
+        attr="differentialGeneExpression",
+    )
+    if dataset.metadata.has_ercc:
+        dataset.attach_component(
+            DifferentialGeneExpression(
+                base=BaseComponent(description="Normalized counts from Deseq2"),
+                contrastsCSV=DataFile(
+                    contrasts.find(nested_dir="ERCC_NormDGE", prefix="ERCCnorm_")
+                ),
+                annotatedTableCSV=DataFile(
+                    at.find(nested_dir="ERCC_NormDGE", prefix="ERCCnorm_")
+                ),
+                visualizationTableCSV=DataFile(
+                    vt.find(nested_dir="ERCC_NormDGE", suffix="_ERCCnorm")
+                ),
+                visualizationPCATablCSV=DataFile(
+                    vpt.find(nested_dir="ERCC_NormDGE", suffix="_ERCCnorm")
+                ),
+            ),
+            attr="differentialGeneExpressionERCC",
+        )
+        dataset.normalizedGeneCounts.erccNormalizedCountsCSV = DataFile(enc.find())
+
+    # update samples
+    ...
 
     # return dataSystem only if not being used in a loading stack
     if stack:
