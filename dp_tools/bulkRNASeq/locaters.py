@@ -237,18 +237,27 @@ class Fastq:
 
 # TODO: refactor most to this abstract class
 class Exact_Path_Finder(abc.ABC):
+    DEFAULT_FORMAT: dict = None  # type: ignore
     # replace needed for regex to interpret regex escape characters AFTER interpretting python escape characters
     # (i.e. accomodate windows using the same separator as the escape char)
     @property
     def _EXACT_PATH_FORMAT(self):
         return self.EXACT_PATH_FORMAT.replace("\\", r"\\")
 
+    @property
+    def _DEFAULT_FORMAT(self):
+        return self.DEFAULT_FORMAT
+
     def __init__(self, search_root: Path):
         self.search_root = search_root
+        if not self.DEFAULT_FORMAT:
+            self.DEFAULT_FORMAT = dict()
 
     def find(self, **kwargs) -> Path:
         found = list()
-        pattern = self._EXACT_PATH_FORMAT.format(**kwargs)
+        # determine formatters by updating defaults with kwargs
+        formatters = self._DEFAULT_FORMAT | kwargs
+        pattern = self._EXACT_PATH_FORMAT.format(**formatters)
         log.debug(f"Locating {type(self).__name__} file with pattern: {pattern}")
 
         putative_found = self.search_root / pattern
