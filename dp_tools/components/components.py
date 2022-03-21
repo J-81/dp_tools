@@ -91,14 +91,21 @@ class GenomeAlignments(TemplateComponent):
 
 @dataclass(eq=False)
 class GeneCounts(TemplateComponent):
+    """ Based on RSEM output gene counts"""
 
-    fastqGZ: DataFile
     base: BaseComponent = field(repr=False)
-    # id: str = field(default_factory=get_id)
     multiQCDir: Union[DataDir, None] = field(default=None)
-    fastqcReportHTML: Union[DataFile, None] = field(default=None)
-    fastqcReportZIP: Union[DataFile, None] = field(default=None)
-    trimmingReportTXT: Union[DataFile, None] = field(default=None)
+    genesResults: Union[DataFile, None] = field(default=None)
+    isoformsResults: Union[DataFile, None] = field(default=None)
+    statDir: Union[DataDir, None] = field(default=None, metadata={"mqc_parse": "Rsem"})
+
+
+@dataclass(eq=False)
+class DatasetGeneCounts(TemplateComponent):
+    
+    base: BaseComponent = field(repr=False)
+    numNonZero: Union[DataFile, None] = field(default=None)
+    unnormalizedCounts: Union[DataFile, None] = field(default=None)
 
 
 @dataclass(eq=False)
