@@ -11,6 +11,8 @@ from typing import List, Protocol, Union
 
 import pandas as pd
 from dp_tools.components.components import (
+    DatasetGeneCounts,
+    GeneCounts,
     GenomeAlignments,
     RSeQCAnalysis,
     TrimReadsComponent,
@@ -40,13 +42,18 @@ from dp_tools.bulkRNASeq.locaters import (
     AlignedToTranscriptomeBam,
     FastqcReport,
     GeneBodyCoverageOut,
+    GenesResults,
     InferExperimentOut,
     InnerDistanceOut,
+    IsoformsResults,
     LogFinal,
     LogFull,
     LogProgress,
     MultiQCDir,
     Fastq,
+    NumNonZero,
+    RSEMStat,
+    RSEMUnnormalizedCounts,
     ReadDistributionOut,
     Runsheet,
     SjTab,
@@ -422,6 +429,65 @@ def load_BulkRNASeq_STAGE_0201(
                 path=idOut.find(sample_name=sample_name)
             )
         sample.attach_component(genomeAlignments, attr="genomeAlignments")
+
+    # return dataSystem only if not being used in a loading stack
+    if stack:
+        return root_path, dataSystem
+    else:
+        return dataSystem
+
+
+def load_BulkRNASeq_STAGE_03(
+    root_path: Path, dataSystem: TemplateDataSystem, stack: bool = False
+):
+    """Load data that should be present into stage 03 (RSEM Counts)
+
+    :param dataSystem: The dataSystem as loaded through STAGE 03
+    :type dataSystem: TemplateDataSystem
+    """
+    # ensure root path exists!
+    if not root_path.is_dir():
+        raise FileNotFoundError(f"Root path doesn't exist!: {root_path}")
+
+    # log about datasystem being built upon
+    log.info(f"Loading STAGE 03 BulkRNASeq data into: \n\t{dataSystem}")
+
+    # initate locaters on the root path
+    gr = GenesResults(search_root=root_path)
+    ir = IsoformsResults(search_root=root_path)
+    rs = RSEMStat(search_root=root_path)
+    mQC = MultiQCDir(search_root=root_path)
+    # for dataset usage
+    nnz = NumNonZero(search_root=root_path)
+    ruc = RSEMUnnormalizedCounts(search_root=root_path)
+
+    # alias for convenience
+    dataset = dataSystem.dataset
+    metadata = dataset.metadata
+
+    # create shared sample datafiles
+    countsMQC = DataDir(mQC.find(rel_dir=Path("03-RSEM_Counts"), mqc_label="count",))
+
+    # update dataset
+    dataset.geneCounts = DatasetGeneCounts(
+        base=BaseComponent(
+            description="Gene counts at a dataset level from RSEM and DESeq2"
+        ),
+        numNonZero=DataFile(nnz.find()),
+        unnormalizedCounts=DataFile(ruc.find()),
+    )
+
+    # update samples
+    for sample_name, sample in dataset.samples.items():
+        # create common component
+        geneCounts = GeneCounts(
+            base=BaseComponent(description="Gene counts for the sample"),
+            multiQCDir=countsMQC,
+            genesResults=DataFile(gr.find(sample_name=sample_name)),
+            isoformsResults=DataFile(ir.find(sample_name=sample_name)),
+            statDir=DataDir(rs.find(sample_name=sample_name)),
+        )
+        sample.attach_component(geneCounts, attr="geneCounts")
 
     # return dataSystem only if not being used in a loading stack
     if stack:
