@@ -5,7 +5,12 @@ from dataclasses import dataclass, field
 import enum
 from typing import List, Union
 from dp_tools.bulkRNASeq.checks import SAMPLE_RAWREADS_0001
-from dp_tools.components.components import GenomeAlignments, RSeQCAnalysis
+from dp_tools.components.components import (
+    DatasetGeneCounts,
+    GeneCounts,
+    GenomeAlignments,
+    RSeQCAnalysis,
+)
 from dp_tools.core.check_model import Flag
 
 from dp_tools.core.entity_model import (
@@ -66,6 +71,10 @@ class BulkRNASeqSample(TemplateSample):
         default_factory=EmptyComponent
     )
 
+    geneCounts: Union[EmptyComponent, GeneCounts] = field(
+        default_factory=EmptyComponent
+    )
+
     def __post_init__(self):
         pass
 
@@ -86,6 +95,9 @@ class BulkRNASeqDataset(TemplateDataset):
     expected_sample_class = BulkRNASeqSample
 
     metadata: Union[EmptyComponent, BulkRNASeqMetadataComponent] = field(
+        default_factory=EmptyComponent
+    )
+    geneCounts: Union[EmptyComponent, DatasetGeneCounts] = field(
         default_factory=EmptyComponent
     )
 
