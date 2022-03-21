@@ -400,3 +400,69 @@ class RSEMUnnormalizedCounts(Exact_Path_Finder):
 
     EXACT_PATH_FORMAT = os.path.join("03-RSEM_Counts", "RSEM_Unnormalized_Counts.csv")
 
+
+class ERCCNormalizedCountsCSV(Exact_Path_Finder):
+    """ DESEQ OUTPUT """
+
+    EXACT_PATH_FORMAT = os.path.join(
+        "04-DESeq2_NormCounts", "ERCC_Normalized_Counts.csv"
+    )
+
+
+class NormalizedCountsCSV(Exact_Path_Finder):
+    """ DESEQ OUTPUT """
+
+    EXACT_PATH_FORMAT = os.path.join("04-DESeq2_NormCounts", "Normalized_Counts.csv")
+
+
+class SampleTableCSV(Exact_Path_Finder):
+    """ DESEQ OUTPUT """
+
+    EXACT_PATH_FORMAT = os.path.join("04-DESeq2_NormCounts", "SampleTable.csv")
+
+
+class UnnormalizedCountsCSV(Exact_Path_Finder):
+    """ DESEQ OUTPUT """
+
+    EXACT_PATH_FORMAT = os.path.join("04-DESeq2_NormCounts", "Unnormalized_Counts.csv")
+
+
+class ContrastsCSV(Exact_Path_Finder):
+    """ DESEQ OUTPUT """
+
+    DEFAULT_FORMAT = {"prefix": "", "suffix": "", "nested_dir": ""}
+
+    EXACT_PATH_FORMAT = os.path.join(
+        "05-DESeq2_DGE", "{nested_dir}", "{prefix}contrasts.csv"
+    )
+
+
+class AnnotatedTableCSV(Exact_Path_Finder):
+    """ DESEQ OUTPUT """
+
+    DEFAULT_FORMAT = {"prefix": "", "suffix": "", "nested_dir": ""}
+
+    EXACT_PATH_FORMAT = os.path.join(
+        "05-DESeq2_DGE", "{nested_dir}", "{prefix}differential_expression.csv"
+    )
+
+
+class VisualizationTableCSV(Exact_Path_Finder):
+    """ DESEQ OUTPUT """
+
+    DEFAULT_FORMAT = {"prefix": "", "suffix": "", "nested_dir": ""}
+
+    EXACT_PATH_FORMAT = os.path.join(
+        "05-DESeq2_DGE", "{nested_dir}", "visualization_output_table{suffix}.csv"
+    )
+
+
+class VisualizationPCATableCSV(Exact_Path_Finder):
+    """ DESEQ OUTPUT """
+
+    DEFAULT_FORMAT = {"prefix": "", "suffix": "", "nested_dir": ""}
+
+    EXACT_PATH_FORMAT = os.path.join(
+        "05-DESeq2_DGE", "{nested_dir}", "visualization_PCA_table{suffix}.csv"
+    )
+
