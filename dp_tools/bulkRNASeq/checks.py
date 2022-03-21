@@ -63,10 +63,10 @@ class SAMPLE_RAWREADS_0001(Check):
         if all([check_read_parity, code == FlagCode.GREEN]):
             if (
                 not sample.rawForwardReads.mqcData["FastQC"]["General_Stats"][
-                    "Total Sequences"
+                    "total_sequences"
                 ]
                 == sample.rawReverseReads.mqcData["FastQC"]["General_Stats"][
-                    "Total Sequences"
+                    "total_sequences"
                 ]
             ):
                 code = FlagCode.HALT2
@@ -78,12 +78,12 @@ class SAMPLE_RAWREADS_0001(Check):
                 "missing_components": missing_components,
                 "forward_read_count": sample.rawForwardReads.mqcData["FastQC"][
                     "General_Stats"
-                ]["Total Sequences"]
+                ]["total_sequences"]
                 if code == FlagCode.HALT2
                 else None,
                 "reverse_read_count": sample.rawReverseReads.mqcData["FastQC"][
                     "General_Stats"
-                ]["Total Sequences"]
+                ]["total_sequences"]
                 if code == FlagCode.HALT2
                 else None,
             },
@@ -91,7 +91,6 @@ class SAMPLE_RAWREADS_0001(Check):
 
 class SAMPLE_TRIMREADS_0001(SAMPLE_RAWREADS_0001):
     ...
-
 
 class COMPONENT_RAWREADS_0001(Check):
     id = "COMPONENT_RAWREADS_0001"
@@ -210,7 +209,7 @@ class COMPONENT_RAWREADS_0001(Check):
         )
 
 
-class COMPONENT_TRIMREADS_0001(Check):
+class COMPONENT_TRIMREADS_0001(COMPONENT_RAWREADS_0001):
     id = "COMPONENT_TRIMREADS_0001"
     config = {
         "lines_to_check": 200_000_000,
@@ -252,7 +251,7 @@ class DATASET_RAWREADS_0001(Check):
         FlagCode.HALT3: "Corrupted Fastq.gz file suspected, last line number encountered: {last_line_checked}",
     }
 
-    def validate(self: Check, dataset: TemplateDataset) -> Flag:
+    def validate_func(self: Check, dataset: TemplateDataset) -> Flag:
         return Flag(code=FlagCode.GREEN, check=self)
 
 
