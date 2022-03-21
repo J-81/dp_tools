@@ -327,11 +327,13 @@ class SjTab(Exact_Path_Finder):
         "02-STAR_Alignment", "{sample_name}", "{sample_name}_SJ.out.tab",
     )
 
+
 class GeneBodyCoverageOut(Exact_Path_Finder):
 
     EXACT_PATH_FORMAT = os.path.join(
         "RSeQC_Analyses", "02_geneBody_coverage", "{sample_name}"
     )
+
 
 class InferExperimentOut(Exact_Path_Finder):
 
@@ -339,14 +341,53 @@ class InferExperimentOut(Exact_Path_Finder):
         "RSeQC_Analyses", "03_infer_experiment", "{sample_name}_infer_expt.out"
     )
 
+
 class InnerDistanceOut(Exact_Path_Finder):
 
     EXACT_PATH_FORMAT = os.path.join(
         "RSeQC_Analyses", "04_inner_distance", "{sample_name}"
     )
 
+
 class ReadDistributionOut(Exact_Path_Finder):
 
     EXACT_PATH_FORMAT = os.path.join(
         "RSeQC_Analyses", "05_read_distribution", "{sample_name}_read_dist.out"
     )
+
+
+class GenesResults(Exact_Path_Finder):
+    """ RSEM OUTPUT """
+
+    EXACT_PATH_FORMAT = os.path.join(
+        "03-RSEM_Counts", "{sample_name}", "{sample_name}.genes.results"
+    )
+
+
+class IsoformsResults(Exact_Path_Finder):
+    """ RSEM OUTPUT """
+
+    EXACT_PATH_FORMAT = os.path.join(
+        "03-RSEM_Counts", "{sample_name}", "{sample_name}.isoforms.results"
+    )
+
+
+class RSEMStat(Exact_Path_Finder):
+    """ RSEM OUTPUT """
+
+    EXACT_PATH_FORMAT = os.path.join(
+        "03-RSEM_Counts", "{sample_name}", "{sample_name}.stat"
+    )
+
+
+class NumNonZero(Exact_Path_Finder):
+    """ RSEM OUTPUT """
+
+    EXACT_PATH_FORMAT = os.path.join("03-RSEM_Counts", "NumNonZeroGenes.csv")
+
+
+class RSEMUnnormalizedCounts(Exact_Path_Finder):
+    """ RSEM OUTPUT """
+
+    EXACT_PATH_FORMAT = os.path.join("03-RSEM_Counts", "RSEM_Unnormalized_Counts.csv")
+
