@@ -20,7 +20,7 @@ class STAGE(enum.Enum):
     Demultiplexed = 0
     Reads_PreProcessed = 1
     GenomeAligned = 2
-    RSeQCAnalysis = 2.1
+    RSeQCAnalysis = 2.01
     GeneCounted = 3
     DGE = 4
 
