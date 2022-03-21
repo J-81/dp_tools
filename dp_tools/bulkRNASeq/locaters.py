@@ -8,6 +8,7 @@ Such Locators SHOULD:
   - search starting at root data directory
   - any RE patterns should be relative to the search_path
 """
+import abc
 import os
 from pathlib import Path
 from typing import List, Protocol, Tuple, runtime_checkable
@@ -233,3 +234,119 @@ class Fastq:
         ), f"One and only find target should occur. Found: {found}. Pattern: {pattern}"
         return found[0]
 
+
+# TODO: refactor most to this abstract class
+class Exact_Path_Finder(abc.ABC):
+    # replace needed for regex to interpret regex escape characters AFTER interpretting python escape characters
+    # (i.e. accomodate windows using the same separator as the escape char)
+    @property
+    def _EXACT_PATH_FORMAT(self):
+        return self.EXACT_PATH_FORMAT.replace("\\", r"\\")
+
+    def __init__(self, search_root: Path):
+        self.search_root = search_root
+
+    def find(self, **kwargs) -> Path:
+        found = list()
+        pattern = self._EXACT_PATH_FORMAT.format(**kwargs)
+        log.debug(f"Locating {type(self).__name__} file with pattern: {pattern}")
+
+        putative_found = self.search_root / pattern
+        assert (
+            putative_found.exists()
+        ), f"Target does not exist. Expected: {putative_found}. Pattern: {pattern}"
+        found.append(putative_found)
+
+        # Here is where additional validation should occur if the main found resource is a path (e.g. the RSEM stat folder)
+        assert (
+            len(found) == 1
+        ), f"One and only find target should occur. Found: {found}. Pattern: {pattern}"
+        return found[0]
+
+
+class AlignedToTranscriptomeBam(Exact_Path_Finder):
+
+    EXACT_PATH_FORMAT = os.path.join(
+        "02-STAR_Alignment",
+        "{sample_name}",
+        "{sample_name}_Aligned.toTranscriptome.out.bam",
+    )
+
+
+class AlignedSortedByCoordBam(Exact_Path_Finder):
+
+    EXACT_PATH_FORMAT = os.path.join(
+        "02-STAR_Alignment",
+        "{sample_name}",
+        "{sample_name}_Aligned.sortedByCoord.out.bam",
+    )
+
+
+class AlignedSortedByCoordResortedBam(Exact_Path_Finder):
+
+    EXACT_PATH_FORMAT = os.path.join(
+        "02-STAR_Alignment",
+        "{sample_name}",
+        "{sample_name}_Aligned.sortedByCoord_sorted.out.bam",
+    )
+
+
+class AlignedSortedByCoordResortedBamIndex(Exact_Path_Finder):
+
+    EXACT_PATH_FORMAT = os.path.join(
+        "02-STAR_Alignment",
+        "{sample_name}",
+        "{sample_name}_Aligned.sortedByCoord_sorted.out.bam.bai",
+    )
+
+
+class LogFinal(Exact_Path_Finder):
+
+    EXACT_PATH_FORMAT = os.path.join(
+        "02-STAR_Alignment", "{sample_name}", "{sample_name}_Log.final.out",
+    )
+
+
+class LogProgress(Exact_Path_Finder):
+
+    EXACT_PATH_FORMAT = os.path.join(
+        "02-STAR_Alignment", "{sample_name}", "{sample_name}_Log.final.out",
+    )
+
+
+class LogFull(Exact_Path_Finder):
+
+    EXACT_PATH_FORMAT = os.path.join(
+        "02-STAR_Alignment", "{sample_name}", "{sample_name}_Log.out",
+    )
+
+
+class SjTab(Exact_Path_Finder):
+
+    EXACT_PATH_FORMAT = os.path.join(
+        "02-STAR_Alignment", "{sample_name}", "{sample_name}_SJ.out.tab",
+    )
+
+class GeneBodyCoverageOut(Exact_Path_Finder):
+
+    EXACT_PATH_FORMAT = os.path.join(
+        "RSeQC_Analyses", "02_geneBody_coverage", "{sample_name}"
+    )
+
+class InferExperimentOut(Exact_Path_Finder):
+
+    EXACT_PATH_FORMAT = os.path.join(
+        "RSeQC_Analyses", "03_infer_experiment", "{sample_name}_infer_expt.out"
+    )
+
+class InnerDistanceOut(Exact_Path_Finder):
+
+    EXACT_PATH_FORMAT = os.path.join(
+        "RSeQC_Analyses", "04_inner_distance", "{sample_name}"
+    )
+
+class ReadDistributionOut(Exact_Path_Finder):
+
+    EXACT_PATH_FORMAT = os.path.join(
+        "RSeQC_Analyses", "05_read_distribution", "{sample_name}_read_dist.out"
+    )
