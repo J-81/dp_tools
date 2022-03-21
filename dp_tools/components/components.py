@@ -75,12 +75,18 @@ class BulkRNASeqMetadataComponent(TemplateComponent):
 @dataclass(eq=False)
 class GenomeAlignments(TemplateComponent):
 
-    fastqGZ: DataFile
     base: BaseComponent = field(repr=False)
-    # id: str = field(default_factory=get_id)
+    alignedToTranscriptomeBam: Union[DataFile, None] = field(default=None)
+    alignedSortedByCoordBam: Union[DataFile, None] = field(default=None)
+    alignedSortedByCoordResortedBam: Union[DataFile, None] = field(default=None)
+    alignedSortedByCoordResortedBamIndex: Union[DataFile, None] = field(default=None)
+    logFinal: Union[DataFile, None] = field(
+        default=None, metadata={"mqc_parse": "STAR"}
+    )
+    logProgress: Union[DataFile, None] = field(default=None)
+    logFull: Union[DataFile, None] = field(default=None)
+    sjTab: Union[DataFile, None] = field(default=None)
     multiQCDir: Union[DataDir, None] = field(default=None)
-    fastqcReportHTML: Union[DataFile, None] = field(default=None)
-    fastqcReportZIP: Union[DataFile, None] = field(default=None)
 
 
 @dataclass(eq=False)
@@ -98,17 +104,27 @@ class GeneCounts(TemplateComponent):
 @dataclass(eq=False)
 class RSeQCAnalysis(TemplateComponent):
 
-    fastqGZ: DataFile
     base: BaseComponent = field(repr=False)
-    # id: str = field(default_factory=get_id)
-    multiQCDir: Union[DataDir, None] = field(default=None)
-    fastqcReportHTML: Union[DataFile, None] = field(default=None)
-    fastqcReportZIP: Union[DataFile, None] = field(default=None)
-    trimmingReportTXT: Union[DataFile, None] = field(default=None)
+    geneBodyCoverageMultiQCDir: Union[DataDir, None] = field(default=None)
+    geneBodyCoverageOut: Union[DataDir, None] = field(
+        default=None, metadata={"mqc_parse": "RSeQC"}
+    )
+    inferExperimentMultiQCDir: Union[DataDir, None] = field(default=None)
+    inferExperimentOut: Union[DataFile, None] = field(
+        default=None, metadata={"mqc_parse": "RSeQC"}
+    )
+    innerDistanceMultiQCDir: Union[DataDir, None] = field(default=None)
+    innerDistanceOut: Union[DataDir, None] = field(
+        default=None, metadata={"mqc_parse": "RSeQC"}
+    )
+    readDistributionMultiQCDir: Union[DataDir, None] = field(default=None)
+    readDistributionOut: Union[DataFile, None] = field(
+        default=None, metadata={"mqc_parse": "RSeQC"}
+    )
 
 
 @dataclass(eq=False)
-class DGE(TemplateComponent):
+class DifferentialGeneExpression(TemplateComponent):
 
     base: BaseComponent = field(repr=False)
     runsheet: Union[DataFile, None] = field(default=None)
