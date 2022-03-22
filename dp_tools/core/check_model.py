@@ -75,6 +75,9 @@ class Check(abc.ABC):
         # All items in config are NOT required
         # (however, they should be supplied to make the description complete)
         self._proto_description = self.description
+        # assert that this is a string and not a tuple on accident
+        assert not isinstance(self._proto_description, tuple), "Check description must be a string, check that you did not add commas to a multi-line str tuple"
+        assert isinstance(self._proto_description, str)
         self.description = self.description.format(**self.config)
 
         # ensure checkID is valid
@@ -159,7 +162,7 @@ class VVProtocol(abc.ABC):
         # check on init that dataset is of the right type
         assert isinstance(
             dataset, self.expected_dataset_class
-        ), "dataset MUST be of type 'BulkRNASeqDataset' for this protocol"
+        ), f"dataset MUST be of type {self.expected_dataset_class} for this protocol"
         self.dataset = dataset
         self._flags = {"dataset": dict(), "sample": dict(), "component": dict()}
 
