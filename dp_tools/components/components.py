@@ -85,7 +85,7 @@ class GenomeAlignments(TemplateComponent):
     alignedSortedByCoordResortedBam: Union[DataFile, None] = field(default=None)
     alignedSortedByCoordResortedBamIndex: Union[DataFile, None] = field(default=None)
     logFinal: Union[DataFile, None] = field(
-        default=None, metadata={"mqc_parse": "STAR"}
+        default=None, metadata={"mqc_parse": ["STAR"]}
     )
     logProgress: Union[DataFile, None] = field(default=None)
     logFull: Union[DataFile, None] = field(default=None)
@@ -101,7 +101,9 @@ class GeneCounts(TemplateComponent):
     multiQCDir: Union[DataDir, None] = field(default=None)
     genesResults: Union[DataFile, None] = field(default=None)
     isoformsResults: Union[DataFile, None] = field(default=None)
-    statDir: Union[DataDir, None] = field(default=None, metadata={"mqc_parse": "Rsem"})
+    statDir: Union[DataDir, None] = field(
+        default=None, metadata={"mqc_parse": ["Rsem"]}
+    )
 
 
 @dataclass(eq=False)
@@ -118,19 +120,19 @@ class RSeQCAnalysis(TemplateComponent):
     base: BaseComponent = field(repr=False)
     geneBodyCoverageMultiQCDir: Union[DataDir, None] = field(default=None)
     geneBodyCoverageOut: Union[DataDir, None] = field(
-        default=None, metadata={"mqc_parse": "RSeQC"}
+        default=None, metadata={"mqc_parse": ["RSeQC"]}
     )
     inferExperimentMultiQCDir: Union[DataDir, None] = field(default=None)
     inferExperimentOut: Union[DataFile, None] = field(
-        default=None, metadata={"mqc_parse": "RSeQC"}
+        default=None, metadata={"mqc_parse": ["RSeQC"]}
     )
     innerDistanceMultiQCDir: Union[DataDir, None] = field(default=None)
     innerDistanceOut: Union[DataDir, None] = field(
-        default=None, metadata={"mqc_parse": "RSeQC"}
+        default=None, metadata={"mqc_parse": ["RSeQC"]}
     )
     readDistributionMultiQCDir: Union[DataDir, None] = field(default=None)
     readDistributionOut: Union[DataFile, None] = field(
-        default=None, metadata={"mqc_parse": "RSeQC"}
+        default=None, metadata={"mqc_parse": ["RSeQC"]}
     )
 
 
