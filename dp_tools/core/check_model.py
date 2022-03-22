@@ -55,6 +55,19 @@ class FlagCode(enum.Enum):
     GREEN = 20
     INFO = 10
 
+    # allow comparing flag codes
+    # used to determine if a code is of higher severity
+    def __ge__(self, other):
+        return self.value >= other.value
+
+    def __le__(self, other):
+        return self.value <= other.value
+
+    def __gt__(self, other):
+        return self.value > other.value
+
+    def __lt__(self, other):
+        return self.value < other.value
 
 @dataclass
 class Check(abc.ABC):
