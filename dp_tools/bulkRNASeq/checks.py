@@ -1,9 +1,11 @@
+from collections import defaultdict
+import copy
 import enum
 import gzip
 import logging
 from pathlib import Path
 from statistics import mean, median, stdev
-from typing import Callable, Dict, List, Tuple
+from typing import Callable, DefaultDict, Dict, List, Tuple
 from dp_tools.components.components import RawReadsComponent
 from dp_tools.core.entity_model import (
     DataDir,
@@ -320,7 +322,7 @@ class DATASET_RAWREADS_0001(Check):
             "avg_sequence_length",
             "total_sequences",
             "percent_duplicates",
-            "percent_fails",
+            # "percent_fails", number of failed FastQC submodules, not a very useful metric for BulkRNASeq
         ],
         "middle": MIDDLE.mean,
         "yellow_standard_deviation_threshold": 1,
@@ -330,14 +332,14 @@ class DATASET_RAWREADS_0001(Check):
         "Check that the reads stats (source from FastQC) have no outliers among samples "
         "for the following metrics: {metrics}. "
         "Yellow Flagged Outliers are defined as a being {yellow_standard_deviation_threshold} standard "
-        "deviations away from the {middle}. "
+        "deviations away from the {middle.name}. "
         "Red Flagged Outliers are defined as a being {red_standard_deviation_threshold} standard "
-        "deviations away from the {middle}. "
+        "deviations away from the {middle.name}. "
     )
     flag_desc = {
         FlagCode.GREEN: "No reads alignment metric outliers detected for {metrics}",
-        FlagCode.YELLOW1: "Outliers detected as follows: {outliers}",
-        FlagCode.RED1: "Outliers detected as follows: {outliers}",
+        FlagCode.YELLOW1: "Outliers detected as follows (values are rounded number of standard deviations from middle): {formatted_outliers}",
+        FlagCode.RED1: "Outliers detected as follows (values are rounded number of standard deviations from middle): {formatted_outliers}",
     }
 
     def validate_func(self: Check, dataset: TemplateDataset) -> Flag:
@@ -350,37 +352,51 @@ class DATASET_RAWREADS_0001(Check):
         red_threshold = self.config["red_standard_deviation_threshold"]
 
         # init trackers for issues
-        outliers: Dict[str, Tuple[str, str]] = dict()
+        outliers: DefaultDict[str, Dict[str, float]] = defaultdict(dict)
+
+        # determine reads components in samples
+        readsComponents: List[str] = ["rawForwardReads","rawReverseReads"] if dataset.metadata.paired_end else ["rawReads"]
+
+        def format_identifier(sample_name: str, component_str: str) -> str:
+            """Add forward and reverse suffix if paired end, add nothing otherwise""" 
+            return f"{sample_name}:{component_str}" if dataset.metadata.paired_end else sample_name
 
         # iterate through metrics (here all pulled from FastQC general stats)
-        for metric in metrics:
-            sampleToMetric: Dict[str, float] = {
-                s.name: s.rawForwardReads.mqcData["FastQC"]["General_Stats"][metric]
-                for s in dataset.samples.values()
-            }
+        for readComponent in readsComponents:
+            for metric in metrics:
+                sampleToMetric: Dict[str, float] = {
+                    format_identifier(s.name, readComponent): getattr(s, readComponent).mqcData["FastQC"]["General_Stats"][metric]
+                    for s in dataset.samples.values()
+                }
 
-            # yellow level outliers
-            if outliersForThisMetric := identify_outliers(
-                sampleToMetric,
-                standard_deviation_threshold=yellow_threshold,
-                middle=middle,
-            ):
-                code = FlagCode.YELLOW1
-                outliers[metric] = outliersForThisMetric
+                # yellow level outliers
+                if outliersForThisMetric := identify_outliers(
+                    sampleToMetric,
+                    standard_deviation_threshold=yellow_threshold,
+                    middle=middle,
+                ):
+                    if code < FlagCode.YELLOW1:
+                        code = FlagCode.YELLOW1
+                    outliers[metric] = outliers[metric] | outliersForThisMetric
 
-            # red level outliers
-            if outliersForThisMetric := identify_outliers(
-                sampleToMetric,
-                standard_deviation_threshold=red_threshold,
-                middle=middle,
-            ):
-                code = FlagCode.RED1
-                outliers[metric] = outliersForThisMetric
+                # red level outliers
+                if outliersForThisMetric := identify_outliers(
+                    sampleToMetric,
+                    standard_deviation_threshold=red_threshold,
+                    middle=middle,
+                ):
+                    if code < FlagCode.RED1:
+                        code = FlagCode.RED1
+                    outliers[metric] = outliers[metric] | outliersForThisMetric
 
         return Flag(
             code=code,
             check=self,
-            message_args={"outliers": outliers, "metrics": metrics},
+            message_args={
+                "outliers": outliers,
+                "metrics": metrics,
+                "formatted_outliers": pformat(outliers, formatfloat),
+            },
         )
 
 
