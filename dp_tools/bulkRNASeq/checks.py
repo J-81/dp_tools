@@ -16,6 +16,23 @@ log = logging.getLogger(__name__)
 
 from dp_tools.core.check_model import Check, Flag, FlagCode
 
+# adapted from reference: https://stackoverflow.com/questions/56048627/round-floats-in-a-nested-dictionary-recursively
+# used to round values for easier to read messages
+def formatfloat(x):
+    return "%.3g" % float(x)
+
+
+def pformat(original_dictionary, function):
+    dictionary = copy.deepcopy(
+        original_dictionary
+    )  # we don't want to override original values
+    if isinstance(dictionary, dict):
+        new_dict = dict()
+        for k, v in dictionary.items():
+            new_dict[k] = function(v) if isinstance(v, float) else pformat(v, function)
+        return new_dict
+    return dictionary
+
 
 class MIDDLE(enum.Enum):
     mean: Tuple[Callable] = (mean,)
