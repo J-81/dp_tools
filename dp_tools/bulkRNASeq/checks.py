@@ -1,7 +1,9 @@
+import enum
 import gzip
 import logging
 from pathlib import Path
-from typing import List
+from statistics import mean, median, stdev
+from typing import Callable, Dict, List, Tuple
 from dp_tools.components.components import RawReadsComponent
 from dp_tools.core.entity_model import (
     DataDir,
@@ -13,6 +15,37 @@ from dp_tools.core.entity_model import (
 log = logging.getLogger(__name__)
 
 from dp_tools.core.check_model import Check, Flag, FlagCode
+
+
+class MIDDLE(enum.Enum):
+    mean: Callable = mean
+    median: Callable = median
+
+
+def identify_outliers(
+    valueDict: Dict[str, float], standard_deviation_threshold: float, middle: Callable
+):
+    # determine middle value
+    middle_value: float = middle(valueDict.values())
+    std_deviation: float = stdev(valueDict.values())
+
+    # init tracker
+    # holds the key name and the standard deviations from the middle
+    outliers: Dict[str, float] = dict()
+
+    # exit early if std_deviation is zero (i.e. no outliers)
+    if std_deviation == 0:
+        return outliers
+
+    # check if a value is an outlier
+    for key, value in valueDict.items():
+        # calculate standard deviations
+        num_std_deviations_vector = (value - middle_value) / std_deviation
+        # if an outlier, add it to a dict of outliers (include a +/- standard deviations)
+        if abs(num_std_deviations_vector) > standard_deviation_threshold:
+            outliers[key] = num_std_deviations_vector
+
+    return outliers
 
 
 class SAMPLE_RAWREADS_0001(Check):
@@ -89,8 +122,10 @@ class SAMPLE_RAWREADS_0001(Check):
             },
         )
 
+
 class SAMPLE_TRIMREADS_0001(SAMPLE_RAWREADS_0001):
     ...
+
 
 class COMPONENT_RAWREADS_0001(Check):
     id = "COMPONENT_RAWREADS_0001"
@@ -222,17 +257,17 @@ class COMPONENT_TRIMREADS_0001(COMPONENT_RAWREADS_0001):
         ],
     }
 
+
 class DATASET_METADATA_0001(Check):
     id = "DATASET_METADATA_0001"
-    config = {'expected_metadata_attrs': ['paired_end','has_ercc']}
-    description = (
-        "Checks and reports expected metdata required for processing"
-    )
+    config = {"expected_metadata_attrs": ["paired_end", "has_ercc"]}
+    description = "Checks and reports expected metdata required for processing"
     flag_desc = {
         FlagCode.GREEN: "All expected metadata is accessible and populated. {actual_metadata_fields}",
         FlagCode.HALT1: "Missing expected metadata fields: {missing_metadata_fields}",
     }
-    def validate_func(self, dataset: 'BulkRNASeqDataset') -> Flag:
+
+    def validate_func(self, dataset: TemplateDataset) -> Flag:
         # assume green unless flag condition met
         code = FlagCode.GREEN
 
@@ -247,7 +282,7 @@ class DATASET_METADATA_0001(Check):
                 tracked_metadata[attr] = attr_value
             else:
                 missing_metadata_fields.append(attr)
-        
+
         # check if any missing_metadata_fields are present
         if missing_metadata_fields:
             code = FlagCode.HALT1
@@ -257,41 +292,81 @@ class DATASET_METADATA_0001(Check):
             code=code,
             message_args={
                 "actual_metadata_fields": tracked_metadata,
-                "missing_metadata_fields": missing_metadata_fields
-                },
+                "missing_metadata_fields": missing_metadata_fields,
+            },
         )
 
 
 class DATASET_RAWREADS_0001(Check):
     id = "DATASET_RAWREADS_0001"
     config = {
-        "lines_to_check": 200_000_000,
-        # attributes names
-        "expected_data_files": [
-            "fastqGZ",
-            "multiQCDir",
-            "fastqcReportHTML",
-            "fastqcReportZIP",
+        "metrics": [
+            "percent_gc",
+            "avg_sequence_length",
+            "total_sequences",
+            "percent_duplicates",
+            "percent_fails",
         ],
+        "middle": MIDDLE.mean,
+        "yellow_standard_deviation_threshold": 1,
+        "red_standard_deviation_threshold": 2,
     }
     description = (
-        "Performs a validation across all samples' raw reads "
-        "Specifically, checks for any sample-wise outliers in the following metrics: "
-        "\n\t fastqGZ file size, read counts. "
-        "\Also, checks for any sample-wise outliers in the following metrics with the read sets: "
-        "\n\t read counts. "
-        "Additionally, the following checks are performed for each file type: \n"
-        "\tfastq.gz: First {lines_to_check} lines are checked for correct format. "
+        "Check that the reads stats (source from FastQC) have no outliers among samples "
+        "for the following metrics: {metrics}. "
+        "Yellow Flagged Outliers are defined as a being {yellow_standard_deviation_threshold} standard "
+        "deviations away from the {middle}. "
+        "Red Flagged Outliers are defined as a being {red_standard_deviation_threshold} standard "
+        "deviations away from the {middle}. "
     )
     flag_desc = {
-        FlagCode.GREEN: "Component passes all validation requirements.",
-        FlagCode.HALT1: "Missing expected files: {missing_files}",
-        FlagCode.HALT2: "Fastq.gz file has issues on lines: {lines_with_issues}",
-        FlagCode.HALT3: "Corrupted Fastq.gz file suspected, last line number encountered: {last_line_checked}",
+        FlagCode.GREEN: "No reads alignment metric outliers detected for {metrics}",
+        FlagCode.YELLOW1: "Outliers detected as follows: {outliers}",
+        FlagCode.RED1: "Outliers detected as follows: {outliers}",
     }
 
     def validate_func(self: Check, dataset: TemplateDataset) -> Flag:
-        return Flag(code=FlagCode.GREEN, check=self)
+        code = FlagCode.GREEN
+
+        # pull variables from config
+        metrics = self.config["metrics"]
+        middle = self.config["middle"]
+        yellow_threshold = self.config["yellow_standard_deviation_threshold"]
+        red_threshold = self.config["red_standard_deviation_threshold"]
+
+        # init trackers for issues
+        outliers: Dict[str, Tuple[str, str]] = dict()
+
+        # iterate through metrics (here all pulled from FastQC general stats)
+        for metric in metrics:
+            sampleToMetric: Dict[str, float] = {
+                s.name: s.rawForwardReads.mqcData["FastQC"]["General_Stats"][metric]
+                for s in dataset.samples.values()
+            }
+
+            # yellow level outliers
+            if outliersForThisMetric := identify_outliers(
+                sampleToMetric,
+                standard_deviation_threshold=yellow_threshold,
+                middle=middle,
+            ):
+                code = FlagCode.YELLOW1
+                outliers[metric] = outliersForThisMetric
+
+            # red level outliers
+            if outliersForThisMetric := identify_outliers(
+                sampleToMetric,
+                standard_deviation_threshold=red_threshold,
+                middle=middle,
+            ):
+                code = FlagCode.RED1
+                outliers[metric] = outliersForThisMetric
+
+        return Flag(
+            code=code,
+            check=self,
+            message_args={"outliers": outliers, "metrics": metrics},
+        )
 
 
 class DATASET_TRIMREADS_0001(DATASET_RAWREADS_0001):
@@ -306,3 +381,31 @@ class DATASET_TRIMREADS_0001(DATASET_RAWREADS_0001):
             "trimmingReportTXT",
         ],
     }
+
+
+class DATASET_GENOMEALIGNMENTS_0001(Check):
+    id = "DATASET_GENOMEALIGNMENT_0001"
+    config = {
+        "alignment_metrics": [],
+        "middle": "median",
+        "yellow_standard_deviation_threshold": 1,
+        "red_standard_deviation_threshold": 2,
+    }
+    description = (
+        "Check that the genome alignment stats have no outliers among samples "
+        "for the following metrics: {alignment_metrics}. "
+        "Yellow Flagged Outliers are defined as a being {yellow_standard_deviation_threshold} standard "
+        "deviations away from the {middle}. "
+        "Red Flagged Outliers are defined as a being {red_standard_deviation_threshold} standard "
+        "deviations away from the {middle}. "
+    )
+    flag_desc = {
+        FlagCode.GREEN: "No genome alignment metric outliers detected for {alignment_metrics}",
+        FlagCode.YELLOW1: "Outliers detected as follows: {outliers}",
+        FlagCode.RED1: "Outliers detected as follows: {outliers}",
+    }
+
+    def validate_func(self, dataset: TemplateDataset) -> Flag:
+        print("Ready to implement")
+        return Flag(code=code, check=self, message_args={})
+
