@@ -18,8 +18,11 @@ from dp_tools.core.check_model import Check, Flag, FlagCode
 
 
 class MIDDLE(enum.Enum):
-    mean: Callable = mean
-    median: Callable = median
+    mean: Tuple[Callable] = (mean,)
+    median: Tuple[Callable] = (median,)
+
+    def __call__(self, *args, **kwargs):
+        return self.value[0](*args, **kwargs)
 
 
 def identify_outliers(
