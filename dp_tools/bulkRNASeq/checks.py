@@ -324,20 +324,24 @@ class DATASET_RAWREADS_0001(Check):
             "percent_duplicates",
             # "percent_fails", number of failed FastQC submodules, not a very useful metric for BulkRNASeq
         ],
-        "middle": MIDDLE.mean,
-        "yellow_standard_deviation_threshold": 1,
-        "red_standard_deviation_threshold": 2,
+        "middle": MIDDLE.median,
+        "yellow_standard_deviation_threshold": 2,
+        "red_standard_deviation_threshold": 4,
+        "target_components_by_paired_end": {
+            True: ["rawForwardReads", "rawReverseReads"],
+            False: ["rawReads"],
+        },
     }
     description = (
         "Check that the reads stats (source from FastQC) have no outliers among samples "
         "for the following metrics: {metrics}. "
-        "Yellow Flagged Outliers are defined as a being {yellow_standard_deviation_threshold} standard "
+        "Yellow Flagged Outliers are defined as a being {yellow_standard_deviation_threshold} - {red_standard_deviation_threshold} standard "
         "deviations away from the {middle.name}. "
-        "Red Flagged Outliers are defined as a being {red_standard_deviation_threshold} standard "
+        "Red Flagged Outliers are defined as a being {red_standard_deviation_threshold}+ standard "
         "deviations away from the {middle.name}. "
     )
     flag_desc = {
-        FlagCode.GREEN: "No reads alignment metric outliers detected for {metrics}",
+        FlagCode.GREEN: "No reads metric outliers detected for {metrics}",
         FlagCode.YELLOW1: "Outliers detected as follows (values are rounded number of standard deviations from middle): {formatted_outliers}",
         FlagCode.RED1: "Outliers detected as follows (values are rounded number of standard deviations from middle): {formatted_outliers}",
     }
@@ -355,17 +359,25 @@ class DATASET_RAWREADS_0001(Check):
         outliers: DefaultDict[str, Dict[str, float]] = defaultdict(dict)
 
         # determine reads components in samples
-        readsComponents: List[str] = ["rawForwardReads","rawReverseReads"] if dataset.metadata.paired_end else ["rawReads"]
+        readsComponents = self.config["target_components_by_paired_end"][
+            dataset.metadata.paired_end
+        ]
 
         def format_identifier(sample_name: str, component_str: str) -> str:
-            """Add forward and reverse suffix if paired end, add nothing otherwise""" 
-            return f"{sample_name}:{component_str}" if dataset.metadata.paired_end else sample_name
+            """Add forward and reverse suffix if paired end, add nothing otherwise"""
+            return (
+                f"{sample_name}:{component_str}"
+                if dataset.metadata.paired_end
+                else sample_name
+            )
 
         # iterate through metrics (here all pulled from FastQC general stats)
         for readComponent in readsComponents:
             for metric in metrics:
                 sampleToMetric: Dict[str, float] = {
-                    format_identifier(s.name, readComponent): getattr(s, readComponent).mqcData["FastQC"]["General_Stats"][metric]
+                    format_identifier(s.name, readComponent): getattr(
+                        s, readComponent
+                    ).mqcData["FastQC"]["General_Stats"][metric]
                     for s in dataset.samples.values()
                 }
 
@@ -401,7 +413,13 @@ class DATASET_RAWREADS_0001(Check):
 
 
 class DATASET_TRIMREADS_0001(DATASET_RAWREADS_0001):
-    ...
+    # overwrite specific config only
+    config = DATASET_RAWREADS_0001.config | {
+        "target_components_by_paired_end": {
+            True: ["trimForwardReads", "trimReverseReads"],
+            False: ["trimReads"],
+        }
+    }
 
 
 class DATASET_GENOMEALIGNMENTS_0001(Check):
@@ -414,9 +432,9 @@ class DATASET_GENOMEALIGNMENTS_0001(Check):
     description = (
         "Check that the genome alignment stats have no outliers among samples "
         "for the following metrics: {alignment_metrics}. "
-        "Yellow Flagged Outliers are defined as a being {yellow_standard_deviation_threshold} standard "
+        "Yellow Flagged Outliers are defined as a being {yellow_standard_deviation_threshold} - {red_standard_deviation_threshold} standard "
         "deviations away from the {middle}. "
-        "Red Flagged Outliers are defined as a being {red_standard_deviation_threshold} standard "
+        "Red Flagged Outliers are defined as a being {red_standard_deviation_threshold}+ standard "
         "deviations away from the {middle}. "
     )
     flag_desc = {
