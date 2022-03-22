@@ -11,7 +11,7 @@ from dp_tools.bulkRNASeq.loaders import (
     load_BulkRNASeq_STAGE_00,
     load_BulkRNASeq_STAGE_01,
 )
-from dp_tools.bulkRNASeq.vv_protocols import BulkRNASeq_VVProtocol_RawData
+from dp_tools.bulkRNASeq.vv_protocols import STAGE, BulkRNASeq_VVProtocol_RawData
 
 
 @pytest.fixture(autouse=True)
@@ -26,7 +26,9 @@ def test_bulkRNASeq_STAGE00_validation_paired(caplog, glds194_dataSystem_STAGE00
     CAPLEVEL = 20
     caplog.set_level(CAPLEVEL)
     ds = glds194_dataSystem_STAGE00
-    vv_protocol = BulkRNASeq_VVProtocol_RawData(dataset=ds.dataset)
+    vv_protocol = BulkRNASeq_VVProtocol_RawData(
+        dataset=ds.dataset, stage=STAGE.Demultiplexed
+    )
 
     with caplog.at_level(CAPLEVEL):
         vv_protocol.validate_all()
@@ -62,7 +64,9 @@ def test_bulkRNASeq_STAGE00_validation_single(caplog, glds48_dataSystem_STAGE00)
 
     caplog.set_level(CAPLEVEL)
     ds = glds48_dataSystem_STAGE00
-    vv_protocol = BulkRNASeq_VVProtocol_RawData(dataset=ds.dataset)
+    vv_protocol = BulkRNASeq_VVProtocol_RawData(
+        dataset=ds.dataset, stage=STAGE.Demultiplexed
+    )
 
     with MonkeyPatch.context() as m:
         vv_protocol.validate_all()
