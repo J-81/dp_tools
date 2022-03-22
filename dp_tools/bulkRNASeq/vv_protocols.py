@@ -9,6 +9,7 @@ from dp_tools.core.check_model import Flag, VVProtocol
 from dp_tools.bulkRNASeq.checks import (
     COMPONENT_RAWREADS_0001,
     COMPONENT_TRIMREADS_0001,
+    DATASET_METADATA_0001,
     DATASET_RAWREADS_0001,
     DATASET_TRIMREADS_0001,
     SAMPLE_RAWREADS_0001,
@@ -35,6 +36,7 @@ class BulkRNASeq_VVProtocol_RawData(VVProtocol):
     stage: STAGE = STAGE.Demultiplexed
 
     # init all checks
+    dataset_metadata_0001 = DATASET_METADATA_0001()
     dataset_rawreads_0001 = DATASET_RAWREADS_0001()
     sample_rawreads_0001 = SAMPLE_RAWREADS_0001()
     component_rawreads_0001 = COMPONENT_RAWREADS_0001()
@@ -42,8 +44,8 @@ class BulkRNASeq_VVProtocol_RawData(VVProtocol):
 
     def validate_dataset(self) -> Dict[BulkRNASeqDataset, List[Flag]]:
         flags: Dict[BulkRNASeqDataset, List[Flag]] = defaultdict(list)
+        if self.stage >= STAGE.Demultiplexed: flags[self.dataset].append(self.dataset_metadata_0001.validate(self.dataset))
         if self.stage >= STAGE.Demultiplexed: flags[self.dataset].append(self.dataset_rawreads_0001.validate(self.dataset))
-        if self.stage >= STAGE.Reads_PreProcessed: flags[self.dataset].append(self.dataset_rawreads_0001.validate(self.dataset))
         return flags
 
     def validate_samples(self) -> Dict[BulkRNASeqSample, List[Flag]]:
