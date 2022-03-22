@@ -60,7 +60,7 @@ class FlagCode(enum.Enum):
 class Check(abc.ABC):
 
     description: ClassVar[str]
-    id: ClassVar[str]
+    id: ClassVar[str] = field(init=False) # set as class name
     flag_desc: ClassVar[Dict[int, str]]
     # flags associated with this check
     flags: List["Flag"] = field(default_factory=list)
@@ -79,6 +79,9 @@ class Check(abc.ABC):
         assert not isinstance(self._proto_description, tuple), "Check description must be a string, check that you did not add commas to a multi-line str tuple"
         assert isinstance(self._proto_description, str)
         self.description = self.description.format(**self.config)
+
+        # set check id as class name
+        self.id = self.__class__.__name__
 
         # ensure checkID is valid
         assert re.match(

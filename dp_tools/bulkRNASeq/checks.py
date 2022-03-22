@@ -49,7 +49,6 @@ def identify_outliers(
 
 
 class SAMPLE_RAWREADS_0001(Check):
-    id = "SAMPLE_RAWREADS_0001"
     description = (
         "Check that appropriate raw reads components exist. Also check that "
         "All datafiles associated with the components are present. "
@@ -128,7 +127,6 @@ class SAMPLE_TRIMREADS_0001(SAMPLE_RAWREADS_0001):
 
 
 class COMPONENT_RAWREADS_0001(Check):
-    id = "COMPONENT_RAWREADS_0001"
     config = {
         "lines_to_check": 200_000_000,
         # attributes names
@@ -245,7 +243,6 @@ class COMPONENT_RAWREADS_0001(Check):
 
 
 class COMPONENT_TRIMREADS_0001(COMPONENT_RAWREADS_0001):
-    id = "COMPONENT_TRIMREADS_0001"
     config = {
         "lines_to_check": 200_000_000,
         "expected_data_files": [
@@ -259,7 +256,6 @@ class COMPONENT_TRIMREADS_0001(COMPONENT_RAWREADS_0001):
 
 
 class DATASET_METADATA_0001(Check):
-    id = "DATASET_METADATA_0001"
     config = {"expected_metadata_attrs": ["paired_end", "has_ercc"]}
     description = "Checks and reports expected metdata required for processing"
     flag_desc = {
@@ -298,7 +294,6 @@ class DATASET_METADATA_0001(Check):
 
 
 class DATASET_RAWREADS_0001(Check):
-    id = "DATASET_RAWREADS_0001"
     config = {
         "metrics": [
             "percent_gc",
@@ -370,21 +365,10 @@ class DATASET_RAWREADS_0001(Check):
 
 
 class DATASET_TRIMREADS_0001(DATASET_RAWREADS_0001):
-    id = "DATASET_TRIMREADS_0001"
-    config = {
-        "lines_to_check": 200_000_000,
-        "expected_data_files": [
-            "fastqGZ",
-            "multiQCDir",
-            "fastqcReportHTML",
-            "fastqcReportZIP",
-            "trimmingReportTXT",
-        ],
-    }
+    ...
 
 
 class DATASET_GENOMEALIGNMENTS_0001(Check):
-    id = "DATASET_GENOMEALIGNMENT_0001"
     config = {
         "alignment_metrics": [],
         "middle": "median",
