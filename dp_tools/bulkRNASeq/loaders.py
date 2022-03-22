@@ -395,20 +395,20 @@ def load_BulkRNASeq_STAGE_0201(
     # create shared sample datafiles
     gbMQC = DataDir(
         mQC.find(
-            rel_dir=Path("RSeQC_Analyses") / "02_genebody_coverage",
+            rel_dir=(Path("RSeQC_Analyses") / "02_genebody_coverage"),
             mqc_label="geneBody_cov",
         )
     )
     ieMQC = DataDir(
         mQC.find(
-            rel_dir=Path("RSeQC_Analyses") / "03_infer_experiment",
+            rel_dir=(Path("RSeQC_Analyses") / "03_infer_experiment"),
             mqc_label="infer_exp",
         )
     )
     # idMQC moved to metadata controlled block
     rdMQC = DataDir(
         mQC.find(
-            rel_dir=Path("RSeQC_Analyses") / "05_read_distribution",
+            rel_dir=(Path("RSeQC_Analyses") / "05_read_distribution"),
             mqc_label="read_dist",
         )
     )
@@ -431,7 +431,7 @@ def load_BulkRNASeq_STAGE_0201(
         if metadata.paired_end:
             genomeAlignments.innerDistanceMultiQCDir = DataDir(
                 mQC.find(
-                    rel_dir=Path("RSeQC_Analyses") / "04_inner_distance",
+                    rel_dir=(Path("RSeQC_Analyses") / "04_inner_distance"),
                     mqc_label="inner_dist",
                 )
             )
