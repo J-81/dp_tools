@@ -21,6 +21,16 @@ def test_COMPONENT_RAWREADS_0001():
     return COMPONENT_RAWREADS_0001()
 
 
+@pytest.fixture(scope="module")
+def test_COMPONENT_TRIMREADS_0001():
+    return COMPONENT_TRIMREADS_0001()
+
+@pytest.fixture(autouse=True)
+def mock_dev_exceptions(monkeypatch):
+    monkeypatch.setattr(
+        "dp_tools.core.check_model.ALLOWED_DEV_EXCEPTIONS", (SystemExit)
+    )  # ensure unhandled developer exceptions are raised
+
 def test_COMPONENT_RAWREADS_0001_paired(
     glds194_dataSystem_STAGE00, test_COMPONENT_RAWREADS_0001
 ):
@@ -34,7 +44,6 @@ def test_COMPONENT_RAWREADS_0001_paired(
 
     # expected HALT1
     with MonkeyPatch.context() as m:
-        m.setattr(check_model, "ALLOWED_DEV_EXCEPTIONS", (SystemExit))
         m.setattr(test_component, "fastqGZ", None)
         m.setattr(test_component, "fastqcReportZIP", None)
         flag = testCheck.validate(test_component)
@@ -50,7 +59,6 @@ def test_COMPONENT_RAWREADS_0001_paired(
 
     # expected HALT3
     with MonkeyPatch.context() as m:
-        m.setattr(check_model, "ALLOWED_DEV_EXCEPTIONS", (SystemExit))
         mock_path = io.BytesIO(b"bad file contents")
         mock_path.exists = lambda: True
         test_component_monkey_patch = copy.deepcopy(test_component)
@@ -108,9 +116,11 @@ def test_COMPONENT_RAWREADS_0001_single(
         )
 
 
-def test_COMPONENT_TRIMREADS_0001_paired(glds194_dataSystem_STAGE01):
+def test_COMPONENT_TRIMREADS_0001_paired(
+    glds194_dataSystem_STAGE01, test_COMPONENT_TRIMREADS_0001
+):
     ds = glds194_dataSystem_STAGE01
-    testCheck = COMPONENT_TRIMREADS_0001()
+    testCheck = test_COMPONENT_TRIMREADS_0001
 
     test_component = list(ds.dataset.samples.values())[0].trimForwardReads
 
@@ -150,9 +160,11 @@ def test_COMPONENT_TRIMREADS_0001_paired(glds194_dataSystem_STAGE01):
         )
 
 
-def test_COMPONENT_TRIMREADS_0001_single(glds48_dataSystem_STAGE01):
+def test_COMPONENT_TRIMREADS_0001_single(
+    glds48_dataSystem_STAGE01, test_COMPONENT_TRIMREADS_0001
+):
     ds = glds48_dataSystem_STAGE01
-    testCheck = COMPONENT_TRIMREADS_0001()
+    testCheck = test_COMPONENT_TRIMREADS_0001
 
     test_component = list(ds.dataset.samples.values())[0].trimReads
 
