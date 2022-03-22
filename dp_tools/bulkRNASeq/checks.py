@@ -222,6 +222,45 @@ class COMPONENT_TRIMREADS_0001(COMPONENT_RAWREADS_0001):
         ],
     }
 
+class DATASET_METADATA_0001(Check):
+    id = "DATASET_METADATA_0001"
+    config = {'expected_metadata_attrs': ['paired_end','has_ercc']}
+    description = (
+        "Checks and reports expected metdata required for processing"
+    )
+    flag_desc = {
+        FlagCode.GREEN: "All expected metadata is accessible and populated. {actual_metadata_fields}",
+        FlagCode.HALT1: "Missing expected metadata fields: {missing_metadata_fields}",
+    }
+    def validate_func(self, dataset: 'BulkRNASeqDataset') -> Flag:
+        # assume green unless flag condition met
+        code = FlagCode.GREEN
+
+        # set up tracker for expected attributes values
+        tracked_metadata = dict()
+        # and a tracker for missing attributes
+        missing_metadata_fields = list()
+
+        for attr in self.config["expected_metadata_attrs"]:
+            attr_value = getattr(dataset.metadata, attr, None)
+            if attr_value != None:
+                tracked_metadata[attr] = attr_value
+            else:
+                missing_metadata_fields.append(attr)
+        
+        # check if any missing_metadata_fields are present
+        if missing_metadata_fields:
+            code = FlagCode.HALT1
+
+        return Flag(
+            check=self,
+            code=code,
+            message_args={
+                "actual_metadata_fields": tracked_metadata,
+                "missing_metadata_fields": missing_metadata_fields
+                },
+        )
+
 
 class DATASET_RAWREADS_0001(Check):
     id = "DATASET_RAWREADS_0001"
