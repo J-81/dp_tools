@@ -157,10 +157,9 @@ def test_DATASET_GENOMEALIGNMENTS_0001_paired(
 
     assert (
         testCheck.description
-        == "Check that the reads stats (source from FastQC) have no outliers among samples for the following metrics: ['percent_gc', 'avg_sequence_length', 'total_sequences', 'percent_duplicates']. Yellow Flagged Outliers are defined as a being 2 - 4 standard deviations away from the median. Red Flagged Outliers are defined as a being 4+ standard deviations away from the median. "
+        == "Check that the genome alignment stats (source from STAR logs) have no outliers among samples for the following metrics: ['uniquely_mapped_percent', 'avg_mapped_read_length', 'mismatch_rate', 'deletion_rate', 'deletion_length', 'insertion_rate', 'insertion_length', 'multimapped_percent', 'multimapped_toomany_percent', 'unmapped_mismatches_percent', 'unmapped_tooshort_percent', 'unmapped_other_percent']. Yellow Flagged Outliers are defined as a being 2 - 4 standard deviations away from the median. Red Flagged Outliers are defined as a being 4+ standard deviations away from the median. "
     )
 
-    # expected YELLOW1
     flag = testCheck.validate(dataset)
     assert flag.code.name == "YELLOW1"
 
@@ -173,14 +172,15 @@ def test_DATASET_GENOMEALIGNMENTS_0001_single(
 
     assert (
         testCheck.description
-        == "Check that the reads stats (source from FastQC) have no outliers among samples for the following metrics: ['percent_gc', 'avg_sequence_length', 'total_sequences', 'percent_duplicates']. Yellow Flagged Outliers are defined as a being 2 - 4 standard deviations away from the median. Red Flagged Outliers are defined as a being 4+ standard deviations away from the median. "
+        == "Check that the genome alignment stats (source from STAR logs) have no outliers among samples for the following metrics: ['uniquely_mapped_percent', 'avg_mapped_read_length', 'mismatch_rate', 'deletion_rate', 'deletion_length', 'insertion_rate', 'insertion_length', 'multimapped_percent', 'multimapped_toomany_percent', 'unmapped_mismatches_percent', 'unmapped_tooshort_percent', 'unmapped_other_percent']. Yellow Flagged Outliers are defined as a being 2 - 4 standard deviations away from the median. Red Flagged Outliers are defined as a being 4+ standard deviations away from the median. "
     )
 
     # expected YELLOW1
     flag = testCheck.validate(dataset)
     assert flag.code.name == "YELLOW1"
 
-def test_DATASET_RSEQCANALYSIS_0001_paired()
+
+def test_DATASET_RSEQCANALYSIS_0001_paired():
     raise NotImplementedError
 
 

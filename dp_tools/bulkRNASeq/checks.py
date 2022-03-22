@@ -424,26 +424,104 @@ class DATASET_TRIMREADS_0001(DATASET_RAWREADS_0001):
 
 class DATASET_GENOMEALIGNMENTS_0001(Check):
     config = {
-        "alignment_metrics": [],
-        "middle": "median",
-        "yellow_standard_deviation_threshold": 1,
-        "red_standard_deviation_threshold": 2,
+        "metrics": [
+            # "total_reads", # check in FastQC, but is used to normalize
+            # "avg_input_read_length",
+            # "uniquely_mapped", # redundant with better metric of percent
+            "uniquely_mapped_percent",
+            "avg_mapped_read_length",
+            # "num_splices",
+            # "num_annotated_splices",
+            # "num_GTAG_splices",
+            # "num_GCAG_splices",
+            # "num_ATAC_splices",
+            # "num_noncanonical_splices",
+            "mismatch_rate",
+            "deletion_rate",
+            "deletion_length",
+            "insertion_rate",
+            "insertion_length",
+            # "multimapped", # redundant with better metric of percent
+            "multimapped_percent",
+            # "multimapped_toomany",  # redundant with better metric of percent
+            "multimapped_toomany_percent",
+            "unmapped_mismatches_percent",
+            "unmapped_tooshort_percent",
+            "unmapped_other_percent",
+            # "unmapped_mismatches", # redundant with better metric of percent
+            # "unmapped_tooshort", # redundant with better metric of percent
+            # "unmapped_other", # redundant with better metric of percent
+        ],
+        "middle": MIDDLE.median,
+        "yellow_standard_deviation_threshold": 2,
+        "red_standard_deviation_threshold": 4,
     }
     description = (
-        "Check that the genome alignment stats have no outliers among samples "
-        "for the following metrics: {alignment_metrics}. "
+        "Check that the genome alignment stats (source from STAR logs) have no outliers among samples "
+        "for the following metrics: {metrics}. "
         "Yellow Flagged Outliers are defined as a being {yellow_standard_deviation_threshold} - {red_standard_deviation_threshold} standard "
-        "deviations away from the {middle}. "
+        "deviations away from the {middle.name}. "
         "Red Flagged Outliers are defined as a being {red_standard_deviation_threshold}+ standard "
-        "deviations away from the {middle}. "
+        "deviations away from the {middle.name}. "
     )
     flag_desc = {
-        FlagCode.GREEN: "No genome alignment metric outliers detected for {alignment_metrics}",
-        FlagCode.YELLOW1: "Outliers detected as follows: {outliers}",
-        FlagCode.RED1: "Outliers detected as follows: {outliers}",
+        FlagCode.GREEN: "No genome alignment metric outliers detected for {metrics}",
+        FlagCode.YELLOW1: "Outliers detected as follows (values are rounded number of standard deviations from middle): {formatted_outliers}",
+        FlagCode.RED1: "Outliers detected as follows (values are rounded number of standard deviations from middle): {formatted_outliers}",
     }
 
-    def validate_func(self, dataset: TemplateDataset) -> Flag:
-        print("Ready to implement")
-        return Flag(code=code, check=self, message_args={})
+    def validate_func(self: Check, dataset: TemplateDataset) -> Flag:
+        code = FlagCode.GREEN
+
+        # pull variables from config
+        metrics = self.config["metrics"]
+        middle = self.config["middle"]
+        yellow_threshold = self.config["yellow_standard_deviation_threshold"]
+        red_threshold = self.config["red_standard_deviation_threshold"]
+
+        # init trackers for issues
+        outliers: DefaultDict[str, Dict[str, float]] = defaultdict(dict)
+
+        # determine reads components in samples
+        targetComponents = ["genomeAlignments"]
+
+        # iterate through metrics (here all pulled from FastQC general stats)
+        for targetComponent in targetComponents:
+            for metric in metrics:
+                sampleToMetric: Dict[str, float] = {
+                    s.name: getattr(s, targetComponent).mqcData["STAR"][
+                        "General_Stats"
+                    ][metric]
+                    for s in dataset.samples.values()
+                }
+
+                # yellow level outliers
+                if outliersForThisMetric := identify_outliers(
+                    sampleToMetric,
+                    standard_deviation_threshold=yellow_threshold,
+                    middle=middle,
+                ):
+                    if code < FlagCode.YELLOW1:
+                        code = FlagCode.YELLOW1
+                    outliers[metric] = outliers[metric] | outliersForThisMetric
+
+                # red level outliers
+                if outliersForThisMetric := identify_outliers(
+                    sampleToMetric,
+                    standard_deviation_threshold=red_threshold,
+                    middle=middle,
+                ):
+                    if code < FlagCode.RED1:
+                        code = FlagCode.RED1
+                    outliers[metric] = outliers[metric] | outliersForThisMetric
+
+        return Flag(
+            code=code,
+            check=self,
+            message_args={
+                "outliers": outliers,
+                "metrics": metrics,
+                "formatted_outliers": pformat(outliers, formatfloat),
+            },
+        )
 
