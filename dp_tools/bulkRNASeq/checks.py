@@ -516,7 +516,7 @@ class DATASET_GENOMEALIGNMENTS_0001(Check):
                     outliers[metric] = outliers[metric] | outliersForThisMetric
 
         return Flag(
-            code=code,
+            codes=code,
             check=self,
             message_args={
                 "outliers": outliers,
@@ -528,30 +528,40 @@ class DATASET_GENOMEALIGNMENTS_0001(Check):
 
 class DATASET_RSEQCANALYSIS_0001(Check):
     config = {
-        "metrics": [],
+        "plots_all": ["Read Distribution", "Infer experiment", "Gene Body Coverage"],
+        "plot_paired_end": ["Inner Distance"],
         "middle": MIDDLE.median,
         "yellow_standard_deviation_threshold": 2,
         "red_standard_deviation_threshold": 4,
+        "yellow_minimum_dominant_strandedness": 75,  # percents
+        "halt_minimum_dominant_strandedness": 65,  # percents
     }
     description = (
-        "Check that the rseqc analysis stats (source from the rseqc logs) have no outliers among samples "
-        "for the following metrics: {metrics}. "
+        "Check that the rseqc analysis stats (source from the rseqc logs) have no outlier values among samples "
+        "for the following plots: {plots_all} (Paired end only: {plot_paired_end}). "
         "Yellow Flagged Outliers are defined as a being {yellow_standard_deviation_threshold} - {red_standard_deviation_threshold} standard "
         "deviations away from the {middle.name}. "
         "Red Flagged Outliers are defined as a being {red_standard_deviation_threshold}+ standard "
         "deviations away from the {middle.name}. "
+        "Additionally the following is assessed for infer experiment strandedess metrics: "
+        "A Yellow Flag is raised in the case that the dominant strandessness is between {yellow_minimum_dominant_strandedness} - {halt_minimum_dominant_strandedness} "
+        "A Halt Flag is raised in the case that the dominant strandessness is below {halt_minimum_dominant_strandedness} "
+        "Note: the 'dominant strandedness' is the max(datasetwide_average(antisense), datasetwide_average(sense)) "
     )
     flag_desc = {
         FlagCode.GREEN: "No rseqc analysis metric outliers detected for {metrics}",
         FlagCode.YELLOW1: "Outliers detected as follows (values are rounded number of standard deviations from middle): {formatted_outliers}",
+        FlagCode.YELLOW2: "The dominant strandedness is {dominant_strandedness}, this is lower than the yellow flag threshold.",
         FlagCode.RED1: "Outliers detected as follows (values are rounded number of standard deviations from middle): {formatted_outliers}",
+        FlagCode.HALT1: "The dominant strandedness is {dominant_strandedness}, this is lower than the halting flag threshold.",
     }
 
     def validate_func(self: Check, dataset: TemplateDataset) -> Flag:
-        code = FlagCode.GREEN
+        codes = {FlagCode.GREEN}
 
         # pull variables from config
-        metrics = self.config["metrics"]
+        targetPlotsAll = self.config["plots_all"]
+        targetPlotsPairedEnd = self.config["plot_paired_end"]
         middle = self.config["middle"]
         yellow_threshold = self.config["yellow_standard_deviation_threshold"]
         red_threshold = self.config["red_standard_deviation_threshold"]
@@ -559,45 +569,88 @@ class DATASET_RSEQCANALYSIS_0001(Check):
         # init trackers for issues
         outliers: DefaultDict[str, Dict[str, float]] = defaultdict(dict)
 
-        # determine reads components in samples
-        targetComponents = ["rSeQCAnalysis"]
+        # extend with paired end specific plot if appropriate
+        targetPlots = targetPlotsAll
+        if dataset.metadata.paired_end:
+            targetPlots.extend(targetPlotsPairedEnd)
 
         # iterate through metrics (here all pulled from FastQC general stats)
-        for targetComponent in targetComponents:
-            for metric in metrics:
-                sampleToMetric: Dict[str, float] = {
-                    s.name: getattr(s, targetComponent).mqcData["RSeQC"][
-                        "General_Stats"
-                    ][metric]
-                    for s in dataset.samples.values()
-                }
+        for plot_name in targetPlots:
+            # extract dataframe of all samples
+            df = dataset.getMQCDataFrame(
+                sample_component="rSeQCAnalysis", mqc_module="RSeQC", mqc_plot=plot_name
+            )
 
+            # convert to samplewise dicts
+            metricToSampleToMetricValue: Dict[str, Dict[str, float]] = df.to_dict()
+
+            for metricName, sampleToMetricValue in metricToSampleToMetricValue.items():
                 # yellow level outliers
                 if outliersForThisMetric := identify_outliers(
-                    sampleToMetric,
+                    sampleToMetricValue,
                     standard_deviation_threshold=yellow_threshold,
                     middle=middle,
                 ):
-                    if code < FlagCode.YELLOW1:
-                        code = FlagCode.YELLOW1
-                    outliers[metric] = outliers[metric] | outliersForThisMetric
+                    if max(codes) < FlagCode.YELLOW1:
+                        codes.add(FlagCode.YELLOW1)
+                    outliers[metricName] = outliers[metricName] | outliersForThisMetric
 
                 # red level outliers
                 if outliersForThisMetric := identify_outliers(
-                    sampleToMetric,
+                    sampleToMetricValue,
                     standard_deviation_threshold=red_threshold,
                     middle=middle,
                 ):
-                    if code < FlagCode.RED1:
-                        code = FlagCode.RED1
-                    outliers[metric] = outliers[metric] | outliersForThisMetric
+                    if max(codes) < FlagCode.RED1:
+                        codes.add(FlagCode.RED1)
+                        # remove lower FlagCode YELLOW1
+                        codes.remove(FlagCode.YELLOW1)
+                    outliers[metricName] = outliers[metricName] | outliersForThisMetric
+
+        # dominant strandedness related subcheck
+        # assess dominant strandedness
+        yellow_minimum_dominant_strandedness = self.config[
+            "yellow_minimum_dominant_strandedness"
+        ]
+        halt_minimum_dominant_strandedness = self.config[
+            "halt_minimum_dominant_strandedness"
+        ]
+
+        def get_dominant_strandedness(dataset: TemplateDataset) -> tuple[str, float]:
+            df = dataset.getMQCDataFrame(
+                sample_component="rSeQCAnalysis",
+                mqc_module="RSeQC",
+                mqc_plot="Infer experiment",
+            )
+            dominant_strandedness_name = df.mean()[
+                ["Antisense (% Tags)", "Sense (% Tags)"]
+            ].idxmax()
+            dominant_strandedness_value = df.mean()[
+                ["Antisense (% Tags)", "Sense (% Tags)"]
+            ].max()
+            return (dominant_strandedness_name, dominant_strandedness_value)
+
+        dominant_strandedness = get_dominant_strandedness(dataset)
+
+        # flag based on thresholds
+        dominant_strandedness_value = dominant_strandedness[1]
+        if (
+            yellow_minimum_dominant_strandedness
+            > dominant_strandedness_value
+            > halt_minimum_dominant_strandedness
+        ):
+            codes.add(FlagCode.YELLOW2)
+        elif dominant_strandedness_value < halt_minimum_dominant_strandedness:
+            codes.add(FlagCode.HALT1)
+
+        # set code to green if no flags added
 
         return Flag(
-            code=code,
+            codes=codes,
             check=self,
             message_args={
                 "outliers": outliers,
-                "metrics": metrics,
                 "formatted_outliers": pformat(outliers, formatfloat),
+                "dominant_strandedness": dominant_strandedness,
             },
         )
