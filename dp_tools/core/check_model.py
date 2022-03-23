@@ -149,7 +149,7 @@ class Check(abc.ABC):
 @dataclass
 class Flag:
 
-    code: FlagCode
+    codes: set[FlagCode]
     check: Check
     message_args: dict = field(default_factory=dict)
     message: str = field(init=False)
@@ -157,19 +157,46 @@ class Flag:
     # must ensure all flags are correct before continuing
     def __post_init__(self):
 
+        # code related init
+        # covert single codes to list if not already a list
+        if isinstance(self.codes, FlagCode):
+            self.codes = {self.codes}
+
+        # remove FlagCode.GREEN if included with other flags
+        # that flag should never be reported if higher severity flags are reported
+        if FlagCode.GREEN in self.codes and max(self.codes) != FlagCode.GREEN:
+            self.codes.remove(FlagCode.GREEN)
+        
+        # convert codes into sorted list in descending severity order
+        self.codes = list(self.codes)
+        self.codes.sort(reverse=True)
+
+        # set message
+        self.message = None
+        for code in self.codes:
+            if not self.message:
+                self.message = ""
+            else:
+                self.message += ":::"
         # retrieve proto message
-        pre_format_msg = self.check.flag_desc[self.code]
+            pre_format_msg = self.check.flag_desc[code]
 
         # populate message with message_args
-        self.message = pre_format_msg.format(**self.message_args)
+            self.message += pre_format_msg.format(**self.message_args)
 
         # check types before final addition and init
-        strict_type_checks(self)
+        strict_type_checks(self, exceptions = ["codes"] ) # codes is a list of objects, not currently covered by this check
+
         # add to check flags records
         self.check.flags.append(self)
 
+    @property
+    def maxCode(self):
+        """ Returns most severe FlagCode rather than all codes for backwards compatibility """
+        return max(self.codes)
+
     def __str__(self):
-        return f"Flag (checkID: {self.check.id}, FlagCode: {self.code.name}:{(self.code.value)}, message: {self.message})"
+        return f"Flag (checkID: {self.check.id}, FlagCodes: {self.codes}, message: {self.message})"
 
 class VVProtocol(abc.ABC):
     """ A abstract protocol for VV """
