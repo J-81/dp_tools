@@ -7,6 +7,7 @@ from dp_tools.bulkRNASeq.loaders import (
     load_BulkRNASeq_STAGE_00,
     load_BulkRNASeq_STAGE_01,
     load_BulkRNASeq_STAGE_02,
+    load_BulkRNASeq_STAGE_0201,
 )
 
 
@@ -97,15 +98,36 @@ def glds194_dataSystem_STAGE01(glds194_test_dir):
         )
     )
 
+
 @pytest.fixture
 def glds194_dataSystem_STAGE02(glds194_test_dir):
     return copy.deepcopy(
-        load_BulkRNASeq_STAGE_02(*load_BulkRNASeq_STAGE_01(
-            *load_BulkRNASeq_STAGE_00(
-                glds194_test_dir, dataSystem_name="GLDS-194", stack=True
-            ), stack=True
+        load_BulkRNASeq_STAGE_02(
+            *load_BulkRNASeq_STAGE_01(
+                *load_BulkRNASeq_STAGE_00(
+                    glds194_test_dir, dataSystem_name="GLDS-194", stack=True
+                ),
+                stack=True
+            )
         )
-    ))
+    )
+
+
+@pytest.fixture
+def glds194_dataSystem_STAGE0201(glds194_test_dir):
+    return copy.deepcopy(
+        load_BulkRNASeq_STAGE_0201(
+            *load_BulkRNASeq_STAGE_02(
+                *load_BulkRNASeq_STAGE_01(
+                    *load_BulkRNASeq_STAGE_00(
+                        glds194_test_dir, dataSystem_name="GLDS-194", stack=True
+                    ),
+                    stack=True
+                ), stack = True
+            )
+        )
+    )
+
 
 @pytest.fixture
 def glds48_dataSystem_STAGE00(glds48_test_dir):
@@ -124,13 +146,33 @@ def glds48_dataSystem_STAGE01(glds48_test_dir):
         )
     )
 
+
 @pytest.fixture
 def glds48_dataSystem_STAGE02(glds48_test_dir):
     return copy.deepcopy(
-        load_BulkRNASeq_STAGE_02(*load_BulkRNASeq_STAGE_01(
-            *load_BulkRNASeq_STAGE_00(
-                glds48_test_dir, dataSystem_name="GLDS-48", stack=True
-            ), stack=True
+        load_BulkRNASeq_STAGE_02(
+            *load_BulkRNASeq_STAGE_01(
+                *load_BulkRNASeq_STAGE_00(
+                    glds48_test_dir, dataSystem_name="GLDS-48", stack=True
+                ),
+                stack=True
+            )
         )
-    ))
+    )
 
+
+@pytest.fixture
+def glds48_dataSystem_STAGE0201(glds48_test_dir):
+    return copy.deepcopy(
+        load_BulkRNASeq_STAGE_0201(
+            *load_BulkRNASeq_STAGE_02(
+                *load_BulkRNASeq_STAGE_01(
+                    *load_BulkRNASeq_STAGE_00(
+                        glds48_test_dir, dataSystem_name="GLDS-48", stack=True
+                    ),
+                    stack=True
+                ),
+                stack=True
+            )
+        )
+    )
