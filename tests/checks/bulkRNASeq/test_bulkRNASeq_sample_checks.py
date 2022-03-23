@@ -23,7 +23,7 @@ def test_SAMPLE_RAWREADS_0001_paired():
         mockReverse.mqcData = {"FastQC": {"General_Stats": {"total_sequences": 100}}}
         mockSample.dataset.metadata.paired_end = True
         flag = testCheck.validate(sample=mockSample)
-        assert flag.code == check_model.FlagCode.HALT1
+        assert flag.maxCode == check_model.FlagCode.HALT1
         assert (
             flag.message
             == "Missing expected components: ['rawForwardReads', 'rawReverseReads']"
@@ -35,7 +35,7 @@ def test_SAMPLE_RAWREADS_0001_paired():
         mockSample = MagicMock(spec=BulkRNASeqSample)
         mockSample.dataset.metadata.paired_end = False
         flag = testCheck.validate(sample=mockSample)
-        assert flag.code == check_model.FlagCode.HALT1
+        assert flag.maxCode == check_model.FlagCode.HALT1
         assert flag.message == "Missing expected components: ['rawReads']"
 
     # for paired end passes
@@ -49,7 +49,7 @@ def test_SAMPLE_RAWREADS_0001_paired():
         mockSample.rawReverseReads = mockReverse
         mockSample.dataset.metadata.paired_end = True
         flag = testCheck.validate(sample=mockSample)
-        assert flag.code == check_model.FlagCode.GREEN
+        assert flag.maxCode == check_model.FlagCode.GREEN
         assert flag.message == "All expected raw read files present"
 
     # for paired end passes
@@ -63,7 +63,7 @@ def test_SAMPLE_RAWREADS_0001_paired():
         mockSample.rawReverseReads = mockReverse
         mockSample.dataset.metadata.paired_end = True
         flag = testCheck.validate(sample=mockSample)
-        assert flag.code == check_model.FlagCode.HALT2
+        assert flag.maxCode == check_model.FlagCode.HALT2
         assert (
             flag.message
             == "Forward and reverse reads counts differ. Forward: (500) Reverse: (100)"
@@ -76,7 +76,7 @@ def test_SAMPLE_RAWREADS_0001_paired():
         mockSample.rawReads = MagicMock(spec=RawReadsComponent)
         mockSample.dataset.metadata.paired_end = False
         flag = testCheck.validate(sample=mockSample)
-        assert flag.code == check_model.FlagCode.GREEN
+        assert flag.maxCode == check_model.FlagCode.GREEN
         assert flag.message == "All expected raw read files present"
 
 

@@ -40,14 +40,14 @@ def test_COMPONENT_RAWREADS_0001_paired(
 
     # expected GREEN
     flag = testCheck.validate(test_component)
-    assert flag.code.name == "GREEN"
+    assert flag.maxCode.name == "GREEN"
 
     # expected HALT1
     with MonkeyPatch.context() as m:
         m.setattr(test_component, "fastqGZ", None)
         m.setattr(test_component, "fastqcReportZIP", None)
         flag = testCheck.validate(test_component)
-        assert flag.code.name == "HALT1"
+        assert flag.maxCode.name == "HALT1"
         assert flag.message == "Missing expected files: ['fastqGZ', 'fastqcReportZIP']"
 
     # expected HALT2
@@ -55,7 +55,7 @@ def test_COMPONENT_RAWREADS_0001_paired(
     # with MonkeyPatch.context() as m:
     #    m.setattr(gzip, "open", lambda: raise EOFError)
     #    flag = COMPONENT_RAWREADS_0001.validate(test_component)
-    #    assert flag.code.name == 'HALT2'
+    #    assert flag.maxCode.name == 'HALT2'
 
     # expected HALT3
     with MonkeyPatch.context() as m:
@@ -64,7 +64,7 @@ def test_COMPONENT_RAWREADS_0001_paired(
         test_component_monkey_patch = copy.deepcopy(test_component)
         test_component_monkey_patch.fastqGZ.path = mock_path
         flag = testCheck.validate(test_component_monkey_patch)
-        assert flag.code.name == "HALT3"
+        assert flag.maxCode.name == "HALT3"
         assert (
             flag.message
             == "Corrupted Fastq.gz file suspected, last line number encountered: 0"
@@ -83,7 +83,7 @@ def test_COMPONENT_RAWREADS_0001_single(
     with MonkeyPatch.context() as m:
         m.setattr(check_model, "ALLOWED_DEV_EXCEPTIONS", (SystemExit))
         flag = testCheck.validate(test_component)
-        assert flag.code.name == "GREEN"
+        assert flag.maxCode.name == "GREEN"
 
     # expected HALT1
     with MonkeyPatch.context() as m:
@@ -91,7 +91,7 @@ def test_COMPONENT_RAWREADS_0001_single(
         m.setattr(test_component, "fastqGZ", None)
         m.setattr(test_component, "fastqcReportZIP", None)
         flag = testCheck.validate(test_component)
-        assert flag.code.name == "HALT1"
+        assert flag.maxCode.name == "HALT1"
         assert flag.message == "Missing expected files: ['fastqGZ', 'fastqcReportZIP']"
 
     # expected HALT2
@@ -99,7 +99,7 @@ def test_COMPONENT_RAWREADS_0001_single(
     # with MonkeyPatch.context() as m:
     #    m.setattr(gzip, "open", lambda: raise EOFError)
     #    flag = COMPONENT_RAWREADS_0001.validate(test_component)
-    #    assert flag.code.name == 'HALT2'
+    #    assert flag.maxCode.name == 'HALT2'
 
     # expected HALT3
     with MonkeyPatch.context() as m:
@@ -109,7 +109,7 @@ def test_COMPONENT_RAWREADS_0001_single(
         test_component_monkey_patch = copy.deepcopy(test_component)
         test_component_monkey_patch.fastqGZ.path = mock_path
         flag = testCheck.validate(test_component_monkey_patch)
-        assert flag.code.name == "HALT3"
+        assert flag.maxCode.name == "HALT3"
         assert (
             flag.message
             == "Corrupted Fastq.gz file suspected, last line number encountered: 0"
@@ -128,14 +128,14 @@ def test_COMPONENT_TRIMREADS_0001_paired(
     with MonkeyPatch.context() as m:
         m.setattr(check_model, "ALLOWED_DEV_EXCEPTIONS", (SystemExit))
         flag = testCheck.validate(test_component)
-        assert flag.code.name == "GREEN"
+        assert flag.maxCode.name == "GREEN"
 
     # expected HALT1
     with MonkeyPatch.context() as m:
         m.setattr(check_model, "ALLOWED_DEV_EXCEPTIONS", (SystemExit))
         m.setattr(test_component, "trimmingReportTXT", None)
         flag = testCheck.validate(test_component)
-        assert flag.code.name == "HALT1"
+        assert flag.maxCode.name == "HALT1"
         assert flag.message == "Missing expected files: ['trimmingReportTXT']"
 
     # expected HALT2
@@ -143,7 +143,7 @@ def test_COMPONENT_TRIMREADS_0001_paired(
     # with MonkeyPatch.context() as m:
     #    m.setattr(gzip, "open", lambda: raise EOFError)
     #    flag = COMPONENT_RAWREADS_0001.validate(test_component)
-    #    assert flag.code.name == 'HALT2'
+    #    assert flag.maxCode.name == 'HALT2'
 
     # expected HALT3
     with MonkeyPatch.context() as m:
@@ -153,7 +153,7 @@ def test_COMPONENT_TRIMREADS_0001_paired(
         test_component_monkey_patch = copy.deepcopy(test_component)
         test_component_monkey_patch.fastqGZ.path = mock_path
         flag = testCheck.validate(test_component_monkey_patch)
-        assert flag.code.name == "HALT3"
+        assert flag.maxCode.name == "HALT3"
         assert (
             flag.message
             == "Corrupted Fastq.gz file suspected, last line number encountered: 0"
@@ -172,14 +172,14 @@ def test_COMPONENT_TRIMREADS_0001_single(
     with MonkeyPatch.context() as m:
         m.setattr(check_model, "ALLOWED_DEV_EXCEPTIONS", (SystemExit))
         flag = testCheck.validate(test_component)
-        assert flag.code.name == "GREEN"
+        assert flag.maxCode.name == "GREEN"
 
     # expected HALT1
     with MonkeyPatch.context() as m:
         m.setattr(check_model, "ALLOWED_DEV_EXCEPTIONS", (SystemExit))
         m.setattr(test_component, "trimmingReportTXT", None)
         flag = testCheck.validate(test_component)
-        assert flag.code.name == "HALT1"
+        assert flag.maxCode.name == "HALT1"
         assert flag.message == "Missing expected files: ['trimmingReportTXT']"
 
     # expected HALT2
@@ -187,7 +187,7 @@ def test_COMPONENT_TRIMREADS_0001_single(
     # with MonkeyPatch.context() as m:
     #    m.setattr(gzip, "open", lambda: raise EOFError)
     #    flag = COMPONENT_RAWREADS_0001.validate(test_component)
-    #    assert flag.code.name == 'HALT2'
+    #    assert flag.maxCode.name == 'HALT2'
 
     # expected HALT3
     with MonkeyPatch.context() as m:
@@ -197,7 +197,7 @@ def test_COMPONENT_TRIMREADS_0001_single(
         test_component_monkey_patch = copy.deepcopy(test_component)
         test_component_monkey_patch.fastqGZ.path = mock_path
         flag = testCheck.validate(test_component_monkey_patch)
-        assert flag.code.name == "HALT3"
+        assert flag.maxCode.name == "HALT3"
         assert (
             flag.message
             == "Corrupted Fastq.gz file suspected, last line number encountered: 0"

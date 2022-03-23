@@ -126,7 +126,7 @@ class Check(abc.ABC):
                 f"Developer exception raised during a validation function for check: {self}"
             )
             return Flag(
-                code=FlagCode.DEV_UNHANDLED,
+                maxCode=FlagCode.DEV_UNHANDLED,
                 message_args={"function": self.validate_func, "e": e, "full_traceback": traceback.format_exc(), "args": args, "kwargs": kwargs},
                 check=self,
             )
@@ -178,10 +178,10 @@ class Flag:
                 self.message = ""
             else:
                 self.message += ":::"
-        # retrieve proto message
+            # retrieve proto message
             pre_format_msg = self.check.flag_desc[code]
 
-        # populate message with message_args
+            # populate message with message_args
             self.message += pre_format_msg.format(**self.message_args)
 
         # check types before final addition and init
