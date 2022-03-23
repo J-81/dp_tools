@@ -7,6 +7,7 @@ from dp_tools.bulkRNASeq.checks import (
     DATASET_GENOMEALIGNMENTS_0001,
     DATASET_METADATA_0001,
     DATASET_RAWREADS_0001,
+    DATASET_RSEQCANALYSIS_0001,
     DATASET_TRIMREADS_0001,
 )
 
@@ -36,6 +37,11 @@ def test_DATASET_TRIMREADS_0001():
 @pytest.fixture(scope="module")
 def test_DATASET_GENOMEALIGNMENTS_0001():
     return DATASET_GENOMEALIGNMENTS_0001()
+
+
+@pytest.fixture(scope="module")
+def test_DATASET_RSEQCANALYSIS_0001():
+    return DATASET_RSEQCANALYSIS_0001()
 
 
 def test_DATASET_METADATA_0001_paired(
@@ -180,12 +186,40 @@ def test_DATASET_GENOMEALIGNMENTS_0001_single(
     assert flag.code.name == "YELLOW1"
 
 
-def test_DATASET_RSEQCANALYSIS_0001_paired():
-    raise NotImplementedError
+def test_DATASET_RSEQCANALYSIS_0001_paired(
+    glds194_dataSystem_STAGE0201, test_DATASET_RSEQCANALYSIS_0001
+):
+    dataset = glds194_dataSystem_STAGE0201.dataset
+    dataset.getMQCDataFrame(
+        sample_component="rawForwardReads",
+        mqc_module="FastQC",
+        mqc_plot="Per Sequence Quality Scores",
+    )
+    testCheck = test_DATASET_RSEQCANALYSIS_0001
+
+    # assert (
+    #     testCheck.description
+    #     == "Check that the genome alignment stats (source from STAR logs) have no outliers among samples for the following metrics: ['uniquely_mapped_percent', 'avg_mapped_read_length', 'mismatch_rate', 'deletion_rate', 'deletion_length', 'insertion_rate', 'insertion_length', 'multimapped_percent', 'multimapped_toomany_percent', 'unmapped_mismatches_percent', 'unmapped_tooshort_percent', 'unmapped_other_percent']. Yellow Flagged Outliers are defined as a being 2 - 4 standard deviations away from the median. Red Flagged Outliers are defined as a being 4+ standard deviations away from the median. "
+    # )
+
+    flag = testCheck.validate(dataset)
+    assert flag.code.name == "YELLOW1"
 
 
-def test_DATASET_RSEQCANALYSIS_0001_single():
-    raise NotImplementedError
+def test_DATASET_RSEQCANALYSIS_0001_single(
+    glds48_dataSystem_STAGE0201, test_DATASET_GENOMEALIGNMENTS_0001
+):
+    dataset = glds48_dataSystem_STAGE0201.dataset
+    testCheck = test_DATASET_GENOMEALIGNMENTS_0001
+
+    assert (
+        testCheck.description
+        == "Check that the genome alignment stats (source from STAR logs) have no outliers among samples for the following metrics: ['uniquely_mapped_percent', 'avg_mapped_read_length', 'mismatch_rate', 'deletion_rate', 'deletion_length', 'insertion_rate', 'insertion_length', 'multimapped_percent', 'multimapped_toomany_percent', 'unmapped_mismatches_percent', 'unmapped_tooshort_percent', 'unmapped_other_percent']. Yellow Flagged Outliers are defined as a being 2 - 4 standard deviations away from the median. Red Flagged Outliers are defined as a being 4+ standard deviations away from the median. "
+    )
+
+    # expected YELLOW1
+    flag = testCheck.validate(dataset)
+    assert flag.code.name == "YELLOW1"
 
 
 def test_DATASET_GENECOUNTS_0001_paired():
