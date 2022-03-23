@@ -295,6 +295,13 @@ Component: class:{self.__class__.__name__}
 
         # extract and set general stats
         general_stats = get_general_stats(mqc_ret)
+        if not self._mqcData.get(module_name):
+            self._mqcData[module_name]: ModuleLevelMQC = dict() # type: ignore
+        # handle modules with no general stats
+        if general_stats == {}:
+            log.info(f"MQC extraction: No general stats in found after running: {mqc_target['mqc_modules']}")
+            self._mqcData[module_name]['General_Stats'] = False
+        else:
         for module_name, samplewise_dict in general_stats.items():
             # init dict if needed
             # TODO: replace with default dict on toplevel init
