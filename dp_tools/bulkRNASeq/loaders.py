@@ -416,7 +416,7 @@ def load_BulkRNASeq_STAGE_0201(
     # update samples
     for sample_name, sample in dataset.samples.items():
         # create common component
-        genomeAlignments = RSeQCAnalysis(
+        rSeQCAnalysis = RSeQCAnalysis(
             base=BaseComponent(
                 description="RSeQC Analysis based on reads aligned to genome in context of gene annotations"
             ),
@@ -429,16 +429,16 @@ def load_BulkRNASeq_STAGE_0201(
         )
         # add pair end specific datafile
         if metadata.paired_end:
-            genomeAlignments.innerDistanceMultiQCDir = DataDir(
+            rSeQCAnalysis.innerDistanceMultiQCDir = DataDir(
                 mQC.find(
                     rel_dir=(Path("RSeQC_Analyses") / "04_inner_distance"),
                     mqc_label="inner_dist",
                 )
             )
-            genomeAlignments.innerDistanceOut = DataDir(
+            rSeQCAnalysis.innerDistanceOut = DataDir(
                 path=idOut.find(sample_name=sample_name)
             )
-        sample.attach_component(genomeAlignments, attr="genomeAlignments")
+        sample.attach_component(rSeQCAnalysis, attr="rSeQCAnalysis")
 
     # return dataSystem only if not being used in a loading stack
     if stack:
