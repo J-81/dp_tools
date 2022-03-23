@@ -127,7 +127,7 @@ class SAMPLE_RAWREADS_0001(Check):
 
         return Flag(
             check=self,
-            code=code,
+            codes=code,
             message_args={
                 "missing_components": missing_components,
                 "forward_read_count": sample.rawForwardReads.mqcData["FastQC"][
@@ -209,7 +209,7 @@ class COMPONENT_RAWREADS_0001(Check):
         if code != FlagCode.GREEN:
             return Flag(
                 check=self,
-                code=code,
+                codes=code,
                 message_args={
                     "lines_with_issues": lines_with_issues,
                     "last_line_checked": i,
@@ -255,7 +255,7 @@ class COMPONENT_RAWREADS_0001(Check):
         # return flag
         return Flag(
             check=self,
-            code=code,
+            codes=code,
             message_args={
                 "lines_with_issues": lines_with_issues,
                 "last_line_checked": i,
@@ -307,7 +307,7 @@ class DATASET_METADATA_0001(Check):
 
         return Flag(
             check=self,
-            code=code,
+            codes=code,
             message_args={
                 "actual_metadata_fields": tracked_metadata,
                 "missing_metadata_fields": missing_metadata_fields,
@@ -402,7 +402,7 @@ class DATASET_RAWREADS_0001(Check):
                     outliers[metric] = outliers[metric] | outliersForThisMetric
 
         return Flag(
-            code=code,
+            codes=code,
             check=self,
             message_args={
                 "outliers": outliers,
