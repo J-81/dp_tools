@@ -52,7 +52,7 @@ def test_DATASET_METADATA_0001_paired(
 
     # expected GREEN
     flag = testCheck.validate(dataset)
-    assert flag.code.name == "GREEN"
+    assert flag.maxCode.name == "GREEN"
     assert (
         flag.message
         == "All expected metadata is accessible and populated. {'paired_end': True, 'has_ercc': True}"
@@ -62,7 +62,7 @@ def test_DATASET_METADATA_0001_paired(
     with MonkeyPatch.context() as m:
         m.setattr(dataset.metadata, "has_ercc", None)
         flag = testCheck.validate(dataset)
-        assert flag.code.name == "HALT1"
+        assert flag.maxCode.name == "HALT1"
         assert flag.message == "Missing expected metadata fields: ['has_ercc']"
 
 
@@ -74,7 +74,7 @@ def test_DATASET_METADATA_0001_single(
 
     # expected GREEN
     flag = testCheck.validate(dataset)
-    assert flag.code.name == "GREEN"
+    assert flag.maxCode.name == "GREEN"
     assert (
         flag.message
         == "All expected metadata is accessible and populated. {'paired_end': False, 'has_ercc': False}"
@@ -84,7 +84,7 @@ def test_DATASET_METADATA_0001_single(
     with MonkeyPatch.context() as m:
         m.setattr(dataset.metadata, "has_ercc", None)
         flag = testCheck.validate(dataset)
-        assert flag.code.name == "HALT1"
+        assert flag.maxCode.name == "HALT1"
         assert flag.message == "Missing expected metadata fields: ['has_ercc']"
 
 
@@ -101,7 +101,7 @@ def test_DATASET_RAWREADS_0001_paired(
 
     # expected YELLOW1
     flag = testCheck.validate(dataset)
-    assert flag.code.name == "YELLOW1"
+    assert flag.maxCode.name == "YELLOW1"
     assert flag.message.startswith(
         "Outliers detected as follows (values are rounded number of standard deviations from middle):"
     )
@@ -120,7 +120,7 @@ def test_DATASET_RAWREADS_0001_single(
 
     # expected YELLOW1
     flag = testCheck.validate(dataset)
-    assert flag.code.name == "YELLOW1"
+    assert flag.maxCode.name == "YELLOW1"
 
 
 def test_DATASET_TRIMREADS_0001_paired(
@@ -136,7 +136,7 @@ def test_DATASET_TRIMREADS_0001_paired(
 
     # expected YELLOW1
     flag = testCheck.validate(dataset)
-    assert flag.code.name == "YELLOW1"
+    assert flag.maxCode.name == "YELLOW1"
 
 
 def test_DATASET_TRIMREADS_0001_single(
@@ -152,7 +152,7 @@ def test_DATASET_TRIMREADS_0001_single(
 
     # expected YELLOW1
     flag = testCheck.validate(dataset)
-    assert flag.code.name == "YELLOW1"
+    assert flag.maxCode.name == "YELLOW1"
 
 
 def test_DATASET_GENOMEALIGNMENTS_0001_paired(
@@ -167,7 +167,7 @@ def test_DATASET_GENOMEALIGNMENTS_0001_paired(
     )
 
     flag = testCheck.validate(dataset)
-    assert flag.code.name == "YELLOW1"
+    assert flag.maxCode.name == "YELLOW1"
 
 
 def test_DATASET_GENOMEALIGNMENTS_0001_single(
@@ -183,43 +183,29 @@ def test_DATASET_GENOMEALIGNMENTS_0001_single(
 
     # expected YELLOW1
     flag = testCheck.validate(dataset)
-    assert flag.code.name == "YELLOW1"
+    assert flag.maxCode.name == "YELLOW1"
 
 
 def test_DATASET_RSEQCANALYSIS_0001_paired(
     glds194_dataSystem_STAGE0201, test_DATASET_RSEQCANALYSIS_0001
 ):
     dataset = glds194_dataSystem_STAGE0201.dataset
-    dataset.getMQCDataFrame(
-        sample_component="rawForwardReads",
-        mqc_module="FastQC",
-        mqc_plot="Per Sequence Quality Scores",
-    )
     testCheck = test_DATASET_RSEQCANALYSIS_0001
 
-    # assert (
-    #     testCheck.description
-    #     == "Check that the genome alignment stats (source from STAR logs) have no outliers among samples for the following metrics: ['uniquely_mapped_percent', 'avg_mapped_read_length', 'mismatch_rate', 'deletion_rate', 'deletion_length', 'insertion_rate', 'insertion_length', 'multimapped_percent', 'multimapped_toomany_percent', 'unmapped_mismatches_percent', 'unmapped_tooshort_percent', 'unmapped_other_percent']. Yellow Flagged Outliers are defined as a being 2 - 4 standard deviations away from the median. Red Flagged Outliers are defined as a being 4+ standard deviations away from the median. "
-    # )
-
     flag = testCheck.validate(dataset)
-    assert flag.code.name == "YELLOW1"
+    assert flag.maxCode.name == "YELLOW2"
+    assert [c.name for c in flag.codes] == ["YELLOW2", "YELLOW1"]
 
 
 def test_DATASET_RSEQCANALYSIS_0001_single(
-    glds48_dataSystem_STAGE0201, test_DATASET_GENOMEALIGNMENTS_0001
+    glds48_dataSystem_STAGE0201, test_DATASET_RSEQCANALYSIS_0001
 ):
     dataset = glds48_dataSystem_STAGE0201.dataset
-    testCheck = test_DATASET_GENOMEALIGNMENTS_0001
-
-    assert (
-        testCheck.description
-        == "Check that the genome alignment stats (source from STAR logs) have no outliers among samples for the following metrics: ['uniquely_mapped_percent', 'avg_mapped_read_length', 'mismatch_rate', 'deletion_rate', 'deletion_length', 'insertion_rate', 'insertion_length', 'multimapped_percent', 'multimapped_toomany_percent', 'unmapped_mismatches_percent', 'unmapped_tooshort_percent', 'unmapped_other_percent']. Yellow Flagged Outliers are defined as a being 2 - 4 standard deviations away from the median. Red Flagged Outliers are defined as a being 4+ standard deviations away from the median. "
-    )
+    testCheck = test_DATASET_RSEQCANALYSIS_0001
 
     # expected YELLOW1
     flag = testCheck.validate(dataset)
-    assert flag.code.name == "YELLOW1"
+    assert flag.maxCode.name == "YELLOW1"
 
 
 def test_DATASET_GENECOUNTS_0001_paired():
