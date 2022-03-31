@@ -44,6 +44,10 @@ def test_DATASET_RSEQCANALYSIS_0001():
     return DATASET_RSEQCANALYSIS_0001()
 
 
+@pytest.fixture(scope="module")
+def test_DATASET_GENECOUNTS_0001():
+    return DATASET_GENECOUNTS_0001()
+
 def test_DATASET_METADATA_0001_paired(
     glds194_dataSystem_STAGE00, test_DATASET_METADATA_0001
 ):
@@ -208,8 +212,26 @@ def test_DATASET_RSEQCANALYSIS_0001_single(
     assert flag.maxCode.name == "YELLOW1"
 
 
-def test_DATASET_GENECOUNTS_0001_paired():
-    raise NotImplementedError
+def test_DATASET_GENECOUNTS_0001_paired(
+    glds194_dataSystem_STAGE03, test_DATASET_GENECOUNTS_0001
+):
+    dataset = glds194_dataSystem_STAGE03.dataset
+    testCheck = test_DATASET_GENECOUNTS_0001
+
+    flag = testCheck.validate(dataset)
+    assert flag.maxCode.name == "YELLOW1"
+    assert [c.name for c in flag.codes] == ["YELLOW1"]
+
+
+def test_DATASET_GENECOUNTS_0001_single(
+    glds48_dataSystem_STAGE03, test_DATASET_RSEQCANALYSIS_0001
+):
+    dataset = glds48_dataSystem_STAGE03.dataset
+    testCheck = test_DATASET_RSEQCANALYSIS_0001
+
+    # expected YELLOW1
+    flag = testCheck.validate(dataset)
+    assert flag.maxCode.name == "YELLOW1"
 
 
 def test_DATASET_GENECOUNTS_0001_single():
