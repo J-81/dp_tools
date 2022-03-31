@@ -786,6 +786,13 @@ class DATASET_DIFFERENTIALGENEEXPRESSION_0001(Check):
             "P.value_": {"nonNegative": True, "nonNull": False},
             "Adj.p.value_": {"nonNegative": True, "nonNull": False},
         },
+        "viz_pairwise_columns_prefixes": {
+            "Log2_Adj.p.value_": {"nonNull": False},
+            "Sig.1_": {"allowedValues": [False, True], "nonNull": False},
+            "Sig.05_": {"allowedValues": [False, True], "nonNull": False},
+            "Log2_P.value_": {"nonNegative": False, "nonNull": False},
+            "Updown_": {"allowedValues": [1, -1], "nonNull": True},
+        },
         # these prefix as follows {prefix}{FactorGroup}
         "group_factorwise_columns_prefixes": {
             "Group.Mean_": {"nonNull": True, "nonNegative": True},
@@ -797,30 +804,36 @@ class DATASET_DIFFERENTIALGENEEXPRESSION_0001(Check):
             "LRT.p.value": {"nonNull": False, "nonNegative": True},
         },
         "sample_counts_constraints": {"nonNegative": True},
-        "middle": MIDDLE.median,
-        "yellow_standard_deviation_threshold": 2,
-        "red_standard_deviation_threshold": 4,
-        "yellow_minimum_dominant_strandedness": 75,  # percents
-        "halt_minimum_dominant_strandedness": 65,  # percents
+        "expected_vis_pca_columns": [
+            "PC1",
+            "PC2",
+        ]  # more may be included but these are REQUIRED
+        # "middle": MIDDLE.median,
+        # "yellow_standard_deviation_threshold": 2,
+        # "red_standard_deviation_threshold": 4,
     }
     description = (
-        "Check that the differential expression outputs exist (source from the RSEM logs) and all samples are included in "
-        "the following tables: {expected_tables} (as defined in the metadata) "
+        "Check that the differential expression outputs exist (source from the deseq2 script) and  "
+        "the following tables: {expected_tables}.  "
+        "For studies with ERCC spike-in, performs the same check on analogous tables. "
         "Additional performs the file specific validations: "
         "- contrasts.csv: Includes all the existing comparison groups (based on factor values in the metadata) and is formatted correctly"
         "- differential_expression.csv:  Includes expected annotation columns {dge_table_expected_annotation_columns}, "
         "includes sample count columns for all samples, all sample count values are non-negative, "
-        "all pairwise comparision columns exist with the following prefixes and follow the following constraints: {pairwise_columns_prefixes} "
-        ""
-        "log2fold change for all possible comparisons, and non-negative p- and adjusted p-values for all possible comparisons. "
+        "all pairwise comparision columns exist with the following prefixes and adhere to the following constraints: {pairwise_columns_prefixes} "
+        "all groupFactorWise statistics columns exists with the following prefixes and adhere to the following constraints: {group_factorwise_columns_prefixes} "
+        "all fixed statistics columns exist and adhere to the following constraints: {fixed_stats_columns} "
+        " - visualization_PCA_table.csv: All samples in index and at the following columns exist {expected_vis_pca_columns} "
+        " - visualization_output_table.csv: Performs same checks as differential_expression.csv as well as, "
+        "ensuring the additional pairwise comparision columns exist with the following prefixes and "
+        "adhere to the following constraints: {expected_vis_pca_columns} "
     )
     flag_desc = {
-        FlagCode.GREEN: "No rseqc analysis metric outliers detected for {metrics}",
-        FlagCode.YELLOW1: "Outliers detected as follows (values are rounded number of standard deviations from middle): {formatted_outliers}",
-        FlagCode.YELLOW2: "The dominant strandedness is {dominant_strandedness}, this is lower than the yellow flag threshold.",
-        FlagCode.RED1: "Outliers detected as follows (values are rounded number of standard deviations from middle): {formatted_outliers}",
-        FlagCode.HALT1: "Contrasts file does not match expectations based on metadata: Error Message: {contrasts_err_msg}",
-        FlagCode.HALT2: "Differential expression file does not match expectations: Error Message: {differential_expression_table_err_msg}",
+        FlagCode.GREEN: "All described elements checked and no issues arose",
+        FlagCode.HALT1: "Contrasts file does not match expectations based on metadata: Error Message(s): {contrasts_err_msg}",
+        FlagCode.HALT2: "Differential expression file does not match expectations: Error Message(s): {differential_expression_table_err_msg}",
+        FlagCode.HALT3: "Viz PCA file does not match expectations: Error Message(s): {viz_pca_err_msg}",
+        FlagCode.HALT4: "Viz output table file does not match expectations: Error Message(s): {viz_output_table_err_msg}",
     }
 
     def _contrasts_check(self, dataset: TemplateDataset, componentTarget: str) -> str:
@@ -855,13 +868,17 @@ class DATASET_DIFFERENTIALGENEEXPRESSION_0001(Check):
         return err_msg
 
     def _differential_expression_table_check(
-        self, dataset: TemplateDataset, componentTarget: str
+        self,
+        dataset: TemplateDataset,
+        componentTarget: str,
+        componentDataAsset: str = "annotatedTableCSV",
     ) -> str:
         err_msg = ""
         target_component = getattr(dataset, componentTarget)
+        target_data_asset = getattr(target_component, componentDataAsset)
 
         # read in dataframe
-        df_dge = pd.read_csv(target_component.annotatedTableCSV.path)
+        df_dge = pd.read_csv(target_data_asset.path)
 
         # check all constant columns exist
         missing_constant_columns: set
@@ -898,13 +915,13 @@ class DATASET_DIFFERENTIALGENEEXPRESSION_0001(Check):
 
             # check non null constraint
             if constraints.get("nonNull") and nonNull(target_df_subset) == False:
-                err_msg += f"At least one value in columns {target_cols} fails nonNull constraint"
+                err_msg += f"At least one value in columns {target_cols} fails nonNull constraint."
             # check non negative constraint
             if (
                 constraints.get("nonNegative")
                 and nonNegative(target_df_subset) == False
             ):
-                err_msg += f"At least one value in columns {target_cols} fails nonNegative constraint"
+                err_msg += f"At least one value in columns {target_cols} fails nonNegative constraint."
 
         # factorGroup level
         factorGroups = list(
@@ -922,13 +939,13 @@ class DATASET_DIFFERENTIALGENEEXPRESSION_0001(Check):
 
             # check non null constraint
             if constraints.get("nonNull") and nonNull(target_df_subset) == False:
-                err_msg += f"At least one value in columns {target_cols} fails nonNull constraint"
+                err_msg += f"At least one value in columns {target_cols} fails nonNull constraint."
             # check non negative constraint
             if (
                 constraints.get("nonNegative")
                 and nonNegative(target_df_subset) == False
             ):
-                err_msg += f"At least one value in columns {target_cols} fails nonNegative constraint"
+                err_msg += f"At least one value in columns {target_cols} fails nonNegative constraint."
 
         # fixed stat columns level
         for target_col, constraints in self.config["fixed_stats_columns"].items():  # type: ignore
@@ -940,13 +957,91 @@ class DATASET_DIFFERENTIALGENEEXPRESSION_0001(Check):
 
             # check non null constraint
             if constraints.get("nonNull") and nonNull(target_df_subset) == False:
-                err_msg += f"At least one value in column ['{target_col}'] fails nonNull constraint"
+                err_msg += f"At least one value in column ['{target_col}'] fails nonNull constraint."
             # check non negative constraint
             if (
                 constraints.get("nonNegative")
                 and nonNegative(target_df_subset) == False
             ):
-                err_msg += f"At least one value in column ['{target_col}'] fails nonNegative constraint"
+                err_msg += f"At least one value in column ['{target_col}'] fails nonNegative constraint."
+
+        return err_msg
+
+    def _viz_pca_table_check(
+        self,
+        dataset: TemplateDataset,
+        componentTarget: str,
+        dataAssetTarget: str = "visualizationPCATableCSV",
+    ) -> str:
+        err_msg = ""
+        target_component = getattr(dataset, componentTarget)
+        target_asset = getattr(target_component, dataAssetTarget)
+
+        # read into dataframe
+        df = pd.read_csv(target_asset.path, index_col=0)
+
+        # check all samples included
+        if missing_samples := set(dataset.samples.keys()) - set(df.index):
+            err_msg += f"Missing samples in index: {missing_samples}"
+
+        # check all expected columns exist
+        if missing_cols := set(self.config["expected_vis_pca_columns"]) - set(df.columns):  # type: ignore
+            err_msg += f"Missing expected columns: {missing_cols}"
+
+        return err_msg
+
+    def _viz_output_table_check(
+        self, dataset: TemplateDataset, componentTarget: str
+    ) -> str:
+        """ Since this effectively extends the differential expression table, 
+        run that first and build on the error message as needed """
+        err_msg = self._differential_expression_table_check(
+            dataset, componentTarget, componentDataAsset="visualizationTableCSV"
+        )
+
+        target_component = getattr(dataset, componentTarget)
+        target_data_asset = getattr(target_component, "visualizationTableCSV")
+
+        # read in dataframe
+        df = pd.read_csv(target_data_asset.path)
+
+        # check all expected columns exists (all unique to the viz table)
+        # check all expected statistic columns present
+        # pairwise comparison level
+        pairwise_comparisons = dataset.metadata.contrasts.columns
+        for statistical_prefix, constraints in self.config[
+            "viz_pairwise_columns_prefixes"
+        ].items():  # type: ignore
+            target_cols: list = [
+                f"{statistical_prefix}{comparison}"
+                for comparison in pairwise_comparisons
+            ]
+            # check existense first and bail if any don't exist
+            if missing_cols := set(target_cols) - set(df.columns):
+                err_msg += f"Missing pairwise statistical column(s): {missing_cols}"
+                continue
+            target_df_subset: pd.DataFrame = df[target_cols]
+
+            # check non null constraint
+            if constraints.get("nonNull") and nonNull(target_df_subset) == False:
+                err_msg += f"At least one value in columns {target_cols} fails nonNull constraint."
+
+            # check non negative constraint
+            if (
+                constraints.get("nonNegative")
+                and nonNegative(target_df_subset) == False
+            ):
+                err_msg += f"At least one value in columns {target_cols} fails nonNegative constraint."
+
+            # check allowed values constraint
+            if (
+                constraints.get("allowedValues")
+                and onlyAllowedValues(
+                    target_df_subset, constraints.get("allowedValues")
+                )
+                == False
+            ):
+                err_msg += f"At least one value in columns {target_cols} fails allowedValues constraint (allowed values: {constraints.get('allowedValues')})."
 
         return err_msg
 
@@ -959,7 +1054,7 @@ class DATASET_DIFFERENTIALGENEEXPRESSION_0001(Check):
             target_components.append("differentialGeneExpressionERCC")
 
         # holds component and subcheck specific error messages
-        err_msgs: dict = {"contrasts": {}, "differential_expression": {}}
+        err_msgs: Dict = defaultdict(dict)
 
         for target_component in target_components:
             # perform contrasts file subcheck
@@ -978,13 +1073,24 @@ class DATASET_DIFFERENTIALGENEEXPRESSION_0001(Check):
                 target_component
             ] = differential_expression_result
 
+            # perform viz PCA file subcheck
+            viz_pca_result = self._viz_pca_table_check(dataset, target_component)
+            if viz_pca_result != "":
+                codes.add(FlagCode.HALT3)
+            err_msgs["viz_pca"][target_component] = viz_pca_result
+
+            # perform viz PCA file subcheck
+            viz_output_table_result = self._viz_output_table_check(
+                dataset, target_component
+            )
+            if viz_output_table_result != "":
+                codes.add(FlagCode.HALT4)
+            err_msgs["viz_output_table"][target_component] = viz_output_table_result
+
         return Flag(
             codes=codes,
             check=self,
             message_args={
-                # "outliers": outliers,
-                # "formatted_outliers": pformat(outliers, formatfloat),
-                # "metrics": metrics,
                 "contrasts_err_msg": "::".join(
                     [f"{k}->{v}" for k, v in err_msgs["contrasts"].items()]
                 ),
@@ -993,6 +1099,12 @@ class DATASET_DIFFERENTIALGENEEXPRESSION_0001(Check):
                         f"{k}->{v}"
                         for k, v in err_msgs["differential_expression"].items()
                     ]
+                ),
+                "viz_pca_table_err_msg": "::".join(
+                    [f"{k}->{v}" for k, v in err_msgs["viz_pca"].items()]
+                ),
+                "viz_output_table_err_msg": "::".join(
+                    [f"{k}->{v}" for k, v in err_msgs["viz_output_table"].items()]
                 ),
             },
         )
