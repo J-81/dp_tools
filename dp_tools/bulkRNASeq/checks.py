@@ -5,7 +5,9 @@ import gzip
 import logging
 from pathlib import Path
 from statistics import mean, median, stdev
-from typing import Callable, DefaultDict, Dict, List, Tuple
+from typing import Callable, DefaultDict, Dict, List, Set, Tuple, Union
+
+import pandas as pd
 from dp_tools.components.components import RawReadsComponent
 from dp_tools.core.entity_model import (
     DataDir,
@@ -68,6 +70,17 @@ def identify_outliers(
             outliers[key] = num_std_deviations_vector
 
     return outliers
+
+
+## Dataframe and Series specific helper functions
+def nonNull(df: pd.DataFrame) -> bool:
+    # negation since it checks if any are null
+    return ~df.isnull().any(axis=None)
+
+
+def nonNegative(df: pd.DataFrame) -> bool:
+    """ This ignores null values """
+    return ((df >= 0) | (df.isnull())).all(axis=None)
 
 
 class SAMPLE_RAWREADS_0001(Check):
