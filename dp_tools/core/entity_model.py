@@ -536,7 +536,17 @@ Is Part of DataSystem:
             plots_per_sample: List[Set] = [set(getattr(sample, sample_component).mqcData.get(mqc_module)["Plots"].keys()) for sample in self.samples.values()]
             # find the intersection of sample wise sets of plots
             plots_in_all_samples = set.intersection(*plots_per_sample) if plots_per_sample else set() # guard against empty list
-            return plots_in_all_samples
+            return plots_in_all_samples.add("general_stats")
+
+        # return table of general stats instead
+        if mqc_plot == "general_stats":
+            dict_format = {
+                    s.name: getattr(s, sample_component).mqcData[mqc_module][
+                        "General_Stats"
+                    ]
+                    for s in self.samples.values()
+                }
+            return pd.DataFrame(dict_format).T
 
         # check if all samples have the requested mqc plot
         # need to explicitly check if the returned is a dataframes 
@@ -546,6 +556,7 @@ Is Part of DataSystem:
         assert all(has_plot.values()), f"At least one sample does not have the requested plot ({mqc_plot}) in module ({mqc_module})!: {has_plot}"
 
         return pd.concat([getattr(s, sample_component).mqcData[mqc_module]["Plots"][mqc_plot].set_index(pd.Index([s.name])) for s in self.samples.values()])
+
 
 #########################################################################
 # SAMPLES
