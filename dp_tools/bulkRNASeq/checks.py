@@ -880,7 +880,7 @@ class DATASET_DIFFERENTIALGENEEXPRESSION_0001(Check):
         pairwise_comparisons = dataset.metadata.contrasts.columns
         for statistical_prefix, constraints in self.config[
             "pairwise_columns_prefixes"
-        ].items(): # type: ignore
+        ].items():  # type: ignore
             target_cols: list = [
                 f"{statistical_prefix}{comparison}"
                 for comparison in pairwise_comparisons
@@ -907,7 +907,7 @@ class DATASET_DIFFERENTIALGENEEXPRESSION_0001(Check):
         )  # list-set to dedupe
         for statistical_prefix, constraints in self.config[
             "group_factorwise_columns_prefixes"
-        ].items(): # type: ignore
+        ].items():  # type: ignore
             target_cols = [f"{statistical_prefix}{group}" for group in factorGroups]
             # check existense first and bail if any don't exist
             if missing_cols := set(target_cols) - set(df_dge.columns):
@@ -926,7 +926,7 @@ class DATASET_DIFFERENTIALGENEEXPRESSION_0001(Check):
                 err_msg += f"At least one value in columns {target_cols} fails nonNegative constraint"
 
         # fixed stat columns level
-        for target_col, constraints in self.config["fixed_stats_columns"].items(): # type: ignore
+        for target_col, constraints in self.config["fixed_stats_columns"].items():  # type: ignore
             # check existense first and bail if any don't exist
             if missing_cols := {target_col} - set(df_dge.columns):
                 err_msg += f"Missing fixed statistical column(s): {missing_cols}"
