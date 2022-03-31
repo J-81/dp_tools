@@ -8,6 +8,8 @@ from dp_tools.bulkRNASeq.loaders import (
     load_BulkRNASeq_STAGE_01,
     load_BulkRNASeq_STAGE_02,
     load_BulkRNASeq_STAGE_0201,
+    load_BulkRNASeq_STAGE_03,
+    load_BulkRNASeq_STAGE_04,
 )
 
 
@@ -123,6 +125,12 @@ def glds194_dataSystem_STAGE0201(glds194_test_dir):
                         glds194_test_dir, dataSystem_name="GLDS-194", stack=True
                     ),
                     stack=True
+                ),
+                stack=True
+            )
+        )
+    )
+
 
 @pytest.fixture
 def glds194_dataSystem_STAGE03(glds194_test_dir):
@@ -143,6 +151,25 @@ def glds194_dataSystem_STAGE03(glds194_test_dir):
         )
     )
 
+
+@pytest.fixture
+def glds194_dataSystem_STAGE04(glds194_test_dir):
+    return copy.deepcopy(
+        load_BulkRNASeq_STAGE_04(
+            *load_BulkRNASeq_STAGE_03(
+                *load_BulkRNASeq_STAGE_0201(
+                    *load_BulkRNASeq_STAGE_02(
+                        *load_BulkRNASeq_STAGE_01(
+                            *load_BulkRNASeq_STAGE_00(
+                                glds194_test_dir, dataSystem_name="GLDS-194", stack=True
+                            ),
+                            stack=True
+                        ),
+                        stack=True
+                    ),
+                    stack=True
+                ),
+                stack=True
             )
         )
     )
@@ -206,6 +233,29 @@ def glds48_dataSystem_STAGE03(glds48_test_dir):
                     *load_BulkRNASeq_STAGE_01(
                         *load_BulkRNASeq_STAGE_00(
                             glds48_test_dir, dataSystem_name="GLDS-48", stack=True
+                        ),
+                        stack=True
+                    ),
+                    stack=True
+                ),
+                stack=True
+            )
+        )
+    )
+
+
+@pytest.fixture
+def glds48_dataSystem_STAGE04(glds48_test_dir):
+    return copy.deepcopy(
+        load_BulkRNASeq_STAGE_04(
+            *load_BulkRNASeq_STAGE_03(
+                *load_BulkRNASeq_STAGE_0201(
+                    *load_BulkRNASeq_STAGE_02(
+                        *load_BulkRNASeq_STAGE_01(
+                            *load_BulkRNASeq_STAGE_00(
+                                glds48_test_dir, dataSystem_name="GLDS-48", stack=True
+                            ),
+                            stack=True
                         ),
                         stack=True
                     ),
