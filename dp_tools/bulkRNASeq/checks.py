@@ -667,3 +667,100 @@ class DATASET_RSEQCANALYSIS_0001(Check):
                 "dominant_strandedness": dominant_strandedness,
             },
         )
+
+
+class DATASET_GENECOUNTS_0001(Check):
+    config = {
+        "plots_all": ["Read Distribution", "Infer experiment", "Gene Body Coverage"],
+        "plot_paired_end": ["Inner Distance"],
+        "metrics": [
+            "Unalignable",
+            "Alignable",
+            "Filtered",
+            "Total",
+            "alignable_percent",
+            "Unique",
+            "Multi",
+            "Uncertain",
+        ],
+        "middle": MIDDLE.median,
+        "yellow_standard_deviation_threshold": 2,
+        "red_standard_deviation_threshold": 4,
+        "yellow_minimum_dominant_strandedness": 75,  # percents
+        "halt_minimum_dominant_strandedness": 65,  # percents
+    }
+    description = (
+        "Check that the gene counts stats (source from the RSEM logs) have no outlier values among samples "
+        "for the following metrics: {metrics} "
+        "Yellow Flagged Outliers are defined as a being {yellow_standard_deviation_threshold} - {red_standard_deviation_threshold} standard "
+        "deviations away from the {middle.name}. "
+        "Red Flagged Outliers are defined as a being {red_standard_deviation_threshold}+ standard "
+        "deviations away from the {middle.name}. "
+        "Additionally the following is assessed for infer experiment strandedess metrics: "
+        "A Yellow Flag is raised in the case that the dominant strandessness is between {yellow_minimum_dominant_strandedness} - {halt_minimum_dominant_strandedness} "
+        "A Halt Flag is raised in the case that the dominant strandessness is below {halt_minimum_dominant_strandedness} "
+        "Note: the 'dominant strandedness' is the max(datasetwide_average(antisense), datasetwide_average(sense)) "
+    )
+    flag_desc = {
+        FlagCode.GREEN: "No rseqc analysis metric outliers detected for {metrics}",
+        FlagCode.YELLOW1: "Outliers detected as follows (values are rounded number of standard deviations from middle): {formatted_outliers}",
+        FlagCode.YELLOW2: "The dominant strandedness is {dominant_strandedness}, this is lower than the yellow flag threshold.",
+        FlagCode.RED1: "Outliers detected as follows (values are rounded number of standard deviations from middle): {formatted_outliers}",
+        FlagCode.HALT1: "The dominant strandedness is {dominant_strandedness}, this is lower than the halting flag threshold.",
+    }
+
+    def validate_func(self: Check, dataset: TemplateDataset) -> Flag:
+        codes = {FlagCode.GREEN}
+
+        # pull variables from config
+        metrics = self.config["metrics"]
+        middle = self.config["middle"]
+        yellow_threshold = self.config["yellow_standard_deviation_threshold"]
+        red_threshold = self.config["red_standard_deviation_threshold"]
+
+        # init trackers for issues
+        outliers: DefaultDict[str, Dict[str, float]] = defaultdict(dict)
+
+        # extract dataframe of general stats
+        df = dataset.getMQCDataFrame(
+            sample_component="geneCounts", mqc_module="Rsem", mqc_plot="general_stats"
+        )
+
+        # iterate through metrics (here all pulled from FastQC general stats)
+        for metric_name in metrics:
+            sampleToMetricValue = df[[metric_name]].to_dict()[metric_name]
+
+            # yellow level outliers
+            if outliersForThisMetric := identify_outliers(
+                sampleToMetricValue,
+                standard_deviation_threshold=yellow_threshold,
+                middle=middle,
+            ):
+                if max(codes) < FlagCode.YELLOW1:
+                    codes.add(FlagCode.YELLOW1)
+                    outliers[metric_name] = (
+                        outliers[metric_name] | outliersForThisMetric
+                    )
+
+            # red level outliers
+            if outliersForThisMetric := identify_outliers(
+                sampleToMetricValue,
+                standard_deviation_threshold=red_threshold,
+                middle=middle,
+            ):
+                if max(codes) < FlagCode.RED1:
+                    codes.add(FlagCode.RED1)
+                    outliers[metric_name] = (
+                        outliers[metric_name] | outliersForThisMetric
+                    )
+
+        return Flag(
+            codes=codes,
+            check=self,
+            message_args={
+                "outliers": outliers,
+                "formatted_outliers": pformat(outliers, formatfloat),
+                "metrics": metrics,
+            },
+        )
+
