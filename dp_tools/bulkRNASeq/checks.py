@@ -764,3 +764,240 @@ class DATASET_GENECOUNTS_0001(Check):
             },
         )
 
+
+class DATASET_DIFFERENTIALGENEEXPRESSION_0001(Check):
+    config = {
+        "expected_tables": [
+            "differential_expression.csv",
+            "visualization_output_table.csv",
+            "visualization_PCA_table.csv",
+        ],
+        "dge_table_expected_annotation_columns": [
+            "ENSEMBL",
+            "SYMBOL",
+            "GENENAME",
+            "REFSEQ",
+            "ENTREZID",
+            "STRING_id",
+            "GOSLIM_IDS",
+        ],
+        # includes column specific constraints
+        # these prefix as follows {prefix}{pairWiseFactorGroupComparison}
+        "pairwise_columns_prefixes": {
+            "Log2fc_": {"nonNull": True},
+            "Stat_": {"nonNull": True},
+            # can be removed from analysis before p-value and adj-p-value assessed
+            # ref: https://bioconductor.org/packages/release/bioc/vignettes/DESeq2/inst/doc/DESeq2.html#why-are-some-p-values-set-to-na
+            "P.value_": {"nonNegative": True, "nonNull": False},
+            "Adj.p.value_": {"nonNegative": True, "nonNull": False},
+        },
+        # these prefix as follows {prefix}{FactorGroup}
+        "group_factorwise_columns_prefixes": {
+            "Group.Mean_": {"nonNull": True, "nonNegative": True},
+            "Group.Stdev_": {"nonNull": True, "nonNegative": True},
+        },
+        "fixed_stats_columns": {
+            "All.mean": {"nonNull": True, "nonNegative": True},
+            "All.stdev": {"nonNull": True, "nonNegative": True},
+            "LRT.p.value": {"nonNull": False, "nonNegative": True},
+        },
+        "sample_counts_constraints": {"nonNegative": True},
+        "middle": MIDDLE.median,
+        "yellow_standard_deviation_threshold": 2,
+        "red_standard_deviation_threshold": 4,
+        "yellow_minimum_dominant_strandedness": 75,  # percents
+        "halt_minimum_dominant_strandedness": 65,  # percents
+    }
+    description = (
+        "Check that the differential expression outputs exist (source from the RSEM logs) and all samples are included in "
+        "the following tables: {expected_tables} (as defined in the metadata) "
+        "Additional performs the file specific validations: "
+        "- contrasts.csv: Includes all the existing comparison groups (based on factor values in the metadata) and is formatted correctly"
+        "- differential_expression.csv:  Includes expected annotation columns {dge_table_expected_annotation_columns}, "
+        "includes sample count columns for all samples, all sample count values are non-negative, "
+        "all pairwise comparision columns exist with the following prefixes and follow the following constraints: {pairwise_columns_prefixes} "
+        ""
+        "log2fold change for all possible comparisons, and non-negative p- and adjusted p-values for all possible comparisons. "
+    )
+    flag_desc = {
+        FlagCode.GREEN: "No rseqc analysis metric outliers detected for {metrics}",
+        FlagCode.YELLOW1: "Outliers detected as follows (values are rounded number of standard deviations from middle): {formatted_outliers}",
+        FlagCode.YELLOW2: "The dominant strandedness is {dominant_strandedness}, this is lower than the yellow flag threshold.",
+        FlagCode.RED1: "Outliers detected as follows (values are rounded number of standard deviations from middle): {formatted_outliers}",
+        FlagCode.HALT1: "Contrasts file does not match expectations based on metadata: Error Message: {contrasts_err_msg}",
+        FlagCode.HALT2: "Differential expression file does not match expectations: Error Message: {differential_expression_table_err_msg}",
+    }
+
+    def _contrasts_check(self, dataset: TemplateDataset, componentTarget: str) -> str:
+        """ Performs contrasts specific subcheck 
+        
+        Returns empty string if no issues are found
+        Returns an error message (string) otherwise
+        """
+        # extract target Component
+        target_component = getattr(dataset, componentTarget)
+
+        err_msg = ""
+        # extract dicts for deseq2 contrasts and the metadata formatted one here
+        # make sure to read in explicit index column for deseq2
+        dict_deseq2: Dict = pd.read_csv(
+            target_component.contrastsCSV.path, index_col=0
+        ).to_dict(orient="list")
+        dict_data_model: Dict = dataset.metadata.contrasts.to_dict(orient="list")
+
+        # check that all headers are present
+        deseq2_headers = set(dict_deseq2.keys())
+        data_model_headers = set(dict_data_model.keys())
+        if deseq2_headers != data_model_headers:
+            err_msg += f"Header disparity! Extra deseq2 headers: {deseq2_headers - data_model_headers} Extra metadata headers: {data_model_headers - deseq2_headers}"
+            # return early, if headers mismatch no point in checking column content
+            return err_msg
+
+        # check contents of each column matches expecatation (group1 and group2 formatted as expected)
+        # this also rechecks headers (keys) but that is caught in the prior validation
+        if dict_deseq2 != dict_data_model:
+            err_msg += f"Rows don't match expectations. Deseq2: {dict_deseq2}. DataModel (from metadata source): {dict_data_model}"
+        return err_msg
+
+    def _differential_expression_table_check(
+        self, dataset: TemplateDataset, componentTarget: str
+    ) -> str:
+        err_msg = ""
+        target_component = getattr(dataset, componentTarget)
+
+        # read in dataframe
+        df_dge = pd.read_csv(target_component.annotatedTableCSV.path)
+
+        # check all constant columns exist
+        missing_constant_columns: set
+        expected_columns: list = self.config["dge_table_expected_annotation_columns"]  # type: ignore
+        if missing_constant_columns := set(expected_columns) - set(df_dge.columns):
+            err_msg += f"Annotation Columns missing: {missing_constant_columns}"
+
+        # check all sample counts columns exist
+        expected_samples = set(dataset.samples.keys())
+        if missing_samples := expected_samples - set(df_dge.columns):
+            err_msg += f"Sample Count Columns missing: {missing_samples}"
+        # check that they met constraints
+        # all sample column counts are not negative
+        if not (df_dge[list(expected_samples)] >= 0).all(axis=None):
+            err_msg += (
+                f"Sample Count Columns include negative values: {missing_samples}"
+            )
+
+        # check all expected statistic columns present
+        # pairwise comparison level
+        pairwise_comparisons = dataset.metadata.contrasts.columns
+        for statistical_prefix, constraints in self.config[
+            "pairwise_columns_prefixes"
+        ].items(): # type: ignore
+            target_cols: list = [
+                f"{statistical_prefix}{comparison}"
+                for comparison in pairwise_comparisons
+            ]
+            # check existense first and bail if any don't exist
+            if missing_cols := set(target_cols) - set(df_dge.columns):
+                err_msg += f"Missing pairwise statistical column(s): {missing_cols}"
+                continue
+            target_df_subset: pd.DataFrame = df_dge[target_cols]
+
+            # check non null constraint
+            if constraints.get("nonNull") and nonNull(target_df_subset) == False:
+                err_msg += f"At least one value in columns {target_cols} fails nonNull constraint"
+            # check non negative constraint
+            if (
+                constraints.get("nonNegative")
+                and nonNegative(target_df_subset) == False
+            ):
+                err_msg += f"At least one value in columns {target_cols} fails nonNegative constraint"
+
+        # factorGroup level
+        factorGroups = list(
+            set(dataset.metadata.factor_groups.values())
+        )  # list-set to dedupe
+        for statistical_prefix, constraints in self.config[
+            "group_factorwise_columns_prefixes"
+        ].items(): # type: ignore
+            target_cols = [f"{statistical_prefix}{group}" for group in factorGroups]
+            # check existense first and bail if any don't exist
+            if missing_cols := set(target_cols) - set(df_dge.columns):
+                err_msg += f"Missing groupFactor statistical column(s): {missing_cols}"
+                continue
+            target_df_subset = df_dge[target_cols]
+
+            # check non null constraint
+            if constraints.get("nonNull") and nonNull(target_df_subset) == False:
+                err_msg += f"At least one value in columns {target_cols} fails nonNull constraint"
+            # check non negative constraint
+            if (
+                constraints.get("nonNegative")
+                and nonNegative(target_df_subset) == False
+            ):
+                err_msg += f"At least one value in columns {target_cols} fails nonNegative constraint"
+
+        # fixed stat columns level
+        for target_col, constraints in self.config["fixed_stats_columns"].items(): # type: ignore
+            # check existense first and bail if any don't exist
+            if missing_cols := {target_col} - set(df_dge.columns):
+                err_msg += f"Missing fixed statistical column(s): {missing_cols}"
+                continue
+            target_df_subset = df_dge[target_col]
+
+            # check non null constraint
+            if constraints.get("nonNull") and nonNull(target_df_subset) == False:
+                err_msg += f"At least one value in column ['{target_col}'] fails nonNull constraint"
+            # check non negative constraint
+            if (
+                constraints.get("nonNegative")
+                and nonNegative(target_df_subset) == False
+            ):
+                err_msg += f"At least one value in column ['{target_col}'] fails nonNegative constraint"
+
+        return err_msg
+
+    def validate_func(self: Check, dataset: TemplateDataset) -> Flag:
+        dataset.metadata.contrasts
+        codes = {FlagCode.GREEN}
+
+        target_components = ["differentialGeneExpression"]
+        if dataset.metadata.has_ercc:
+            target_components.append("differentialGeneExpressionERCC")
+
+        # holds component and subcheck specific error messages
+        err_msgs: dict = {"contrasts": {}, "differential_expression": {}}
+
+        for target_component in target_components:
+            # perform contrasts file subcheck
+            contrasts_result = self._contrasts_check(dataset, target_component)
+            if contrasts_result != "":
+                codes.add(FlagCode.HALT1)
+            err_msgs["contrasts"][target_component] = contrasts_result
+
+            # perform differential expression file subcheck
+            differential_expression_result = self._differential_expression_table_check(
+                dataset, target_component
+            )
+            if differential_expression_result != "":
+                codes.add(FlagCode.HALT2)
+            err_msgs["differential_expression"][
+                target_component
+            ] = differential_expression_result
+
+        return Flag(
+            codes=codes,
+            check=self,
+            message_args={
+                # "outliers": outliers,
+                # "formatted_outliers": pformat(outliers, formatfloat),
+                # "metrics": metrics,
+                "contrasts_err_msg": "::".join(
+                    [f"{k}->{v}" for k, v in err_msgs["contrasts"].items()]
+                ),
+                "differential_expression_table_err_msg": "::".join(
+                    [
+                        f"{k}->{v}"
+                        for k, v in err_msgs["differential_expression"].items()
+                    ]
+                ),
+            },
+        )
