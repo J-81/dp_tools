@@ -79,8 +79,13 @@ def nonNull(df: pd.DataFrame) -> bool:
 
 
 def nonNegative(df: pd.DataFrame) -> bool:
-    """ This ignores null values """
+    """ This ignores null values, use nonNull to validate that condition """
     return ((df >= 0) | (df.isnull())).all(axis=None)
+
+
+def onlyAllowedValues(df: pd.DataFrame, allowed_values: list) -> bool:
+    """ This ignores null values, use nonNull to validate that condition """
+    return ((df.isin(allowed_values)) | (df.isnull())).all(axis=None)
 
 
 class SAMPLE_RAWREADS_0001(Check):
