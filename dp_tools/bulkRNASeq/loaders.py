@@ -555,7 +555,7 @@ def load_BulkRNASeq_STAGE_04(
             contrastsCSV=DataFile(contrasts.find()),
             annotatedTableCSV=DataFile(at.find()),
             visualizationTableCSV=DataFile(vt.find()),
-            visualizationPCATablCSV=DataFile(vpt.find()),
+            visualizationPCATableCSV=DataFile(vpt.find()),
         ),
         attr="differentialGeneExpression",
     )
@@ -572,7 +572,7 @@ def load_BulkRNASeq_STAGE_04(
                 visualizationTableCSV=DataFile(
                     vt.find(nested_dir="ERCC_NormDGE", suffix="_ERCCnorm")
                 ),
-                visualizationPCATablCSV=DataFile(
+                visualizationPCATableCSV=DataFile(
                     vpt.find(nested_dir="ERCC_NormDGE", suffix="_ERCCnorm")
                 ),
             ),

@@ -238,4 +238,4 @@ class DifferentialGeneExpression(TemplateComponent):
     contrastsCSV: Union[DataFile, None] = field(default=None)
     annotatedTableCSV: Union[DataFile, None] = field(default=None)
     visualizationTableCSV: Union[DataFile, None] = field(default=None)
-    visualizationPCATablCSV: Union[DataFile, None] = field(default=None)
+    visualizationPCATableCSV: Union[DataFile, None] = field(default=None)
