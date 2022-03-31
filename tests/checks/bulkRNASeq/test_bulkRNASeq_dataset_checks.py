@@ -232,10 +232,10 @@ def test_DATASET_GENECOUNTS_0001_paired(
 
 
 def test_DATASET_GENECOUNTS_0001_single(
-    glds48_dataSystem_STAGE03, test_DATASET_RSEQCANALYSIS_0001
+    glds48_dataSystem_STAGE03, test_DATASET_GENECOUNTS_0001
 ):
     dataset = glds48_dataSystem_STAGE03.dataset
-    testCheck = test_DATASET_RSEQCANALYSIS_0001
+    testCheck = test_DATASET_GENECOUNTS_0001
 
     # expected YELLOW1
     flag = testCheck.validate(dataset)
@@ -249,8 +249,7 @@ def test_DATASET_DIFFERENTIALGENEEXPRESSION_0001_paired(
     testCheck = test_DATASET_DIFFERENTIALGENEEXPRESSION_0001
 
     flag = testCheck.validate(dataset)
-    assert flag.maxCode.name == "YELLOW1"
-    assert [c.name for c in flag.codes] == ["YELLOW1"]
+    assert flag.maxCode.name == "GREEN"
 
 
 def test_DATASET_DIFFERENTIALGENEEXPRESSION_0001_single(
@@ -261,5 +260,5 @@ def test_DATASET_DIFFERENTIALGENEEXPRESSION_0001_single(
 
     # expected YELLOW1
     flag = testCheck.validate(dataset)
-    assert flag.maxCode.name == "YELLOW1"
+    assert flag.maxCode.name == "GREEN"
 
