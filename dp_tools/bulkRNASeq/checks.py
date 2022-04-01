@@ -5,6 +5,7 @@ import gzip
 import logging
 from pathlib import Path
 from statistics import mean, median, stdev
+import subprocess
 from typing import Callable, DefaultDict, Dict, List, Set, Tuple, Union
 
 import pandas as pd
@@ -293,6 +294,87 @@ class COMPONENT_TRIMREADS_0001(COMPONENT_RAWREADS_0001):
             "trimmingReportTXT",
         ],
     }
+
+
+class COMPONENT_GENOMEALIGNMENTS_0001(Check):
+    config = {
+        "expected_files": {
+            "alignedToTranscriptomeBam": {"samtoolsQuickCheck": True},
+            "alignedSortedByCoordBam": {"samtoolsQuickCheck": True},
+            "alignedSortedByCoordResortedBam": {"samtoolsQuickCheck": True},
+            "alignedSortedByCoordResortedBamIndex": {},
+            "logFinal": {},
+            "logProgress": {},
+            "logFull": {},
+            "sjTab": {},
+        },
+        # Will use the following syntax for combined metrics
+        # 'metric1' + 'metric2' + 'metric3'
+        "general_stats_metrics": {
+            "uniquely_mapped_percent + multimapped_percent": {
+                "yellow_lower_threshold": 70,
+                "red_lower_threshold": 50,
+            },
+            "multimapped_toomany_percent + multimapped_percent": {
+                "yellow_lower_threshold": 30,
+                "red_lower_threshold": 15,
+            },
+        },
+    }
+    description = (
+        "Check that the following files exists and are not corrupted: {expected_files} "
+        "Specifically, bam files are validated using samtools (see: http://www.htslib.org/doc/samtools-quickcheck.html) "
+        ""
+    )
+    flag_desc = {
+        FlagCode.GREEN: "Component passes all validation requirements.",
+        FlagCode.HALT1: "Missing expected files: {missing_files}",
+        FlagCode.HALT2: "Fastq.gz file has issues on lines: {lines_with_issues}",
+        FlagCode.HALT3: "Corrupted Fastq.gz file suspected, last line number encountered: {last_line_checked}",
+    }
+
+    def _samtoolsQuickCheck(self, bamFile: Path) -> str:
+        """ Returns error message if an issue is found, empty string otherwise"""
+        # check with coord file with samtools
+        process = subprocess.Popen(
+            ["samtools", "quickcheck", bamFile],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+        stdout, stderr = process.communicate()
+        return stdout
+
+    def validate_func(self: Check, component) -> Flag:
+        codes = {FlagCode.GREEN}
+
+        for expected_file, constraints in self.config["expected_files"].items():  # type: ignore
+            # check exists
+            if not getattr(component, expected_file).path.is_file():
+                codes.add(FlagCode.HALT1)
+
+            # check with samtools (as per "samtoolsQuickCheck")
+            if constraints.get("samtoolsQuickCheck"):
+                self._samtoolsQuickCheck(getattr(component, expected_file).path)
+
+        print(1)
+
+        return Flag(
+            check=self,
+            codes=code,
+            message_args={
+                "missing_components": missing_components,
+                "forward_read_count": sample.rawForwardReads.mqcData["FastQC"][
+                    "General_Stats"
+                ]["total_sequences"]
+                if code == FlagCode.HALT2
+                else None,
+                "reverse_read_count": sample.rawReverseReads.mqcData["FastQC"][
+                    "General_Stats"
+                ]["total_sequences"]
+                if code == FlagCode.HALT2
+                else None,
+            },
+        )
 
 
 class DATASET_METADATA_0001(Check):
