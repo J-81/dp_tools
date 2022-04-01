@@ -395,7 +395,7 @@ def load_BulkRNASeq_STAGE_0201(
     # create shared sample datafiles
     gbMQC = DataDir(
         mQC.find(
-            rel_dir=(Path("RSeQC_Analyses") / "02_genebody_coverage"),
+            rel_dir=(Path("RSeQC_Analyses") / "02_geneBody_coverage"),
             mqc_label="geneBody_cov",
         )
     )
