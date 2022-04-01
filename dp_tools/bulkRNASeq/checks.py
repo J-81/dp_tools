@@ -3,6 +3,7 @@ import copy
 import enum
 import gzip
 import logging
+import math
 from pathlib import Path
 from statistics import mean, median, stdev
 import subprocess
@@ -72,6 +73,12 @@ def identify_outliers(
 
     return outliers
 
+def convert_nan_to_zero(input: Dict[str, Union[float, int]]) -> Dict:
+    """ Convert any Nan into zero"""
+    output = dict()
+    for key, value in input.items():
+        output[key] = value if not math.isnan(value) else 0
+    return output
 
 ## Dataframe and Series specific helper functions
 def nonNull(df: pd.DataFrame) -> bool:
@@ -480,6 +487,9 @@ class DATASET_RAWREADS_0001(Check):
                     ).mqcData["FastQC"]["General_Stats"][metric]
                     for s in dataset.samples.values()
                 }
+                
+                # ensure any NaN convert to zero as implied by MultiQC
+                sampleToMetric = convert_nan_to_zero(sampleToMetric)
 
                 # yellow level outliers
                 if outliersForThisMetric := identify_outliers(
@@ -594,6 +604,8 @@ class DATASET_GENOMEALIGNMENTS_0001(Check):
                     ][metric]
                     for s in dataset.samples.values()
                 }
+                # ensure any NaN convert to zero as implied by MultiQC
+                sampleToMetric = convert_nan_to_zero(sampleToMetric)
 
                 # yellow level outliers
                 if outliersForThisMetric := identify_outliers(
@@ -685,6 +697,9 @@ class DATASET_RSEQCANALYSIS_0001(Check):
             metricToSampleToMetricValue: Dict[str, Dict[str, float]] = df.to_dict()
 
             for metricName, sampleToMetricValue in metricToSampleToMetricValue.items():
+                # ensure any NaN convert to zero as implied by MultiQC
+                sampleToMetricValue = convert_nan_to_zero(sampleToMetricValue)
+
                 # yellow level outliers
                 if outliersForThisMetric := identify_outliers(
                     sampleToMetricValue,
@@ -806,6 +821,8 @@ class DATASET_GENECOUNTS_0001(Check):
         # iterate through metrics (here all pulled from FastQC general stats)
         for metric_name in metrics:
             sampleToMetricValue = df[[metric_name]].to_dict()[metric_name]
+            # ensure any NaN convert to zero as implied by MultiQC
+            sampleToMetricValue = convert_nan_to_zero(sampleToMetricValue)
 
             # yellow level outliers
             if outliersForThisMetric := identify_outliers(
