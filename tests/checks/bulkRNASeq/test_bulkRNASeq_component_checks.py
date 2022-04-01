@@ -8,7 +8,11 @@ from unittest.mock import MagicMock
 import pickle
 
 import pytest
-from dp_tools.bulkRNASeq.checks import COMPONENT_RAWREADS_0001, COMPONENT_TRIMREADS_0001
+from dp_tools.bulkRNASeq.checks import (
+    COMPONENT_GENOMEALIGNMENTS_0001,
+    COMPONENT_RAWREADS_0001,
+    COMPONENT_TRIMREADS_0001,
+)
 from dp_tools.bulkRNASeq.loaders import load_BulkRNASeq_STAGE_00
 from dp_tools.core import check_model
 from dp_tools.core.entity_model import DataFile
@@ -25,11 +29,18 @@ def test_COMPONENT_RAWREADS_0001():
 def test_COMPONENT_TRIMREADS_0001():
     return COMPONENT_TRIMREADS_0001()
 
+
+@pytest.fixture(scope="module")
+def test_COMPONENT_GENOMEALIGNMENTS_0001():
+    return COMPONENT_GENOMEALIGNMENTS_0001()
+
+
 @pytest.fixture(autouse=True)
 def mock_dev_exceptions(monkeypatch):
     monkeypatch.setattr(
         "dp_tools.core.check_model.ALLOWED_DEV_EXCEPTIONS", (SystemExit)
     )  # ensure unhandled developer exceptions are raised
+
 
 def test_COMPONENT_RAWREADS_0001_paired(
     glds194_dataSystem_STAGE00, test_COMPONENT_RAWREADS_0001
@@ -204,12 +215,28 @@ def test_COMPONENT_TRIMREADS_0001_single(
         )
 
 
-def test_COMPONENT_GENOMEALIGNMENTS_0001_paired(glds194_dataSystem_STAGE01):
-    raise NotImplementedError
+def test_COMPONENT_GENOMEALIGNMENTS_0001_paired(
+    glds194_dataSystem_STAGE02, test_COMPONENT_GENOMEALIGNMENTS_0001
+):
+    ds = glds194_dataSystem_STAGE02
+    testCheck = test_COMPONENT_GENOMEALIGNMENTS_0001
+
+    for sample in ds.dataset.samples.values():
+        test_component = sample.genomeAlignments
+        flag = testCheck.validate(test_component)
+        assert flag.maxCode.name == "GREEN"
 
 
-def test_COMPONENT_GENOMEALIGNMENTS_0001_single(glds48_dataSystem_STAGE01):
-    raise NotImplementedError
+def test_COMPONENT_GENOMEALIGNMENTS_0001_single(
+    glds48_dataSystem_STAGE02, test_COMPONENT_GENOMEALIGNMENTS_0001
+):
+    ds = glds48_dataSystem_STAGE02 
+    testCheck = test_COMPONENT_GENOMEALIGNMENTS_0001
+
+    for sample in ds.dataset.samples.values():
+        test_component = sample.genomeAlignments
+        flag = testCheck.validate(test_component)
+        assert flag.maxCode.name == "GREEN"
 
 
 def test_COMPONENT_RSEQCANALYSIS_0001_paired(glds194_dataSystem_STAGE01):
