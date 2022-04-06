@@ -249,7 +249,7 @@ class VVProtocol(abc.ABC):
                     for entity, flags in self.flags[entity_type].items():
                         record_partial = {"entity_index": self._get_entity_index(entity)}
                         for flag in flags:
-                            record_full = record_partial | {"flag_code": flag.code.value, "check_id": flag.check.id, "message": flag.message}
+                            record_full = record_partial | {"flag_code": flag.maxCode.value, "check_id": flag.check.id, "message": flag.message}
                             records.append(record_full)
             # verbose dataframe format
             # entity_index, flag_enum, flag_code, message, checkID, checkDescription
@@ -260,7 +260,7 @@ class VVProtocol(abc.ABC):
                     for entity, flags in self.flags[entity_type].items():
                         record_partial = {"entity_index": self._get_entity_index(entity)}
                         for flag in flags:
-                            record_full = record_partial | {"flag_name": flag.code.name,"flag_code": flag.code.value, "message": flag.message, "check_id": flag.check.id, "check_description": flag.check.description}
+                            record_full = record_partial | {"flag_name": flag.maxCode.name,"flag_code": flag.maxCode.value, "all_flag_codes": flag.codes, "message": flag.message, "check_id": flag.check.id, "check_description": flag.check.description}
                             records.append(record_full)
             case _:
                 raise ValueError(f"Schema: {schema} not defined")
