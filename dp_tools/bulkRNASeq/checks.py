@@ -10,10 +10,11 @@ import subprocess
 from typing import Callable, DefaultDict, Dict, List, Set, Tuple, Union
 
 import pandas as pd
-from dp_tools.components.components import RawReadsComponent
+from dp_tools.components.components import GenomeAlignments, RawReadsComponent
 from dp_tools.core.entity_model import (
     DataDir,
     DataFile,
+    ModuleLevelMQC,
     TemplateDataset,
     TemplateSample,
 )
@@ -73,12 +74,41 @@ def identify_outliers(
 
     return outliers
 
+# TODO: typedict for thresholds
+def identify_values_past_thresholds(thresholds: dict, value: float) -> List[FlagCode]:
+    """ Return empty list if no codes are raised """
+    VALID_THRESHOLD_TYPES = {"lower","upper"}
+    new_codes = list()
+    for threshold in thresholds:
+        assert threshold.get('type') in VALID_THRESHOLD_TYPES, f"Invalid threshold type configured: valid options {VALID_THRESHOLD_TYPES} got {threshold.get('type')}"
+        if threshold.get('type') == "lower":
+            if value < threshold["value"]:
+                new_codes.append(threshold["code"])
+        elif threshold.get('type') == "upper":
+            if value > threshold["value"]:
+                new_codes.append(threshold["code"])
+    return new_codes
+
+
+
 def convert_nan_to_zero(input: Dict[str, Union[float, int]]) -> Dict:
     """ Convert any Nan into zero"""
     output = dict()
     for key, value in input.items():
         output[key] = value if not math.isnan(value) else 0
     return output
+
+## Functions that use the following syntax to merge values from general stats:
+# "stat1 + stat2" should search and sum the stats
+def stat_string_to_value(stat_string: str, mqcData: ModuleLevelMQC) -> float:
+    """ "stat1 + stat2" should search and sum the stats """
+    sum = float(0)
+    direct_keys = stat_string.split(" + ")
+    for direct_key in direct_keys:
+        print(direct_key)
+        sum += mqcData["General_Stats"][direct_key]
+    return sum
+
 
 ## Dataframe and Series specific helper functions
 def nonNull(df: pd.DataFrame) -> bool:
@@ -317,31 +347,36 @@ class COMPONENT_GENOMEALIGNMENTS_0001(Check):
         },
         # Will use the following syntax for combined metrics
         # 'metric1' + 'metric2' + 'metric3'
+        # valid types: 'upper', 'lower'
         "general_stats_metrics": {
-            "uniquely_mapped_percent + multimapped_percent": {
-                "yellow_lower_threshold": 70,
-                "red_lower_threshold": 50,
-            },
-            "multimapped_toomany_percent + multimapped_percent": {
-                "yellow_lower_threshold": 30,
-                "red_lower_threshold": 15,
-            },
+            "uniquely_mapped_percent + multimapped_percent": [
+                {"code": FlagCode.YELLOW1, "type": "lower", "value": 70},
+                {"code": FlagCode.RED1, "type": "lower", "value": 50},
+            ],
+            "multimapped_toomany_percent + multimapped_percent": [
+                {"code": FlagCode.YELLOW1, "type": "lower", "value": 30},
+                {"code": FlagCode.RED1, "type": "lower", "value": 15},
+            ],
         },
     }
     description = (
-        "Check that the following files exists and are not corrupted: {expected_files} "
-        "Specifically, bam files are validated using samtools (see: http://www.htslib.org/doc/samtools-quickcheck.html) "
+        "Check that the following files exists: {expected_files} "
+        "Beyond existence, validating the files are not corrupt needs to be performed external to this automated V&V program "
+        "Specifically, bam files can be validated using samtools quickcheck (see: http://www.htslib.org/doc/samtools-quickcheck.html) "
         ""
     )
     flag_desc = {
         FlagCode.GREEN: "Component passes all validation requirements.",
+        FlagCode.YELLOW1: "Found values beyond defined yellow thresholds: {flagged_values} -> {threshold_config}",
+        FlagCode.RED1: "Found values beyond defined red thresholds: {flagged_values} -> {threshold_config}",
         FlagCode.HALT1: "Missing expected files: {missing_files}",
-        FlagCode.HALT2: "Fastq.gz file has issues on lines: {lines_with_issues}",
-        FlagCode.HALT3: "Corrupted Fastq.gz file suspected, last line number encountered: {last_line_checked}",
     }
 
-    def _samtoolsQuickCheck(self, bamFile: Path) -> str:
-        """ Returns error message if an issue is found, empty string otherwise"""
+    def UNIMPLEMENTED_samtoolsQuickCheck(self, bamFile: Path) -> str:
+        """ 
+        This function is deprecated until getting subprocesses to use conda envs is properly implemented
+        Returns error message if an issue is found, empty string otherwise
+        """
         # check with coord file with samtools
         process = subprocess.Popen(
             ["samtools", "quickcheck", bamFile],
@@ -349,37 +384,48 @@ class COMPONENT_GENOMEALIGNMENTS_0001(Check):
             stderr=subprocess.PIPE,
         )
         stdout, stderr = process.communicate()
-        return stdout
+        return stderr.decode()
 
-    def validate_func(self: Check, component) -> Flag:
+    def validate_func(self: Check, component: GenomeAlignments, mqc_name: str = "STAR") -> Flag:
         codes = {FlagCode.GREEN}
+        missing_files = list()
+        flagged_values = dict()
 
         for expected_file, constraints in self.config["expected_files"].items():  # type: ignore
             # check exists
             if not getattr(component, expected_file).path.is_file():
                 codes.add(FlagCode.HALT1)
+                missing_files.append(expected_file)
 
             # check with samtools (as per "samtoolsQuickCheck")
-            if constraints.get("samtoolsQuickCheck"):
-                self._samtoolsQuickCheck(getattr(component, expected_file).path)
+            #if constraints.get("samtoolsQuickCheck"):
+            #    self._samtoolsQuickCheck(getattr(component, expected_file).path)
 
-        print(1)
+        for key, thresholds in self.config["general_stats_metrics"].items(): # type: ignore
+            # key may be a direct general stats key or a stat_string
+            # check if direct key
+            value = component.mqcData[mqc_name].get(key, None)
+            if not value :
+                # check if valid stat_string
+                value = stat_string_to_value(key, component.mqcData[mqc_name])
+            
+            # check against thresholds
+            # yellow level outliers
+            if new_codes := identify_values_past_thresholds(
+                thresholds,
+                value
+            ):
+                # add highest severity new code
+                codes.add(max(new_codes))
+                flagged_values[key] = value
 
         return Flag(
             check=self,
-            codes=code,
+            codes=codes,
             message_args={
-                "missing_components": missing_components,
-                "forward_read_count": sample.rawForwardReads.mqcData["FastQC"][
-                    "General_Stats"
-                ]["total_sequences"]
-                if code == FlagCode.HALT2
-                else None,
-                "reverse_read_count": sample.rawReverseReads.mqcData["FastQC"][
-                    "General_Stats"
-                ]["total_sequences"]
-                if code == FlagCode.HALT2
-                else None,
+            "missing_files":missing_files,
+            "threshold_config":self.config["general_stats_metrics"],
+            "flagged_values":flagged_values
             },
         )
 

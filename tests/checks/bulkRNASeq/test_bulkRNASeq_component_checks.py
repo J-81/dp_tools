@@ -224,7 +224,7 @@ def test_COMPONENT_GENOMEALIGNMENTS_0001_paired(
     for sample in ds.dataset.samples.values():
         test_component = sample.genomeAlignments
         flag = testCheck.validate(test_component)
-        assert flag.maxCode.name == "GREEN"
+        assert flag.maxCode.name == "RED1"
 
 
 def test_COMPONENT_GENOMEALIGNMENTS_0001_single(
@@ -236,7 +236,7 @@ def test_COMPONENT_GENOMEALIGNMENTS_0001_single(
     for sample in ds.dataset.samples.values():
         test_component = sample.genomeAlignments
         flag = testCheck.validate(test_component)
-        assert flag.maxCode.name == "GREEN"
+        assert flag.maxCode.name == "RED1"
 
 
 def test_COMPONENT_RSEQCANALYSIS_0001_paired(glds194_dataSystem_STAGE01):
