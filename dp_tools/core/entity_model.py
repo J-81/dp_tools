@@ -43,13 +43,14 @@ class DataFile:
     """ A class for keeping track of files """
 
     path: Path
-    md5sum: str = field(init=False)  # compute on ingestion
+    md5sum: str = field(init=False, repr=False)  # compute on ingestion
     # id: str = field(default_factory=get_id)
     dummy_md5sum: bool = field(
         default=False
     )  # used to replace md5sum of contents with md5sum of the file name
 
     def __post_init__(self):
+        log.debug(f"Initiating DataFile with path: {self.path}")
         if not self.path.is_file():
             raise FileNotFoundError(f"Cannot create DataFile with non-existent file: {self.path}")
         if self.dummy_md5sum:
@@ -83,6 +84,7 @@ class DataDir:
     path: Path
 
     def __post_init__(self):
+        log.debug(f"Initiating DataDir with path: {self.path}")
         assert self.path.is_dir()
         # finally enforce types check
         strict_type_checks(self)
