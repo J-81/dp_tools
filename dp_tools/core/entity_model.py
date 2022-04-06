@@ -56,11 +56,17 @@ class DataFile:
             # generate md5sum based on the path/file name only
             # this computes extremely fast and is advised for testing
             self.md5sum = f"DUMMY:{self._compute_md5sum(self.path.name.encode())}"
+            self._md5sum_cached = True
         else:
-            self.md5sum = self._compute_md5sum(self.path.open("rb").read())
+            self._md5sum_cached = False
 
         # finally enforce types check
-        strict_type_checks(self)
+        strict_type_checks(self, exceptions=["md5sum"])
+
+    def compute_md5sum(self):
+        if not self._md5sum_cached:
+            self.md5sum = self._compute_md5sum(self.path.open("rb").read())
+        return self.md5sum
 
     def _compute_md5sum(self, contents):
         return hashlib.md5(contents).hexdigest()
