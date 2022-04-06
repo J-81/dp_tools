@@ -27,7 +27,6 @@ import multiqc
 from dp_tools.core.model_commons import strict_type_checks
 from dp_tools.core.utilites.multiqc_tools import format_plots_as_dataframe, get_general_stats
 
-logging.basicConfig(level=logging.DEBUG)
 log = logging.getLogger(__name__)
 
 
@@ -145,14 +144,14 @@ class CanAttachComponents:
             log.warning(f"Overwriting existing component in slot: {attr}")
 
         # attach component
-        log.debug(f"attaching {component} to {self}")
+        log.debug(f"attaching {attr} to {self.name}")
         setattr(self, attr, component)
-        log.debug(f"post attaching {component} to {self}")
+        log.debug(f"post attaching {attr} to {self.name}")
 
         # associate component with sample
-        log.debug(f"attaching {self.name} to {component}")
+        log.debug(f"attaching {self.name} to {attr}")
         component._attach_entity(entity=self, entity_attr=attr)
-        log.debug(f"post attaching {self.name} to {component}")
+        log.debug(f"post attaching {self.name} to {attr}")
 
 # Dict[attr: str, 'entity': Union['TemplateDataset', 'TemplateSample' ]
 class AttachEntity(TypedDict):

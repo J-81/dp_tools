@@ -20,9 +20,6 @@ from dp_tools.components.components import (
     TrimReadsComponent,
 )
 
-logging.basicConfig(
-    level=logging.DEBUG, format="%(asctime)s %(levelname)-8s %(message)s"
-)
 log = logging.getLogger(__name__)
 
 from dp_tools.core.entity_model import (
@@ -152,6 +149,7 @@ def load_BulkRNASeq_STAGE_00(
                     )
                 ),
             )
+            log.debug(f"Attaching components to {sample.name}")
             sample.attach_component(raw_fwd_reads, attr="rawForwardReads")
             sample.attach_component(raw_rev_reads, attr="rawReverseReads")
         else:
@@ -172,8 +170,10 @@ def load_BulkRNASeq_STAGE_00(
                     )
                 ),
             )
+            log.debug(f"Attaching components to {sample.name}")
             sample.attach_component(raw_reads, attr="rawReads")
         # attach components
+        log.debug(f"Attaching {sample.name} to {dataset.name}")
         dataset.attach_sample(sample)
 
     # return dataSystem only if not being used in a loading stack
@@ -476,7 +476,7 @@ def load_BulkRNASeq_STAGE_03(
     metadata = dataset.metadata
 
     # create shared sample datafiles
-    countsMQC = DataDir(mQC.find(rel_dir=Path("03-RSEM_Counts"), mqc_label="count",))
+    countsMQC = DataDir(mQC.find(rel_dir=Path("03-RSEM_Counts"), mqc_label="RSEM_count",))
 
     # update dataset
     dataset.geneCounts = DatasetGeneCounts(

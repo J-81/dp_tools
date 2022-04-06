@@ -15,12 +15,7 @@ from typing import List, Protocol, Tuple, runtime_checkable
 import re
 import logging
 
-logging.basicConfig(level=logging.DEBUG)
 log = logging.getLogger(__name__)
-
-
-def _rIterDir(p: Path) -> List[Path]:
-    return [f for f in p.rglob("*")]
 
 
 @runtime_checkable
@@ -104,12 +99,25 @@ class TrimmingReport:
 
 class FastqcReport:
     EXACT_PATH_FORMAT = {
+        # MOCK
+        # "Raw": {
+        #     "Forward": os.path.join(
+        #         "00-RawData", "FastQC_Reports", "{sample_name}_R1_raw_fastqc.{ext}"
+        #     ),
+        #     "Reverse": os.path.join(
+        #         "00-RawData", "FastQC_Reports", "{sample_name}_R2_raw_fastqc.{ext}"
+        #     ),
+        # },
         "Raw": {
             "Forward": os.path.join(
-                "00-RawData", "FastQC_Reports", "{sample_name}_R1_raw_fastqc.{ext}"
+                "01-TG_Preproc",
+                "FastQC_Reports",
+                "{sample_name}_R1_trimmed_fastqc.{ext}",
             ),
             "Reverse": os.path.join(
-                "00-RawData", "FastQC_Reports", "{sample_name}_R2_raw_fastqc.{ext}"
+                "01-TG_Preproc",
+                "FastQC_Reports",
+                "{sample_name}_R2_trimmed_fastqc.{ext}",
             ),
         },
         "Trimmed": {
@@ -232,6 +240,7 @@ class Fastq:
         assert (
             len(found) == 1
         ), f"One and only find target should occur. Found: {found}. Pattern: {pattern}"
+        log.debug(f"Returning located file: {found[0]}")
         return found[0]
 
 
@@ -369,7 +378,8 @@ class GenesResults(Exact_Path_Finder):
     """ RSEM OUTPUT """
 
     EXACT_PATH_FORMAT = os.path.join(
-        "03-RSEM_Counts", "{sample_name}", "{sample_name}.genes.results"
+        #DEBUG MODIFY "03-RSEM_Counts", "{sample_name}", "{sample_name}.genes.results"
+        "03-RSEM_Counts",  "{sample_name}.genes.results"
     )
 
 
@@ -377,7 +387,8 @@ class IsoformsResults(Exact_Path_Finder):
     """ RSEM OUTPUT """
 
     EXACT_PATH_FORMAT = os.path.join(
-        "03-RSEM_Counts", "{sample_name}", "{sample_name}.isoforms.results"
+        #DEBUG MODIFY "03-RSEM_Counts", "{sample_name}", "{sample_name}.isoforms.results"
+        "03-RSEM_Counts", "{sample_name}.isoforms.results"
     )
 
 
@@ -385,7 +396,8 @@ class RSEMStat(Exact_Path_Finder):
     """ RSEM OUTPUT """
 
     EXACT_PATH_FORMAT = os.path.join(
-        "03-RSEM_Counts", "{sample_name}", "{sample_name}.stat"
+        #DEBUG MODIFY "03-RSEM_Counts", "{sample_name}", "{sample_name}.stat"
+        "03-RSEM_Counts", "{sample_name}.stat"
     )
 
 
@@ -424,7 +436,7 @@ class SampleTableCSV(Exact_Path_Finder):
 class UnnormalizedCountsCSV(Exact_Path_Finder):
     """ DESEQ OUTPUT """
 
-    EXACT_PATH_FORMAT = os.path.join("04-DESeq2_NormCounts", "Unnormalized_Counts.csv")
+    EXACT_PATH_FORMAT = os.path.join("04-DESeq2_NormCounts", "RSEM_Unnormalized_Counts.csv")
 
 
 class ContrastsCSV(Exact_Path_Finder):
