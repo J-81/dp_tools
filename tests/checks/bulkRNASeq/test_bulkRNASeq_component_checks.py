@@ -238,26 +238,16 @@ def test_COMPONENT_GENOMEALIGNMENTS_0001_single(
         flag = testCheck.validate(test_component)
         assert flag.maxCode.name == "RED1"
 
-
+'''
 def test_COMPONENT_RSEQCANALYSIS_0001_paired(glds194_dataSystem_STAGE01):
     raise NotImplementedError
-
 
 def test_COMPONENT_RSEQCANALYSIS_0001_single(glds48_dataSystem_STAGE01):
     raise NotImplementedError
 
-
 def test_COMPONENT_GENECOUNTS_0001_paired(glds194_dataSystem_STAGE01):
     raise NotImplementedError
 
-
 def test_COMPONENT_GENECOUNTS_0001_single(glds48_dataSystem_STAGE01):
     raise NotImplementedError
-
-
-def test_COMPONENT_DIFFERENTIALGENEEXPRESSION_0001_paired(glds194_dataSystem_STAGE01):
-    raise NotImplementedError
-
-
-def test_COMPONENT_DIFFERENTIALGENEEXPRESSION_0001_single(glds48_dataSystem_STAGE01):
-    raise NotImplementedError
+'''
