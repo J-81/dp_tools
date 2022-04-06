@@ -236,6 +236,7 @@ class TemplateComponent(abc.ABC, CanAttachEntity):
     # ]  # optional but speeds up multiqc processing time slightly and can constrain modules if desired
     
     def __post_init__(self):
+        log.debug(f"Initiating Component with class: {self.__class__.__name__}")
         strict_type_checks(self)
 
     # TODO: refactor, attached entity related portion should be owned by mixin
