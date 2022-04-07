@@ -1,0 +1,20 @@
+resource categories:
+  #- subcategory: NAME OF TABLE COLUMN
+  #  subdirectory: Subdirectories in Green are only for organizing "folders" in curation s3
+  
+  - subcategory: Merged sequence data
+    subdirectory: Fastq
+    pattern: '{sample}_raw.fastq.gz'
+    publish to repo: true
+
+  # J.Oribello: We should revisit this, fastQC includes some unique (not parsed
+  # into multiQC) relevant information like the actual overrepresented sequence strings
+  - subcategory: Merged sequence data
+    subdirectory: FastQC report
+    pattern: '{sample}_raw.fastq.gz'
+    publish to repo: false
+
+  - subcategory: Merged sequence data
+    subdirectory: MultiQC report
+    pattern: 'raw_multiqc_report.zip'
+    publish to repo: true
