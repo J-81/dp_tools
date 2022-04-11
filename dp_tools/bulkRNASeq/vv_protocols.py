@@ -1,6 +1,6 @@
 from collections import defaultdict
 import enum
-from typing import Dict, List
+from typing import Dict, List, Set, Union
 import logging
 
 from dp_tools.components.components import DatasetGeneCounts, DifferentialGeneExpression, GeneCounts, GenomeAlignments, NormalizedGeneCounts, RSeQCAnalysis
@@ -37,6 +37,13 @@ class STAGE(enum.Enum):
     def __ge__(self, other):
         return self.value >= other.value
 
+    def __le__(self, other):
+        return self.value <= other.value
+
+    @classmethod
+    def get_all_preceeding(cls, query_stage):
+        return {stage for stage in cls if stage <= query_stage}
+
 
 class BulkRNASeq_VVProtocol(VVProtocol):
     expected_dataset_class = BulkRNASeqDataset
@@ -60,25 +67,38 @@ class BulkRNASeq_VVProtocol(VVProtocol):
     component_trimReads_0001 = COMPONENT_TRIMREADS_0001()
     component_genomeAlignments_0001 = COMPONENT_GENOMEALIGNMENTS_0001()
 
-    def __init__(self, dataset: BulkRNASeqDataset, stage: STAGE):
-        super().__init__(dataset)
-        self.stage = stage
+    def __init__(self, dataset: BulkRNASeqDataset, stage: Union[STAGE, Set[STAGE]], dry_run: bool = False):
+        super().__init__(dataset, dry_run)
+
+        # stage can be either a list of stages or a single stage
+        # for a single stage, all stages preceeding should be included
+        if isinstance(stage, STAGE):
+            self._stage_arg = stage
+            self._stages_loaded = {stage}.union(STAGE.get_all_preceeding(stage))
+        elif isinstance(stage, set):
+            self._stage_arg = stage
+            # validate contents
+            for sub_stage in stage:
+                if not isinstance(sub_stage, STAGE):
+                    raise ValueError(f"All requested stages must be a {STAGE}")
+            # set as loaded stages
+            self._stages_loaded = stage
 
     def validate_dataset(self) -> Dict[BulkRNASeqDataset, List[Flag]]:
         flags: Dict[BulkRNASeqDataset, List[Flag]] = defaultdict(list)
-        if self.stage >= STAGE.Demultiplexed: flags[self.dataset].append(self.dataset_metadata_0001.validate(self.dataset))
-        if self.stage >= STAGE.Demultiplexed: flags[self.dataset].append(self.dataset_rawReads_0001.validate(self.dataset))
-        if self.stage >= STAGE.Reads_PreProcessed: flags[self.dataset].append(self.dataset_trimReads_0001.validate(self.dataset))
-        if self.stage >= STAGE.GenomeAligned: flags[self.dataset].append(self.dataset_genomeAlignments_0001.validate(self.dataset))
-        if self.stage >= STAGE.RSeQCAnalysis: flags[self.dataset].append(self.dataset_rseqcAnalysis_0001.validate(self.dataset))
-        if self.stage >= STAGE.GeneCounted: flags[self.dataset].append(self.dataset_geneCounts.validate(self.dataset))
+        if STAGE.Demultiplexed in self._stages_loaded: flags[self.dataset].append(self.dataset_metadata_0001.validate(self.dataset))
+        if STAGE.Demultiplexed in self._stages_loaded: flags[self.dataset].append(self.dataset_rawReads_0001.validate(self.dataset))
+        if STAGE.Reads_PreProcessed in self._stages_loaded: flags[self.dataset].append(self.dataset_trimReads_0001.validate(self.dataset))
+        if STAGE.GenomeAligned in self._stages_loaded: flags[self.dataset].append(self.dataset_genomeAlignments_0001.validate(self.dataset))
+        if STAGE.RSeQCAnalysis in self._stages_loaded: flags[self.dataset].append(self.dataset_rseqcAnalysis_0001.validate(self.dataset))
+        if STAGE.GeneCounted in self._stages_loaded: flags[self.dataset].append(self.dataset_geneCounts.validate(self.dataset))
         return flags
 
     def validate_samples(self) -> Dict[BulkRNASeqSample, List[Flag]]:
         flags: Dict[BulkRNASeqSample, List[Flag]] = defaultdict(list)
         for sample in self.dataset.samples.values():
-            if self.stage >= STAGE.Demultiplexed: flags[sample].append(self.sample_rawReads_0001.validate(sample=sample))
-            if self.stage >= STAGE.Reads_PreProcessed: flags[sample].append(self.sample_trimReads_0001.validate(sample=sample))
+            if STAGE.Demultiplexed in self._stages_loaded: flags[sample].append(self.sample_rawReads_0001.validate(sample=sample))
+            if STAGE.Reads_PreProcessed in self._stages_loaded: flags[sample].append(self.sample_trimReads_0001.validate(sample=sample))
         return flags
 
     def validate_components(self) -> Dict[TemplateComponent, List[Flag]]:
@@ -88,13 +108,13 @@ class BulkRNASeq_VVProtocol(VVProtocol):
             log.info(f"Validating component: {component} with type {type(component)}")
             match component:
                 case RawReadsComponent():
-                    if self.stage >= STAGE.Demultiplexed: flags[component].append(self.component_rawReads_0001.validate(component))
+                    if STAGE.Demultiplexed in self._stages_loaded: flags[component].append(self.component_rawReads_0001.validate(component))
                 case TrimReadsComponent():
-                    if self.stage >= STAGE.Reads_PreProcessed: flags[component].append(self.component_trimReads_0001.validate(component))
+                    if STAGE.Reads_PreProcessed in self._stages_loaded: flags[component].append(self.component_trimReads_0001.validate(component))
                 case BulkRNASeqMetadataComponent():
                     flags[component] = list()
                 case GenomeAlignments():
-                    if self.stage >= STAGE.GenomeAligned: flags[component].append(self.component_genomeAlignments_0001.validate(component))
+                    if STAGE.GenomeAligned in self._stages_loaded: flags[component].append(self.component_genomeAlignments_0001.validate(component))
                 case RSeQCAnalysis():
                     pass # no component level checks implemented
                 case GeneCounts():
