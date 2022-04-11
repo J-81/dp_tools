@@ -218,7 +218,7 @@ class COMPONENT_RAWREADS_0001(Check):
     description = (
         "Confirms that all read components (e.g. rawForwardReads, trimmedReads) should include the following: "
         "Datafiles of the format: {expected_data_files} related to the reads component. "
-        "Additionally, the following checks are performed for each file type: \n"
+        "Additionally, the following checks are performed for each file type: "
         "\tfastq.gz: First {lines_to_check} lines are checked for correct format. "
     )
     flag_desc = {
