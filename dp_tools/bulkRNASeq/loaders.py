@@ -8,7 +8,9 @@ import os
 from pathlib import Path
 import logging
 from typing import List, Protocol, Union
+import pkg_resources
 
+from schema import Schema, Or, SchemaMissingKeyError
 import pandas as pd
 from dp_tools.components.components import (
     DatasetGeneCounts,
@@ -19,6 +21,7 @@ from dp_tools.components.components import (
     RSeQCAnalysis,
     TrimReadsComponent,
 )
+import yaml
 
 log = logging.getLogger(__name__)
 
@@ -34,44 +37,37 @@ from dp_tools.core.entity_model import (
 )
 
 from dp_tools.bulkRNASeq.entity import BulkRNASeqDataset, BulkRNASeqSample
-from dp_tools.bulkRNASeq.locaters import (
-    AlignedSortedByCoordBam,
-    AlignedSortedByCoordResortedBam,
-    AlignedSortedByCoordResortedBamIndex,
-    AlignedToTranscriptomeBam,
-    AnnotatedTableCSV,
-    ContrastsCSV,
-    ERCCNormalizedCountsCSV,
-    FastqcReport,
-    GeneBodyCoverageOut,
-    GenesResults,
-    InferExperimentOut,
-    InnerDistanceOut,
-    IsoformsResults,
-    LogFinal,
-    LogFull,
-    LogProgress,
-    MultiQCDir,
-    Fastq,
-    NormalizedCountsCSV,
-    NumNonZero,
-    RSEMStat,
-    RSEMUnnormalizedCounts,
-    ReadDistributionOut,
-    Runsheet,
-    SampleTableCSV,
-    SjTab,
-    TrimmingReport,
-    UnnormalizedCountsCSV,
-    VisualizationPCATableCSV,
-    VisualizationTableCSV,
-)
+from dp_tools.bulkRNASeq.locaters import find_data_asset_path
 from dp_tools.components import RawReadsComponent, BulkRNASeqMetadataComponent
 
+def load_config(config: Union[str, Path]) -> dict:
+    if isinstance(config, str):
+        conf_data_assets = yaml.safe_load(pkg_resources.resource_string(__name__, f"../config/bulkRNASeq_v{config}.yaml"))["data assets"]
+    elif isinstance(config, Path):
+        conf_data_assets = yaml.safe_load(config.open())["data assets"]
 
+    # validate with schema
+    config_schema = Schema({
+        "processed location": [str],
+        "resource categories": {
+            "subcategory": Or(None, str),
+            "subdirectory": Or(None, str),
+            "publish to repo": bool
+        }
+    })
+    for key, conf_data_asset in conf_data_assets.items():
+        try:
+            config_schema.validate(conf_data_asset)
+        except SchemaMissingKeyError as e:
+            raise ValueError(f"Data asset config: '{key}' failed validation") from e
+    
+    return conf_data_assets
+
+# TODO: Attach/associate data assets config with dataset/datasystem
 def load_BulkRNASeq_STAGE_00(
-    root_path: Path, dataSystem_name: str = None, stack: bool = False
+    root_path: Path, config: Union[str, Path] = "Latest", dataSystem_name: str = None, stack: bool = False
 ):
+    """ config is either an string version referring to a packaged config file or a path to a local config file. """
     # ensure root path exists!
     if not root_path.is_dir():
         raise FileNotFoundError(f"Root path doesn't exist!: {root_path}")
@@ -83,11 +79,8 @@ def load_BulkRNASeq_STAGE_00(
     log.info(f"Attempting to load data model for raw directory: {str(root_path)}")
     dataSystem = GLDSDataSystem(base=BaseDataSystem(name=dataSystem_name))
 
-    # initate locaters on the root path
-    rawFastq = Fastq(search_root=root_path)
-    runsheet = Runsheet(search_root=root_path)
-    readsMQC = MultiQCDir(search_root=root_path)
-    fastqcReport = FastqcReport(search_root=root_path)
+    # load data assets config
+    conf_data_assets = load_config(config)
 
     # create dataset
     dataset = BulkRNASeqDataset(base=BaseDataset(name=dataSystem_name))
@@ -97,7 +90,7 @@ def load_BulkRNASeq_STAGE_00(
     dataSystem.dataset.attach_component(
         BulkRNASeqMetadataComponent(
             base=BaseComponent(description="Metadata in a runsheet csv file"),
-            runsheet=DataFile(runsheet.find(datasystem_name=dataSystem_name)),
+            runsheet=DataFile(find_data_asset_path(root_dir=root_path, data_asset_config=conf_data_assets["runsheet"], dataset=dataSystem_name)),
         ),
         attr="metadata",
     )
@@ -106,12 +99,7 @@ def load_BulkRNASeq_STAGE_00(
     metadata = dataSystem.dataset.all_components["metadata"]
 
     # create shared sample datafiles
-    datf_readsMQC = DataDir(
-        readsMQC.find(
-            rel_dir=Path.joinpath(Path("00-RawData"), Path("FastQC_Reports")),
-            mqc_label="raw",
-        )
-    )
+    datf_readsMQC = DataDir(find_data_asset_path(root_dir=root_path, data_asset_config=conf_data_assets["raw MultiQC directory"], dataset=dataSystem_name))
 
     # create samples
     for sample_name in metadata.samples:
@@ -119,35 +107,19 @@ def load_BulkRNASeq_STAGE_00(
         if metadata.paired_end:
             raw_fwd_reads = RawReadsComponent(
                 base=BaseComponent(description="Raw Forward Reads"),
-                fastqGZ=DataFile(rawFastq.find(sample_name, type=("Raw", "Forward"))),
+                fastqGZ=DataFile(find_data_asset_path(root_dir=root_path, data_asset_config=conf_data_assets["raw forward reads fastq GZ"], sample=sample_name)),
                 multiQCDir=datf_readsMQC,
-                fastqcReportHTML=DataFile(
-                    path=fastqcReport.find(
-                        sample_name=sample_name, ext="html", type=("Raw", "Forward")
-                    )
+                fastqcReportHTML=DataFile(find_data_asset_path(root_dir=root_path, data_asset_config=conf_data_assets["raw forward reads fastQC HTML"], sample=sample_name)
                 ),
-                fastqcReportZIP=DataFile(
-                    path=fastqcReport.find(
-                        sample_name=sample_name, ext="zip", type=("Raw", "Forward")
-                    )
+                fastqcReportZIP=DataFile(find_data_asset_path(root_dir=root_path, data_asset_config=conf_data_assets["raw forward reads fastQC ZIP"], sample=sample_name)
                 ),
             )
             raw_rev_reads = RawReadsComponent(
                 base=BaseComponent(description="Raw Reverse Reads"),
-                fastqGZ=DataFile(
-                    path=rawFastq.find(sample_name, type=("Raw", "Reverse"))
-                ),
+                fastqGZ=DataFile(find_data_asset_path(root_dir=root_path, data_asset_config=conf_data_assets["raw reverse reads fastq GZ"], sample=sample_name)),
                 multiQCDir=datf_readsMQC,
-                fastqcReportHTML=DataFile(
-                    path=fastqcReport.find(
-                        sample_name=sample_name, ext="html", type=("Raw", "Reverse")
-                    )
-                ),
-                fastqcReportZIP=DataFile(
-                    path=fastqcReport.find(
-                        sample_name=sample_name, ext="zip", type=("Raw", "Reverse")
-                    )
-                ),
+                fastqcReportHTML=DataFile(find_data_asset_path(root_dir=root_path, data_asset_config=conf_data_assets["raw reverse reads fastQC HTML"], sample=sample_name)),
+                fastqcReportZIP=DataFile(find_data_asset_path(root_dir=root_path, data_asset_config=conf_data_assets["raw reverse reads fastQC ZIP"], sample=sample_name))
             )
             log.debug(f"Attaching components to {sample.name}")
             sample.attach_component(raw_fwd_reads, attr="rawForwardReads")
@@ -155,20 +127,10 @@ def load_BulkRNASeq_STAGE_00(
         else:
             raw_reads = RawReadsComponent(
                 base=BaseComponent(description="Raw Reads"),
-                fastqGZ=DataFile(
-                    path=rawFastq.find(sample_name, type=("Raw", "Forward"))
-                ),
+                fastqGZ=DataFile(find_data_asset_path(root_dir=root_path, data_asset_config=conf_data_assets["raw reads fastq GZ"], sample=sample_name)),
                 multiQCDir=datf_readsMQC,
-                fastqcReportHTML=DataFile(
-                    path=fastqcReport.find(
-                        sample_name=sample_name, ext="html", type=("Raw", "Forward")
-                    )
-                ),
-                fastqcReportZIP=DataFile(
-                    path=fastqcReport.find(
-                        sample_name=sample_name, ext="zip", type=("Raw", "Forward")
-                    )
-                ),
+                fastqcReportHTML=DataFile(find_data_asset_path(root_dir=root_path, data_asset_config=conf_data_assets["raw reads fastQC HTML"], sample=sample_name)),
+                fastqcReportZIP=DataFile(find_data_asset_path(root_dir=root_path, data_asset_config=conf_data_assets["raw reads fastQC ZIP"], sample=sample_name))
             )
             log.debug(f"Attaching components to {sample.name}")
             sample.attach_component(raw_reads, attr="rawReads")
@@ -185,7 +147,7 @@ def load_BulkRNASeq_STAGE_00(
 
 # TODO: docstring
 def load_BulkRNASeq_STAGE_01(
-    root_path: Path, dataSystem: TemplateDataSystem, stack: bool = False
+    root_path: Path, dataSystem: TemplateDataSystem, config: Union[str, Path] = "Latest", stack: bool = False
 ):
     """Load data that should be present into stage 01 (TG-PreProc)
 
@@ -199,11 +161,8 @@ def load_BulkRNASeq_STAGE_01(
     # log about datasystem being built upon
     log.info(f"Loading STAGE 01 BulkRNASeq data into: \n\t{dataSystem}")
 
-    # initate locaters on the root path
-    fastq = Fastq(search_root=root_path)
-    readsMQC = MultiQCDir(search_root=root_path)
-    fastqcReport = FastqcReport(search_root=root_path)
-    trimmingReport = TrimmingReport(search_root=root_path)
+    # load data assets config
+    conf_data_assets = load_config(config)
 
     # attach dataset components
     # dataSystem.dataset.attach_component(
@@ -219,75 +178,37 @@ def load_BulkRNASeq_STAGE_01(
     dataset = dataSystem.dataset
 
     # create shared sample datafiles
-    datf_readsMQC = DataDir(
-        readsMQC.find(
-            rel_dir=Path.joinpath(Path("01-TG_Preproc"), Path("FastQC_Reports")),
-            mqc_label="trimmed",
-        )
-    )
+    datf_readsMQC = DataDir(find_data_asset_path(root_dir=root_path, data_asset_config=conf_data_assets["trimmed MultiQC directory"]))
 
     # update samples
     for sample_name, sample in dataset.samples.items():
         if metadata.paired_end:
-            _type = ("Trimmed", "Forward")
             trim_fwd_reads = TrimReadsComponent(
                 base=BaseComponent(description="Trimmed Forward Reads"),
-                fastqGZ=DataFile(fastq.find(sample_name, type=_type)),
+                fastqGZ=DataFile(find_data_asset_path(root_dir=root_path, data_asset_config=conf_data_assets["trimmed forward reads fastq GZ"], sample=sample_name)),
                 multiQCDir=datf_readsMQC,
-                fastqcReportHTML=DataFile(
-                    path=fastqcReport.find(
-                        sample_name=sample_name, ext="html", type=_type
-                    )
-                ),
-                fastqcReportZIP=DataFile(
-                    path=fastqcReport.find(
-                        sample_name=sample_name, ext="zip", type=_type
-                    )
-                ),
-                trimmingReportTXT=DataFile(
-                    path=trimmingReport.find(sample_name=sample_name, type=_type[1])
-                ),
+                fastqcReportHTML=DataFile(find_data_asset_path(root_dir=root_path, data_asset_config=conf_data_assets["trimmed forward reads fastQC HTML"], sample=sample_name)),
+                fastqcReportZIP=DataFile(find_data_asset_path(root_dir=root_path, data_asset_config=conf_data_assets["trimmed forward reads fastQC ZIP"], sample=sample_name)),
+                trimmingReportTXT=DataFile(find_data_asset_path(root_dir=root_path, data_asset_config=conf_data_assets["forward reads trimming report"], sample=sample_name)),
             )
-            _type = ("Trimmed", "Reverse")
             trim_rev_reads = TrimReadsComponent(
                 base=BaseComponent(description="Trimmed Reverse Reads"),
-                fastqGZ=DataFile(path=fastq.find(sample_name, type=_type)),
+                fastqGZ=DataFile(find_data_asset_path(root_dir=root_path, data_asset_config=conf_data_assets["trimmed reverse reads fastq GZ"], sample=sample_name)),
                 multiQCDir=datf_readsMQC,
-                fastqcReportHTML=DataFile(
-                    path=fastqcReport.find(
-                        sample_name=sample_name, ext="html", type=_type
-                    )
-                ),
-                fastqcReportZIP=DataFile(
-                    path=fastqcReport.find(
-                        sample_name=sample_name, ext="zip", type=_type
-                    )
-                ),
-                trimmingReportTXT=DataFile(
-                    path=trimmingReport.find(sample_name=sample_name, type=_type[1])
-                ),
+                fastqcReportHTML=DataFile(find_data_asset_path(root_dir=root_path, data_asset_config=conf_data_assets["trimmed reverse reads fastQC HTML"], sample=sample_name)),
+                fastqcReportZIP=DataFile(find_data_asset_path(root_dir=root_path, data_asset_config=conf_data_assets["trimmed reverse reads fastQC ZIP"], sample=sample_name)),
+                trimmingReportTXT=DataFile(find_data_asset_path(root_dir=root_path, data_asset_config=conf_data_assets["reverse reads trimming report"], sample=sample_name)),
             )
             sample.attach_component(trim_fwd_reads, attr="trimForwardReads")
             sample.attach_component(trim_rev_reads, attr="trimReverseReads")
         else:
-            _type = ("Trimmed", "Forward")
             trim_reads = TrimReadsComponent(
                 base=BaseComponent(description="Trimmed Reads"),
-                fastqGZ=DataFile(path=fastq.find(sample_name, type=_type)),
+                fastqGZ=DataFile(find_data_asset_path(root_dir=root_path, data_asset_config=conf_data_assets["trimmed reads fastq GZ"], sample=sample_name)),
                 multiQCDir=datf_readsMQC,
-                fastqcReportHTML=DataFile(
-                    path=fastqcReport.find(
-                        sample_name=sample_name, ext="html", type=_type
-                    )
-                ),
-                fastqcReportZIP=DataFile(
-                    path=fastqcReport.find(
-                        sample_name=sample_name, ext="zip", type=_type
-                    )
-                ),
-                trimmingReportTXT=DataFile(
-                    path=trimmingReport.find(sample_name=sample_name, type=_type[1])
-                ),
+                fastqcReportHTML=DataFile(find_data_asset_path(root_dir=root_path, data_asset_config=conf_data_assets["trimmed reads fastQC HTML"], sample=sample_name)),
+                fastqcReportZIP=DataFile(find_data_asset_path(root_dir=root_path, data_asset_config=conf_data_assets["trimmed reads fastQC ZIP"], sample=sample_name)),
+                trimmingReportTXT=DataFile(find_data_asset_path(root_dir=root_path, data_asset_config=conf_data_assets["reads trimming report"], sample=sample_name)),
             )
             sample.attach_component(trim_reads, attr="trimReads")
 
