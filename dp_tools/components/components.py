@@ -25,7 +25,7 @@ class RawReadsComponent(TemplateComponent):
     fastqGZ: DataFile
     base: BaseComponent = field(repr=False)
     # id: str = field(default_factory=get_id)
-    multiQCDirZIP: Union[DataFile, None] = field(default=None)
+    fastQCmultiQCDirZIP: Union[DataFile, None] = field(default=None)
     fastqcReportHTML: Union[DataFile, None] = field(default=None)
     fastqcReportZIP: Union[DataFile, None] = field(
         default=None, metadata={"mqc_parse": ["FastQC"]}
