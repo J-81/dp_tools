@@ -1,16 +1,17 @@
 # anchors for reuse
-rawDataDir: &rawDataDir "00-RawData"
-trimDataDir: &trimDataDir "01-TG_Preproc"
-alignDataDir: &alignDataDir "02-STAR_Alignment"
-countsDataDir: &countsDataDir "03-RSEM_Counts"
-normCountsDataDir: &normCountsDataDir "04-DESeq2_NormCounts"
-DGEDataDir: &DGEDataDir "05-DESeq2_DGE"
-rseqcDataDir: &rseqcDataDir "RSeQC_Analyses"
-FastQC_Reports: &FastQC_Reports "FastQC_Reports"
-neverPublished: &neverPublished
-  subcategory: null
-  subdirectory: null
-  publish to repo: false
+_anchors:
+  rawDataDir: &rawDataDir "00-RawData"
+  trimDataDir: &trimDataDir "01-TG_Preproc"
+  alignDataDir: &alignDataDir "02-STAR_Alignment"
+  countsDataDir: &countsDataDir "03-RSEM_Counts"
+  normCountsDataDir: &normCountsDataDir "04-DESeq2_NormCounts"
+  DGEDataDir: &DGEDataDir "05-DESeq2_DGE"
+  rseqcDataDir: &rseqcDataDir "RSeQC_Analyses"
+  FastQC_Reports: &FastQC_Reports "FastQC_Reports"
+  neverPublished: &neverPublished
+    subcategory: null
+    subdirectory: null
+    publish to repo: false
 
 data assets:
   runsheet:
@@ -625,3 +626,31 @@ data assets:
       
     resource categories: *DGEAnalysisData
 
+Validation Protocols:
+  dry run all:
+    dry run: true
+    skip checks: !!set {}
+    stage: "DGE"
+
+  full: &full
+    dry run: false
+    skip checks: !!set {}
+    stage: "DGE"
+
+  only processed:
+    dry run: false
+    skip checks: !!set {}
+    stage: !!set
+      ? Reads_PreProcessed
+      ? GenomeAligned
+      ? RSeQCAnalysis
+      ? GeneCounted
+      ? DGE
+
+  only raw:
+    dry run: false
+    skip checks: !!set {}
+    stage: !!set
+      ? Demultiplexed
+
+  DEFAULT: *full

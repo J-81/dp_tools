@@ -128,3 +128,31 @@ data assets:
     # pattern: 'raw_multiqc_report.zip'
     # publish to repo: true
 
+Validation Protocols:
+  dry run all:
+    dry run: true
+    skip checks: !!set {}
+    stage: "DGE"
+
+  full: &full
+    dry run: false
+    skip checks: !!set {}
+    stage: "DGE"
+
+  only processed:
+    dry run: false
+    skip checks: !!set {}
+    stage: !!set
+      ? Reads_PreProcessed
+      ? GenomeAligned
+      ? RSeQCAnalysis
+      ? GeneCounted
+      ? DGE
+
+  only raw:
+    dry run: false
+    skip checks: !!set {}
+    stage: !!set
+      ? Demultiplexed
+
+  DEFAULT: *full
