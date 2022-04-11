@@ -1,0 +1,130 @@
+# anchors for reuse
+rawDataDir: &rawDataDir "00-RawData"
+FastQC_Reports: &FastQC_Reports "FastQC_Reports"
+neverPublished: &neverPublished
+  subcategory: null
+  subdirectory: null
+  publish to repo: false
+
+
+data assets:
+  runsheet:
+    processed location: 
+      - "Metadata"
+      - "AST_autogen_template_RNASeq_RCP_{dataset}_RNASeq_runsheet.csv"
+
+    resource categories: *neverPublished
+
+  raw MultiQC directory:
+    processed location: 
+      - *rawDataDir
+      - *FastQC_Reports
+      - "raw_multiqc_report"
+
+    resource categories: *neverPublished
+
+  raw forward reads fastq GZ:
+    processed location:
+      - *rawDataDir
+      - "Fastq"
+      - "{sample}_R1_raw.fastq.gz"
+
+    resource categories: &rawFastqGZ
+      subcategory: Merged sequence data
+      subdirectory: Fastqs
+      publish to repo: true
+
+  raw reverse reads fastq GZ:
+    processed location:
+      - *rawDataDir
+      - "Fastq"
+      - "{sample}_R2_raw.fastq.gz"
+
+    resource categories: *rawFastqGZ
+
+  raw reads fastq GZ:
+    processed location:
+      - *rawDataDir
+      - "Fastq"
+      - "{sample}_raw.fastq.gz"
+
+    resource categories: *rawFastqGZ
+
+  raw forward reads fastQC HTML:
+    processed location:
+      - *rawDataDir
+      - *FastQC_Reports
+      - "{sample}_R1_raw_fastqc.html"
+
+    resource categories:
+      subcategory: Merged sequence data
+      subdirectory: Fastqs
+      publish to repo: true
+
+  raw reverse reads fastQC HTML:
+    processed location:
+      - *rawDataDir
+      - *FastQC_Reports
+      - "{sample}_R2_raw_fastqc.html"
+
+    resource categories:
+      subcategory: Merged sequence data
+      subdirectory: Fastqs
+      publish to repo: true
+
+  raw reads fastQC HTML:
+    processed location:
+      - *rawDataDir
+      - *FastQC_Reports
+      - "{sample}_raw_fastqc.html"
+
+    resource categories:
+      subcategory: Merged sequence data
+      subdirectory: Fastqs
+      publish to repo: true
+
+  raw forward reads fastQC ZIP:
+    processed location:
+      - *rawDataDir
+      - *FastQC_Reports
+      - "{sample}_R1_raw_fastqc.zip"
+
+    resource categories:
+      subcategory: Merged sequence data
+      subdirectory: Fastqs
+      publish to repo: true
+
+  raw reverse reads fastQC ZIP:
+    processed location:
+      - *rawDataDir
+      - *FastQC_Reports
+      - "{sample}_R2_raw_fastqc.zip"
+
+    resource categories:
+      subcategory: Merged sequence data
+      subdirectory: Fastqs
+      publish to repo: true
+
+  raw reads fastQC ZIP:
+    processed location:
+      - *rawDataDir
+      - *FastQC_Reports
+      - "{sample}_raw_fastqc.zip"
+
+    resource categories:
+      subcategory: Merged sequence data
+      subdirectory: Fastqs
+      publish to repo: true
+
+  # J.Oribello: We should revisit this, fastQC includes some unique (not parsed
+  # into multiQC) relevant information like the actual overrepresented sequence strings
+    # subcategory: Merged sequence data
+    # subdirectory: FastQC reports
+    # pattern: '{sample}_raw.fastq.gz'
+    # publish to repo: false
+
+    # subcategory: Merged sequence data
+    # subdirectory: MultiQC reports
+    # pattern: 'raw_multiqc_report.zip'
+    # publish to repo: true
+

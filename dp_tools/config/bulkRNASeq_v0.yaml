@@ -1,0 +1,224 @@
+# anchors for reuse
+rawDataDir: &rawDataDir "00-RawData"
+trimDataDir: &trimDataDir "01-TG_Preproc"
+FastQC_Reports: &FastQC_Reports "FastQC_Reports"
+neverPublished: &neverPublished
+  subcategory: null
+  subdirectory: null
+  publish to repo: false
+
+data assets:
+  runsheet:
+    processed location: 
+      - "Metadata"
+      - "AST_autogen_template_RNASeq_RCP_{dataset}_RNASeq_runsheet.csv"
+
+    resource categories: *neverPublished
+
+  raw MultiQC directory:
+    processed location: 
+      - *rawDataDir
+      - *FastQC_Reports
+      - "raw_multiqc_report"
+
+    resource categories:
+      subcategory: Merged sequence data
+      subdirectory: MultiQC report
+      publish to repo: true
+
+  raw forward reads fastq GZ:
+    processed location:
+      - *rawDataDir
+      - "Fastq"
+      - "{sample}_R1_raw.fastq.gz"
+
+    resource categories: &rawFastqGZ
+      subcategory: Merged sequence data
+      subdirectory: Fastqs
+      publish to repo: true
+
+  raw reverse reads fastq GZ:
+    processed location:
+      - *rawDataDir
+      - "Fastq"
+      - "{sample}_R2_raw.fastq.gz"
+
+    resource categories: *rawFastqGZ
+
+  raw reads fastq GZ:
+    processed location:
+      - *rawDataDir
+      - "Fastq"
+      - "{sample}_R1_raw.fastq.gz"
+
+    resource categories: *rawFastqGZ
+
+  raw forward reads fastQC HTML:
+    processed location:
+      - *rawDataDir
+      - *FastQC_Reports
+      - "{sample}_R1_raw_fastqc.html"
+
+    resource categories:
+      subcategory: Merged sequence data
+      subdirectory: Fastqs
+      publish to repo: true
+
+  # J.Oribello: We should revisit this, fastQC includes some unique (not parsed
+  # into multiQC) relevant information like the actual overrepresented sequence strings
+  raw reverse reads fastQC HTML:
+    processed location:
+      - *rawDataDir
+      - *FastQC_Reports
+      - "{sample}_R2_raw_fastqc.html"
+
+    resource categories:
+      subcategory: Merged sequence data
+      subdirectory: Fastqs
+      publish to repo: true
+
+  raw reads fastQC HTML:
+    processed location:
+      - *rawDataDir
+      - *FastQC_Reports
+      - "{sample}_R1_raw_fastqc.html"
+
+    resource categories:
+      subcategory: Merged sequence data
+      subdirectory: Fastqs
+      publish to repo: true
+
+  raw forward reads fastQC ZIP: 
+    processed location:
+      - *rawDataDir
+      - *FastQC_Reports
+      - "{sample}_R1_raw_fastqc.zip"
+
+    resource categories:
+      subcategory: Merged sequence data
+      subdirectory: Fastqs
+      publish to repo: true
+
+  raw reverse reads fastQC ZIP:
+    processed location:
+      - *rawDataDir
+      - *FastQC_Reports
+      - "{sample}_R2_raw_fastqc.zip"
+
+    resource categories:
+      subcategory: Merged sequence data
+      subdirectory: Fastqs
+      publish to repo: true
+
+  raw reads fastQC ZIP:
+    processed location:
+      - *rawDataDir
+      - *FastQC_Reports
+      - "{sample}_R1_raw_fastqc.zip"
+
+    resource categories:
+      subcategory: Merged sequence data
+      subdirectory: Fastqs
+      publish to repo: true
+
+  trimmed MultiQC directory:
+    processed location: 
+      - *trimDataDir
+      - *FastQC_Reports
+      - "trimmed_multiqc_report"
+
+    resource categories:
+      subcategory: Trimmed sequence data
+      subdirectory: MultiQC report
+      publish to repo: true
+
+  trimmed forward reads fastq GZ: &trimmedFastqGZ
+    processed location:
+      - *trimDataDir
+      - "Fastq"
+      - "{sample}_R1_trimmed.fastq.gz"
+
+    resource categories:
+      subcategory: Trimmed sequence data
+      subdirectory: Fastqs
+      publish to repo: true
+
+  trimmed reverse reads fastq GZ:
+    <<: *trimmedFastqGZ
+    processed location:
+      - *trimDataDir
+      - "Fastq"
+      - "{sample}_R2_trimmed.fastq.gz"
+
+  trimmed reads fastq GZ:
+    <<: *trimmedFastqGZ
+    processed location:
+      - *trimDataDir
+      - "Fastq"
+      - "{sample}_R1_trimmed.fastq.gz"
+
+  trimmed forward reads fastQC HTML: &trimmedForwardReadsFastQCHTML
+    processed location:
+      - *trimDataDir
+      - *FastQC_Reports
+      - "{sample}_R1_trimmed_fastqc.html"
+
+    resource categories: *neverPublished
+
+  trimmed reverse reads fastQC HTML: 
+    <<: *trimmedForwardReadsFastQCHTML
+    processed location:
+      - *trimDataDir
+      - *FastQC_Reports
+      - "{sample}_R2_trimmed_fastqc.html"
+
+  trimmed reads fastQC HTML: 
+    <<: *trimmedForwardReadsFastQCHTML
+    processed location:
+      - *trimDataDir
+      - *FastQC_Reports
+      - "{sample}_R1_trimmed_fastqc.html"
+
+  trimmed forward reads fastQC ZIP: &trimmedForwardReadsFastQCZIP
+    processed location:
+      - *trimDataDir
+      - *FastQC_Reports
+      - "{sample}_R1_trimmed_fastqc.zip"
+
+    resource categories: *neverPublished
+
+  trimmed reverse reads fastQC ZIP: 
+    <<: *trimmedForwardReadsFastQCZIP
+    processed location:
+      - *trimDataDir
+      - *FastQC_Reports
+      - "{sample}_R2_trimmed_fastqc.zip"
+
+  trimmed reads fastQC ZIP: 
+    <<: *trimmedForwardReadsFastQCZIP
+    processed location:
+      - *trimDataDir
+      - *FastQC_Reports
+      - "{sample}_R1_trimmed_fastqc.zip"
+
+  forward reads trimming report: &trimmedForwardReadsFastQCTrimmingReport
+    processed location:
+      - *trimDataDir
+      - Trimming_Reports
+      - "{sample}_R1_raw.fastq.gz_trimming_report.txt"
+
+    resource categories: *neverPublished
+
+  reverse reads trimming report: 
+    <<: *trimmedForwardReadsFastQCTrimmingReport
+    processed location:
+      - *trimDataDir
+      - Trimming_Reports
+      - "{sample}_R2_raw.fastq.gz_trimming_report.txt"
+
+  reads trimming report: 
+    <<: *trimmedForwardReadsFastQCTrimmingReport
+    processed location:
+      - *trimDataDir
+      - Trimming_Reports
+      - "{sample}_R1_raw.fastq.gz_trimming_report.txt"
