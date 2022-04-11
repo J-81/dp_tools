@@ -54,6 +54,7 @@ class FlagCode(enum.Enum):
     YELLOW5 = 35
     GREEN = 20
     INFO = 10
+    SKIPPED = 1  # should never be used directly, instead is the flag code for skipping checks
     DRY_RUN = 0  # should never be used directly, instead is the flag code for validation dry runs
 
     # allow comparing flag codes
@@ -82,9 +83,10 @@ class Check(abc.ABC):
     allChecks: ClassVar[
         List["Check"]
     ] = list()  # note this is a class attribute list, tracking all checks
-    _dry_run: ClassVar[bool] = field(default=False, repr=False) # controls whether a validation is performed
+    _dry_run: ClassVar[bool] = field(default=False, repr=False) # controls whether a validation is performed as per dry run
+    skip_this: ClassVar[bool] = field(default=False, repr=False) # controls whether a validation is performed as per explicit skipping
 
-    def __post_init__(self):
+    def __post_init__(self, skip: bool = None):
         # format description with config
         # All templated fields MUST be in config
         # All items in config are NOT required
@@ -111,6 +113,10 @@ class Check(abc.ABC):
         # add to tracked allChecks
         self.allChecks.append(self)
 
+        # set skip if added
+        if skip != None:
+            self.__class__.skip_this = skip
+
         # add flag description for unhandled developer exception flags
         self.flag_desc[
             FlagCode.DEV_UNHANDLED
@@ -121,11 +127,26 @@ class Check(abc.ABC):
             FlagCode.DRY_RUN
         ] = "DRY RUN REQUESTED: check not run"
 
+        # add flag description for handling SKIPPED flags
+        self.flag_desc[
+            FlagCode.SKIPPED
+        ] = "CHECK SKIP REQUESTED: check not run"
+
     @abc.abstractmethod
     def validate_func(self) -> 'Flag':
         raise NotImplementedError
 
-    def validate(self, *args, **kwargs):
+    def validate(self, request_skip: bool, *args, **kwargs):
+        # add skipped route that bails out
+        # NOTE: this intentionally takes place before the dry run condition is checked
+        #       this allows checking if your config will perform as expected, including skips
+        if request_skip:
+            return Flag(
+                codes=FlagCode.SKIPPED,
+                message_args={},
+                check=self,
+            )
+
         # add dry run route that bails out
         if self.__class__._dry_run:
             return Flag(
@@ -216,7 +237,12 @@ class Flag:
 class VVProtocol(abc.ABC):
     """ A abstract protocol for VV """
 
-    def __init__(self, dataset, dry_run: bool = False):
+    def __init__(self, dataset, dry_run: bool = False, skip_these_checks: set = None):
+        # assign to empty set if no skips are specified
+        if skip_these_checks == None:
+            self.skip_these_checks = set()
+        else:
+            self.skip_these_checks = skip_these_checks
         # check on init that dataset is of the right type
         assert isinstance(
             dataset, self.expected_dataset_class
@@ -226,6 +252,10 @@ class VVProtocol(abc.ABC):
         if dry_run:
             log.critical("DRY RUNNING: Validation protocol, no checks performed")
             Check._dry_run = True
+
+    def run_check(self, check: Check, *args, **kwargs) -> Flag:
+        """ Runs check and performs validation if skip is not requested """
+        return check.validate(request_skip=(check.id in self.skip_these_checks), *args, **kwargs)
 
     @property
     def flags(self):
