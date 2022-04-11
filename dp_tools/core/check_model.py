@@ -54,6 +54,7 @@ class FlagCode(enum.Enum):
     YELLOW5 = 35
     GREEN = 20
     INFO = 10
+    DRY_RUN = 0  # should never be used directly, instead is the flag code for validation dry runs
 
     # allow comparing flag codes
     # used to determine if a code is of higher severity
@@ -81,6 +82,7 @@ class Check(abc.ABC):
     allChecks: ClassVar[
         List["Check"]
     ] = list()  # note this is a class attribute list, tracking all checks
+    _dry_run: ClassVar[bool] = field(default=False, repr=False) # controls whether a validation is performed
 
     def __post_init__(self):
         # format description with config
@@ -114,11 +116,24 @@ class Check(abc.ABC):
             FlagCode.DEV_UNHANDLED
         ] = "An unhandled exception occured in {function} with args '{args}' and kwargs: '{kwargs}': {e}.\n{full_traceback}"
 
+        # add flag description for handling DRYRUN flags
+        self.flag_desc[
+            FlagCode.DRY_RUN
+        ] = "DRY RUN REQUESTED: check not run"
+
     @abc.abstractmethod
     def validate_func(self) -> 'Flag':
         raise NotImplementedError
 
     def validate(self, *args, **kwargs):
+        # add dry run route that bails out
+        if self.__class__._dry_run:
+            return Flag(
+                codes=FlagCode.DRY_RUN,
+                message_args={},
+                check=self,
+            )
+
         try:
             return self.validate_func(*args, **kwargs)
         except ALLOWED_DEV_EXCEPTIONS as e:
@@ -126,7 +141,7 @@ class Check(abc.ABC):
                 f"Developer exception raised during a validation function for check: {self}"
             )
             return Flag(
-                maxCode=FlagCode.DEV_UNHANDLED,
+                codes=FlagCode.DEV_UNHANDLED,
                 message_args={"function": self.validate_func, "e": e, "full_traceback": traceback.format_exc(), "args": args, "kwargs": kwargs},
                 check=self,
             )
@@ -201,13 +216,16 @@ class Flag:
 class VVProtocol(abc.ABC):
     """ A abstract protocol for VV """
 
-    def __init__(self, dataset):
+    def __init__(self, dataset, dry_run: bool = False):
         # check on init that dataset is of the right type
         assert isinstance(
             dataset, self.expected_dataset_class
         ), f"dataset MUST be of type {self.expected_dataset_class} for this protocol"
         self.dataset = dataset
         self._flags = {"dataset": dict(), "sample": dict(), "component": dict()}
+        if dry_run:
+            log.critical("DRY RUNNING: Validation protocol, no checks performed")
+            Check._dry_run = True
 
     @property
     def flags(self):
