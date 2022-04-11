@@ -42,7 +42,7 @@ from dp_tools.components import RawReadsComponent, BulkRNASeqMetadataComponent
 
 def load_config(config: Union[str, Path]) -> dict:
     if isinstance(config, str):
-        conf_data_assets = yaml.safe_load(pkg_resources.resource_string(__name__, f"../config/bulkRNASeq_v{config}.yaml"))["data assets"]
+        conf_data_assets = yaml.safe_load(pkg_resources.resource_string(__name__, os.path.join("..","config",f"bulkRNASeq_v{config}.yaml")))["data assets"]
     elif isinstance(config, Path):
         conf_data_assets = yaml.safe_load(config.open())["data assets"]
 
