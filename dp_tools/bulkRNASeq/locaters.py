@@ -8,14 +8,25 @@ Such Locators SHOULD:
   - search starting at root data directory
   - any RE patterns should be relative to the search_path
 """
+from dataclasses import dataclass, field
 from functools import cache
 import os
 from pathlib import Path
-from typing import List, Protocol, Set, Tuple
+from typing import ClassVar, List, Protocol, Set, Tuple
 import logging
 
 logging.basicConfig(level=logging.DEBUG)
 log = logging.getLogger(__name__)
+
+'''
+TODO: implement as a class to achieve the following functionality:
+- Track all unlocated data assets to report likely data assets missing from data-model
+@dataclass
+class Locator():
+    all_data_assets: ClassVar[Set] = field(init=False, repr=False)
+    root_dir: Path
+    data_asset_config: dict
+'''
 
 def find_data_asset_path(
     data_asset_config: dict,
