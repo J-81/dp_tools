@@ -27,7 +27,7 @@ def test_bulkRNASeq_STAGE00_validation_paired(caplog, glds194_dataSystem_STAGE00
     caplog.set_level(CAPLEVEL)
     ds = glds194_dataSystem_STAGE00
     vv_protocol = BulkRNASeq_VVProtocol(
-        dataset=ds.dataset, stage=STAGE.Demultiplexed
+        dataset=ds.dataset, stage=STAGE.Demultiplexed, dry_run=True
     )
 
     with caplog.at_level(CAPLEVEL):
@@ -65,7 +65,7 @@ def test_bulkRNASeq_STAGE00_validation_single(caplog, glds48_dataSystem_STAGE00)
     caplog.set_level(CAPLEVEL)
     ds = glds48_dataSystem_STAGE00
     vv_protocol = BulkRNASeq_VVProtocol(
-        dataset=ds.dataset, stage=STAGE.Demultiplexed
+        dataset=ds.dataset, stage=STAGE.Demultiplexed, dry_run=True
     )
 
     with MonkeyPatch.context() as m:
@@ -86,7 +86,7 @@ def test_bulkRNASeq_STAGE00_validation_single(caplog, glds48_dataSystem_STAGE00)
 def test_bulkRNASeq_STAGE01_validation_paired(glds194_dataSystem_STAGE01):
     ds = glds194_dataSystem_STAGE01
     vv_protocol = BulkRNASeq_VVProtocol(
-        dataset=ds.dataset, stage=STAGE.Reads_PreProcessed
+        dataset=ds.dataset, stage=STAGE.Reads_PreProcessed, dry_run=True
     )
 
     vv_protocol.validate_all()
@@ -99,7 +99,7 @@ def test_bulkRNASeq_STAGE01_validation_paired(glds194_dataSystem_STAGE01):
 def test_bulkRNASeq_STAGE01_validation_single(glds48_dataSystem_STAGE01):
     ds = glds48_dataSystem_STAGE01
     vv_protocol = BulkRNASeq_VVProtocol(
-        dataset=ds.dataset, stage=STAGE.Reads_PreProcessed
+        dataset=ds.dataset, stage=STAGE.Reads_PreProcessed, dry_run=True
     )
 
     vv_protocol.validate_all()
@@ -111,7 +111,7 @@ def test_bulkRNASeq_STAGE01_validation_single(glds48_dataSystem_STAGE01):
 def test_bulkRNASeq_STAGE02_validation_paired(glds194_dataSystem_STAGE02):
     ds = glds194_dataSystem_STAGE02
     vv_protocol = BulkRNASeq_VVProtocol(
-        dataset=ds.dataset, stage=STAGE.GenomeAligned
+        dataset=ds.dataset, stage=STAGE.GenomeAligned, dry_run=True
     )
 
     vv_protocol.validate_all()
@@ -123,7 +123,7 @@ def test_bulkRNASeq_STAGE02_validation_paired(glds194_dataSystem_STAGE02):
 def test_bulkRNASeq_STAGE02_validation_single(glds48_dataSystem_STAGE02):
     ds = glds48_dataSystem_STAGE02
     vv_protocol = BulkRNASeq_VVProtocol(
-        dataset=ds.dataset, stage=STAGE.GenomeAligned
+        dataset=ds.dataset, stage=STAGE.GenomeAligned, dry_run=True
     )
 
     vv_protocol.validate_all()
@@ -135,7 +135,7 @@ def test_bulkRNASeq_STAGE02_validation_single(glds48_dataSystem_STAGE02):
 def test_bulkRNASeq_STAGE03_validation_paired(glds194_dataSystem_STAGE03):
     ds = glds194_dataSystem_STAGE03
     vv_protocol = BulkRNASeq_VVProtocol(
-        dataset=ds.dataset, stage=STAGE.GeneCounted
+        dataset=ds.dataset, stage=STAGE.GeneCounted, dry_run=True
     )
 
     vv_protocol.validate_all()
@@ -147,7 +147,7 @@ def test_bulkRNASeq_STAGE03_validation_paired(glds194_dataSystem_STAGE03):
 def test_bulkRNASeq_STAGE03_validation_single(glds48_dataSystem_STAGE03):
     ds = glds48_dataSystem_STAGE03
     vv_protocol = BulkRNASeq_VVProtocol(
-        dataset=ds.dataset, stage=STAGE.GeneCounted
+        dataset=ds.dataset, stage=STAGE.GeneCounted, dry_run=True
     )
 
     vv_protocol.validate_all()
@@ -159,7 +159,7 @@ def test_bulkRNASeq_STAGE03_validation_single(glds48_dataSystem_STAGE03):
 def test_bulkRNASeq_STAGE04_validation_paired(glds194_dataSystem_STAGE04):
     ds = glds194_dataSystem_STAGE04
     vv_protocol = BulkRNASeq_VVProtocol(
-        dataset=ds.dataset, stage=STAGE.DGE
+        dataset=ds.dataset, stage=STAGE.DGE, dry_run=True
     )
 
     vv_protocol.validate_all()
@@ -171,7 +171,7 @@ def test_bulkRNASeq_STAGE04_validation_paired(glds194_dataSystem_STAGE04):
 def test_bulkRNASeq_STAGE04_validation_single(glds48_dataSystem_STAGE04):
     ds = glds48_dataSystem_STAGE04
     vv_protocol = BulkRNASeq_VVProtocol(
-        dataset=ds.dataset, stage=STAGE.DGE
+        dataset=ds.dataset, stage=STAGE.DGE, dry_run=True
     )
 
     vv_protocol.validate_all()
