@@ -108,7 +108,7 @@ def load_BulkRNASeq_STAGE_00(
             raw_fwd_reads = RawReadsComponent(
                 base=BaseComponent(description="Raw Forward Reads"),
                 fastqGZ=DataFile(find_data_asset_path(root_dir=root_path, data_asset_config=conf_data_assets["raw forward reads fastq GZ"], sample=sample_name)),
-                multiQCDirZIP=datf_readsMQC,
+                fastQCmultiQCDirZIP=datf_readsMQC,
                 fastqcReportHTML=DataFile(find_data_asset_path(root_dir=root_path, data_asset_config=conf_data_assets["raw forward reads fastQC HTML"], sample=sample_name)
                 ),
                 fastqcReportZIP=DataFile(find_data_asset_path(root_dir=root_path, data_asset_config=conf_data_assets["raw forward reads fastQC ZIP"], sample=sample_name)
@@ -117,7 +117,7 @@ def load_BulkRNASeq_STAGE_00(
             raw_rev_reads = RawReadsComponent(
                 base=BaseComponent(description="Raw Reverse Reads"),
                 fastqGZ=DataFile(find_data_asset_path(root_dir=root_path, data_asset_config=conf_data_assets["raw reverse reads fastq GZ"], sample=sample_name)),
-                multiQCDirZIP=datf_readsMQC,
+                fastQCmultiQCDirZIP=datf_readsMQC,
                 fastqcReportHTML=DataFile(find_data_asset_path(root_dir=root_path, data_asset_config=conf_data_assets["raw reverse reads fastQC HTML"], sample=sample_name)),
                 fastqcReportZIP=DataFile(find_data_asset_path(root_dir=root_path, data_asset_config=conf_data_assets["raw reverse reads fastQC ZIP"], sample=sample_name))
             )
@@ -128,7 +128,7 @@ def load_BulkRNASeq_STAGE_00(
             raw_reads = RawReadsComponent(
                 base=BaseComponent(description="Raw Reads"),
                 fastqGZ=DataFile(find_data_asset_path(root_dir=root_path, data_asset_config=conf_data_assets["raw reads fastq GZ"], sample=sample_name)),
-                multiQCDirZIP=datf_readsMQC,
+                fastQCmultiQCDirZIP=datf_readsMQC,
                 fastqcReportHTML=DataFile(find_data_asset_path(root_dir=root_path, data_asset_config=conf_data_assets["raw reads fastQC HTML"], sample=sample_name)),
                 fastqcReportZIP=DataFile(find_data_asset_path(root_dir=root_path, data_asset_config=conf_data_assets["raw reads fastQC ZIP"], sample=sample_name))
             )
