@@ -4,6 +4,8 @@
 import abc
 from dataclasses import dataclass, field
 import enum
+import os
+from pathlib import Path
 import re
 import traceback
 from typing import (
@@ -12,6 +14,7 @@ from typing import (
     Dict,
     List,
     Optional,
+    Set,
     Tuple,
     Union,
 )
@@ -22,6 +25,9 @@ from dp_tools.core.entity_model import (
     TemplateSample,
 )
 import pandas as pd
+import pkg_resources
+from schema import Schema, SchemaMissingKeyError, And, Or
+import yaml
 
 log = logging.getLogger(__name__)
 
@@ -30,7 +36,6 @@ from dp_tools.core.model_commons import strict_type_checks
 ALLOWED_DEV_EXCEPTIONS = (
     Exception  # Hooking into this with monkeypatch can be handy for testing
 )
-
 
 class FlagCode(enum.Enum):
     """ Maps a flag code to a severity level. """
@@ -237,7 +242,52 @@ class Flag:
 class VVProtocol(abc.ABC):
     """ A abstract protocol for VV """
 
-    def __init__(self, dataset, dry_run: bool = False, skip_these_checks: set = None):
+    def __init__(self, dataset,
+                       config: Union[Tuple[str, str], Path], 
+                       dry_run: bool = False,
+                       skip_these_checks: set = None, 
+                       stage_names = None,  # TODO: fix typehint here
+                       protocol_name: str = "DEFAULT"):
+
+        # logging
+        log.info(f"Initiating V&V protocol with config: '{config}' and '{protocol_name}'")
+
+        # parse config for values
+        # TODO: raise exceptions/warnings when both CLI and config args are double supplied
+        if validation_config := self.load_config(config, protocol_name):
+            try:
+                # retrieve from config
+                # at this point, this is a string
+                config_stage_names: Union[str, Set[str]] = validation_config['stage']
+            except KeyError:
+                raise KeyError(f"Config file did not specify a valid stage: valid={[i for i in self.STAGES]}, supplied:{validation_config['stage']}")
+
+            if skip_these_checks == None:
+                skip_these_checks = validation_config.get('skip these checks', None)
+        
+        # set as final stage_names if not overridden
+        # TODO: invert this for clarity
+        if not stage_names:
+            stage_names = config_stage_names
+
+        # stage can be either a list of stages or a single stage
+        # for a single stage, all stages preceeding should be included
+        if isinstance(stage_names, str):
+            self._stage_arg = self.STAGES[stage_names]
+            self._stages_loaded = {self._stage_arg}.union(self.STAGES.get_all_preceeding(self._stage_arg))
+        elif isinstance(stage_names, set):
+            self._stage_arg = {self.STAGES[stage_name] for stage_name in stage_names}
+            # validate contents
+            for sub_stage in self._stage_arg:
+                if not isinstance(sub_stage, self.STAGES):
+                    raise ValueError(f"All requested stages must be a {self.STAGES}")
+            # set as loaded stages
+            self._stages_loaded = self._stage_arg
+        else:
+            raise ValueError("'stage' must be supplied either directly or as part of configuration")
+
+        log.info(f"Loaded validation stages: {self._stages_loaded}")
+
         # assign to empty set if no skips are specified
         if skip_these_checks == None:
             self.skip_these_checks = set()
@@ -266,6 +316,11 @@ class VVProtocol(abc.ABC):
     def expected_dataset_class(self):
         return self.expected_dataset_class
 
+    @abc.abstractproperty
+    @property
+    def STAGES(self):
+        return self._STAGES
+
     def validate_all(self):
         self._flags["dataset"].update(self.validate_dataset())
         self._flags["sample"].update(self.validate_samples())
@@ -282,6 +337,26 @@ class VVProtocol(abc.ABC):
     @abc.abstractmethod
     def validate_components(self) -> Dict[TemplateComponent, List[Flag]]:
         ...
+
+    def load_config(self, config: Union[Tuple[str, str], Path], protocol_name: str = "DEFAULT") -> dict:
+        if isinstance(config, tuple):
+            conf_validation = yaml.safe_load(pkg_resources.resource_string(__name__, os.path.join("..","config",f"{config[0]}_v{config[1]}.yaml")))["Validation Protocols"][protocol_name]
+        elif isinstance(config, Path):
+            conf_validation = yaml.safe_load(config.open())["Validation Protocols"][protocol_name]
+
+        log.debug("Loaded the following validation config: {conf_validation}")
+
+        # validate with schema
+        config_schema = Schema({
+            "dry run": bool,
+            "skip checks": set,
+            "stage": Or(set[str], str)
+        })
+        
+        config_schema.validate(conf_validation)
+        
+        self.config = conf_validation
+        return conf_validation
     ###################################################################################################################
     # EXPORT RELATED METHODS (POST VALIDATION)
     ###################################################################################################################

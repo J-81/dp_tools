@@ -1,6 +1,7 @@
 from collections import defaultdict
 import enum
-from typing import Dict, List, Set, Union
+from pathlib import Path
+from typing import Dict, List, Set, Tuple, Union
 import logging
 
 from dp_tools.components.components import DatasetGeneCounts, DifferentialGeneExpression, GeneCounts, GenomeAlignments, NormalizedGeneCounts, RSeQCAnalysis
@@ -67,36 +68,16 @@ class BulkRNASeq_VVProtocol(VVProtocol):
     component_trimReads_0001 = COMPONENT_TRIMREADS_0001()
     component_genomeAlignments_0001 = COMPONENT_GENOMEALIGNMENTS_0001()
 
+    STAGES = STAGE
+
     # TODO: Move generalized functionality to abc init
-    def __init__(self, dataset: BulkRNASeqDataset, stage: Union[STAGE, Set[STAGE]] = None, dry_run: bool = False, skip_these_checks: set = None, validation_config: dict = None):
-        # parse config for values
-        # TODO: raise exceptions/warnings when both CLI and config args are double supplied
-        if validation_config:
-            try:
-                stage = STAGE[validation_config['stage']]
-            except KeyError:
-                raise KeyError(f"Config file did not specify a valid stage: valid={[i for i in STAGE]}, supplied:{validation_config['stage']}")
+    def __init__(self, 
+                 dataset: BulkRNASeqDataset, 
+                 config: Union[Tuple[str, str], Path] = ("bulkRNASeq", "Latest"),
+                 **kwargs):
+        super().__init__(dataset=dataset, config=config, **kwargs)
 
-            if skip_these_checks == None:
-                skip_these_checks = validation_config.get('skip these checks', None)
 
-        super().__init__(dataset, dry_run, skip_these_checks)
-
-        # stage can be either a list of stages or a single stage
-        # for a single stage, all stages preceeding should be included
-        if isinstance(stage, STAGE):
-            self._stage_arg = stage
-            self._stages_loaded = {stage}.union(STAGE.get_all_preceeding(stage))
-        elif isinstance(stage, set):
-            self._stage_arg = stage
-            # validate contents
-            for sub_stage in stage:
-                if not isinstance(sub_stage, STAGE):
-                    raise ValueError(f"All requested stages must be a {STAGE}")
-            # set as loaded stages
-            self._stages_loaded = stage
-        else:
-            raise ValueError("'stage' must be supplied either directly or as part of configuration")
 
     def validate_dataset(self) -> Dict[BulkRNASeqDataset, List[Flag]]:
         flags: Dict[BulkRNASeqDataset, List[Flag]] = defaultdict(list)
@@ -126,7 +107,7 @@ class BulkRNASeq_VVProtocol(VVProtocol):
         flags: Dict[TemplateComponent, List[Flag]] = defaultdict(list)
         # iterate through all components by level
         for component in self.dataset.all_non_empty_components_recursive:
-            log.info(f"Validating component: {component} with type {type(component)}")
+            log.debug(f"Validating component: {component.__class__.__name__}")
             match component:
                 case RawReadsComponent():
                     if STAGE.Demultiplexed in self._stages_loaded: 
