@@ -5,6 +5,7 @@
 1. Define the sample (assay specific) including what components should be attached 
 1. Define the dataset (assay specific) including what components should be attached (e.g. DifferentialGeneExpressionComponent is a dataset component rather than tied to a specific sample) [BulkRNASeq Entities Example](https://github.com/J-81/dp_tools/blob/main/dp_tools/bulkRNASeq/entity.py)
 1. Write a loader that connects file location knowledge and a root directory input to assemble the dataset object [BulkRNASeq Loaders Example](https://github.com/J-81/dp_tools/blob/main/dp_tools/bulkRNASeq/loaders.py)
+    - Note: It is recommended to use the general data asset find function [source](dp_tools/bulkRNASeq/locaters.py#L20) coupled with a data asset yaml config [example](dp_tools/config/bulkRNASeq_v0.yaml)
 1. Write checks [BulkRNASeq Checks Example](https://github.com/J-81/dp_tools/blob/main/dp_tools/bulkRNASeq/checks.py)
 1. Incorporate those checks into a VV_Protocol [BulkRNASeq Protocol Example](https://github.com/J-81/dp_tools/blob/main/dp_tools/bulkRNASeq/vv_protocols.py)
 
