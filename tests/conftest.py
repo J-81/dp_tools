@@ -96,7 +96,7 @@ def glds194_dataSystem_STAGE01(glds194_test_dir):
         load_BulkRNASeq_STAGE_01(
             *load_BulkRNASeq_STAGE_00(
                 glds194_test_dir, config = "0", dataSystem_name="GLDS-194", stack=True
-            )
+            ), config="0"
         )
     )
 
