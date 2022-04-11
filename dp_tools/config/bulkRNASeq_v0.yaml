@@ -1,6 +1,11 @@
 # anchors for reuse
 rawDataDir: &rawDataDir "00-RawData"
 trimDataDir: &trimDataDir "01-TG_Preproc"
+alignDataDir: &alignDataDir "02-STAR_Alignment"
+countsDataDir: &countsDataDir "03-RSEM_Counts"
+normCountsDataDir: &normCountsDataDir "04-DESeq2_NormCounts"
+DGEDataDir: &DGEDataDir "05-DESeq2_DGE"
+rseqcDataDir: &rseqcDataDir "RSeQC_Analyses"
 FastQC_Reports: &FastQC_Reports "FastQC_Reports"
 neverPublished: &neverPublished
   subcategory: null
@@ -20,6 +25,14 @@ data assets:
       - *rawDataDir
       - *FastQC_Reports
       - "raw_multiqc_report"
+
+    resource categories: *neverPublished
+
+  raw MultiQC directory ZIP:
+    processed location: 
+      - *rawDataDir
+      - *FastQC_Reports
+      - "raw_multiqc_report.zip"
 
     resource categories:
       subcategory: Merged sequence data
@@ -121,11 +134,19 @@ data assets:
       subdirectory: Fastqs
       publish to repo: true
 
-  trimmed MultiQC directory:
+  trimmed fastQC MultiQC directory:
     processed location: 
       - *trimDataDir
       - *FastQC_Reports
       - "trimmed_multiqc_report"
+
+    resource categories: *neverPublished
+
+  trimmed fastQC MultiQC directory ZIP:
+    processed location: 
+      - *trimDataDir
+      - *FastQC_Reports
+      - "trimmed_multiqc_report.zip"
 
     resource categories:
       subcategory: Trimmed sequence data
@@ -201,10 +222,29 @@ data assets:
       - *FastQC_Reports
       - "{sample}_R1_trimmed_fastqc.zip"
 
+  trimming MultiQC directory:
+    processed location: 
+      - *trimDataDir
+      - &trimmingReportsDir "Trimming_Reports"
+      - "trimming_multiqc_report"
+
+    resource categories: *neverPublished
+
+  trimming MultiQC directory ZIP:
+    processed location: 
+      - *trimDataDir
+      - *trimmingReportsDir
+      - "trimming_multiqc_report.zip"
+
+    resource categories:
+      subcategory: Trimmed sequence data
+      subdirectory: MultiQC reports
+      publish to repo: true
+
   forward reads trimming report: &trimmedForwardReadsFastQCTrimmingReport
     processed location:
       - *trimDataDir
-      - Trimming_Reports
+      - *trimmingReportsDir
       - "{sample}_R1_raw.fastq.gz_trimming_report.txt"
 
     resource categories: *neverPublished
@@ -213,12 +253,375 @@ data assets:
     <<: *trimmedForwardReadsFastQCTrimmingReport
     processed location:
       - *trimDataDir
-      - Trimming_Reports
+      - *trimmingReportsDir
       - "{sample}_R2_raw.fastq.gz_trimming_report.txt"
 
   reads trimming report: 
     <<: *trimmedForwardReadsFastQCTrimmingReport
     processed location:
       - *trimDataDir
-      - Trimming_Reports
+      - *trimmingReportsDir
       - "{sample}_R1_raw.fastq.gz_trimming_report.txt"
+
+  aligned MultiQC directory:
+    processed location: 
+      - *alignDataDir
+      - "align_multiqc_report"
+
+    resource categories: *neverPublished
+
+  aligned MultiQC directory ZIP:
+    processed location: 
+      - *alignDataDir
+      - "align_multiqc_report.zip"
+
+    resource categories:
+      subcategory: Aligned sequence data
+      subdirectory: MultiQC reports
+      publish to repo: true
+
+  aligned ToTranscriptome Bam:
+    processed location: 
+      - *alignDataDir
+      - "{sample}"
+      - "{sample}_Aligned.toTranscriptome.out.bam"
+
+    resource categories:
+      subcategory: Aligned sequence data
+      subdirectory: Aligned Data
+      publish to repo: true
+
+  aligned SortedByCoord Bam:
+    processed location: 
+      - *alignDataDir
+      - "{sample}"
+      - "{sample}_Aligned.sortedByCoord.out.bam"
+
+    resource categories:
+      subcategory: Aligned sequence data
+      subdirectory: Aligned Data
+      publish to repo: true
+
+  aligned SortedByCoord ResortedBam:
+    processed location: 
+      - *alignDataDir
+      - "{sample}"
+      - "{sample}_Aligned.sortedByCoord_sorted.out.bam.bai"
+
+    resource categories:
+      subcategory: Aligned sequence data
+      subdirectory: Aligned Data
+      publish to repo: true
+
+  aligned SortedByCoord ResortedBamIndex:
+    processed location: 
+      - *alignDataDir
+      - "{sample}"
+      - "{sample}_Aligned.sortedByCoord_sorted.out.bam.bai"
+
+    resource categories:
+      subcategory: Aligned sequence data
+      subdirectory: Aligned Data
+      publish to repo: true
+
+  aligned log Final:
+    processed location: 
+      - *alignDataDir
+      - "{sample}"
+      - "{sample}_Log.final.out"
+
+    resource categories: *neverPublished
+
+  aligned log Progress:
+    processed location: 
+      - *alignDataDir
+      - "{sample}"
+      - "{sample}_Log.progress.out"
+
+    resource categories: 
+      subcategory: Aligned sequence data
+      subdirectory: Alignment logs
+      publish to repo: true
+
+  aligned log Full:
+    processed location: 
+      - *alignDataDir
+      - "{sample}"
+      - "{sample}_Log.out"
+
+    resource categories: *neverPublished
+
+  aligned sjTab:
+    processed location: 
+      - *alignDataDir
+      - "{sample}"
+      - "{sample}_SJ.out.tab"
+
+    resource categories: *neverPublished
+
+  genebody coverage MultiQC directory:
+    processed location: 
+      - *rseqcDataDir
+      - "02_geneBody_coverage"
+      - "geneBody_cov_multiqc_report"
+
+    resource categories: *neverPublished
+
+  genebody coverage MultiQC directory ZIP:
+    processed location: 
+      - *rseqcDataDir
+      - "02_geneBody_coverage"
+      - "geneBody_cov_multiqc_report.zip"
+
+    resource categories:
+      subcategory: RSeQC
+      subdirectory: MultiQC reports
+      publish to repo: true
+
+  infer experiment MultiQC directory:
+    processed location: 
+      - *rseqcDataDir
+      - "03_infer_experiment"
+      - "infer_exp_multiqc_report"
+
+    resource categories: *neverPublished
+
+  infer experiment MultiQC directory ZIP:
+    processed location: 
+      - *rseqcDataDir
+      - "03_infer_experiment"
+      - "infer_exp_multiqc_report.zip"
+
+    resource categories:
+      subcategory: RSeQC
+      subdirectory: MultiQC reports
+      publish to repo: true
+
+  inner distance MultiQC directory:
+    processed location: 
+      - *rseqcDataDir
+      - "04_inner_distance"
+      - "inner_dist_multiqc_report"
+
+    resource categories: *neverPublished
+
+  inner distance MultiQC directory ZIP:
+    processed location: 
+      - *rseqcDataDir
+      - "04_inner_distance"
+      - "inner_dist_multiqc_report.zip"
+
+    resource categories:
+      subcategory: RSeQC
+      subdirectory: MultiQC reports
+      publish to repo: true
+
+  read distribution MultiQC directory:
+    processed location: 
+      - *rseqcDataDir
+      - "05_read_distribution"
+      - "read_dist_multiqc_report"
+
+    resource categories: *neverPublished
+
+  read distribution MultiQC directory ZIP:
+    processed location: 
+      - *rseqcDataDir
+      - "05_read_distribution"
+      - "read_dist_multiqc_report.zip"
+
+    resource categories:
+      subcategory: RSeQC
+      subdirectory: MultiQC reports
+      publish to repo: true
+
+  genebody coverage out:
+    processed location: 
+      - *rseqcDataDir
+      - "02_geneBody_coverage"
+      - "{sample}"
+
+    resource categories: *neverPublished
+
+  infer experiment out:
+    processed location: 
+      - *rseqcDataDir
+      - "03_infer_experiment"
+      - "{sample}_infer_expt.out"
+
+    resource categories: *neverPublished
+
+  inner distance out:
+    processed location: 
+      - *rseqcDataDir
+      - "04_inner_distance"
+      - "{sample}"
+
+    resource categories: *neverPublished
+
+  read distribution out:
+    processed location: 
+      - *rseqcDataDir
+      - "05_read_distribution"
+      - "{sample}_read_dist.out"
+
+    resource categories: *neverPublished
+
+  RSEM counts MultiQC directory:
+    processed location: 
+      - *countsDataDir
+      - "count_multiqc_report"
+
+    resource categories: *neverPublished
+
+  RSEM counts MultiQC directory ZIP:
+    processed location: 
+      - *countsDataDir
+      - "count_multiqc_report.zip"
+
+    resource categories:
+      subcategory: Raw counts data
+      subdirectory: MultiQC reports
+      publish to repo: true
+
+  number non-zero count genes table:
+    processed location: 
+      - *countsDataDir
+      - "NumNonZeroGenes.csv"
+
+    resource categories: *neverPublished
+
+  unnormalized counts table:
+    processed location: 
+      - *countsDataDir
+      - "RSEM_Unnormalized_Counts.csv" # NEW in v0: Renamed from 'Unnormalized_Counts.csv'
+
+    resource categories: 
+      subcategory: Raw counts data
+      subdirectory: Count Data
+      publish to repo: true
+
+  sample gene counts table:
+    processed location: 
+      - *countsDataDir
+      - "{sample}"
+      - "{sample}.genes.results"
+
+    resource categories: 
+      subcategory: Raw counts data
+      subdirectory: Count Data
+      publish to repo: true
+
+  sample isoform counts table:
+    processed location: 
+      - *countsDataDir
+      - "{sample}"
+      - "{sample}.isoforms.results"
+      
+    resource categories: 
+      subcategory: Raw counts data
+      subdirectory: Count Data
+      publish to repo: true
+
+  sample counts stats directory:
+    processed location: 
+      - *countsDataDir
+      - "{sample}"
+      - "{sample}.stat"
+
+    resource categories: *neverPublished
+
+  DESeq2 normalized counts table:
+    processed location: 
+      - *normCountsDataDir
+      - "Normalized_Counts.csv"
+      
+    resource categories: &normalizedCountsData
+      subcategory: Normalized counts data
+      subdirectory: ""
+      publish to repo: true
+
+  ERCC normalized DESeq2 normalized counts table:
+    processed location: 
+      - *normCountsDataDir
+      - "ERCC_Normalized_Counts.csv"
+      
+    resource categories: *normalizedCountsData
+
+  sample table:
+    processed location: 
+      - *normCountsDataDir
+      - "SampleTable.csv"
+      
+    resource categories: *normalizedCountsData
+
+  DESeq2 unnormalized counts table:
+    processed location: 
+      - *normCountsDataDir
+      - "Unnormalized_Counts.csv"
+      
+    resource categories: *normalizedCountsData
+
+  DESeq2 contrasts table:
+    processed location: 
+      - *DGEDataDir
+      - "contrasts.csv"
+      
+    resource categories: &DGEAnalysisData
+      subcategory: Differential expression analysis data
+      subdirectory: ""
+      publish to repo: true
+
+  ERCC normalized DESeq2 contrasts table:
+    processed location: 
+      - *DGEDataDir
+      - &erccSubDir "ERCC_NormDGE"
+      - "ERCCnorm_contrasts.csv"
+      
+    resource categories: *DGEAnalysisData
+
+  DESeq2 annotated DGE table:
+    processed location: 
+      - *DGEDataDir
+      - "differential_expression.csv"
+      
+    resource categories: *DGEAnalysisData
+
+  ERCC normalized DESeq2 annotated DGE table:
+    processed location: 
+      - *DGEDataDir
+      - *erccSubDir
+      - "ERCCnorm_differential_expression.csv"
+      
+    resource categories: *DGEAnalysisData
+
+  DESeq2 annotated DGE extended for viz table:
+    processed location: 
+      - *DGEDataDir
+      - "visualization_output_table.csv"
+      
+    resource categories: *DGEAnalysisData
+
+  ERCC normalized DESeq2 annotated DGE extended for viz table:
+    processed location: 
+      - *DGEDataDir
+      - *erccSubDir
+      - "visualization_output_table_ERCCnorm.csv"
+      
+    resource categories: *DGEAnalysisData
+
+  DESeq2 viz PCA table:
+    processed location: 
+      - *DGEDataDir
+      - "visualization_PCA_table.csv"
+      
+    resource categories: *DGEAnalysisData
+
+  ERCC normalized DESeq2 viz PCA table:
+    processed location: 
+      - *DGEDataDir
+      - *erccSubDir
+      - "visualization_PCA_table_ERCCnorm.csv"
+      
+    resource categories: *DGEAnalysisData
+
