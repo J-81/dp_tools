@@ -15,7 +15,6 @@ from pathlib import Path
 from typing import ClassVar, List, Protocol, Set, Tuple
 import logging
 
-logging.basicConfig(level=logging.DEBUG)
 log = logging.getLogger(__name__)
 
 '''
