@@ -17,6 +17,10 @@ setup(
    author_email='jonathan.d.oribello@nasa.gov',
    packages=find_packages(),  #same as name
    scripts=[],
+   package_data={
+      'dp_tools': ['config/*.yaml'],
+   },
+   include_package_data=True,
    python_requires='>=3.10',
    install_requires=[],
    setup_requires=[],
