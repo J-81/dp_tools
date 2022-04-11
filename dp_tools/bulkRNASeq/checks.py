@@ -210,7 +210,7 @@ class COMPONENT_RAWREADS_0001(Check):
         # attributes names
         "expected_data_files": [
             "fastqGZ",
-            "multiQCDirZIP",
+            "fastQCmultiQCDirZIP",
             "fastqcReportHTML",
             "fastqcReportZIP",
         ],
@@ -325,7 +325,7 @@ class COMPONENT_TRIMREADS_0001(COMPONENT_RAWREADS_0001):
         "lines_to_check": 200_000_000,
         "expected_data_files": [
             "fastqGZ",
-            "multiQCDirZIP",
+            "fastQCmultiQCDirZIP",
             "fastqcReportHTML",
             "fastqcReportZIP",
             "trimmingReportTXT",
