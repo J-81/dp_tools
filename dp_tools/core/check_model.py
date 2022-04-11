@@ -141,7 +141,7 @@ class Check(abc.ABC):
     def validate_func(self) -> 'Flag':
         raise NotImplementedError
 
-    def validate(self, request_skip: bool, *args, **kwargs):
+    def validate(self, *args, request_skip: bool = False,  **kwargs):
         # add skipped route that bails out
         # NOTE: this intentionally takes place before the dry run condition is checked
         #       this allows checking if your config will perform as expected, including skips
