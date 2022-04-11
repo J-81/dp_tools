@@ -20,6 +20,7 @@ from typing import (
     runtime_checkable,
 )
 import logging
+from click import File
 
 import pandas as pd
 import multiqc
@@ -48,11 +49,13 @@ class DataFile:
     dummy_md5sum: bool = field(
         default=False
     )  # used to replace md5sum of contents with md5sum of the file name
+    check_exists: bool = field(default=True)
 
     def __post_init__(self):
         log.debug(f"Initiating DataFile with path: {self.path}")
-        if not self.path.is_file():
-            raise FileNotFoundError(f"Cannot create DataFile with non-existent file: {self.path}")
+        if self.check_exists:
+            if not self.path.is_file():
+                raise FileNotFoundError(f"Cannot create DataFile with non-existent file: {self.path}")
         if self.dummy_md5sum:
             # generate md5sum based on the path/file name only
             # this computes extremely fast and is advised for testing
@@ -81,11 +84,15 @@ class DataDir:
     Both multiQC and RSEM include examples of things better tracked as directories; however, more granual loading can be achieved with DataFile.
     """
 
-    path: Path
+    path: Path    
+    check_exists: bool = field(default=True)
 
     def __post_init__(self):
         log.debug(f"Initiating DataDir with path: {self.path}")
-        assert self.path.is_dir()
+        if self.check_exists:
+            if not self.path.is_dir():
+                raise FileNotFoundError(f"Cannot create DataDir with non-existent directory: {self.path}")
+
         # finally enforce types check
         strict_type_checks(self)
 
