@@ -44,6 +44,7 @@ class DataFile:
     """ A class for keeping track of files """
 
     path: Path
+    metadata: dict = field(default_factory=dict) # used to incorporate to additional data asset metadata like publish status etc.
     md5sum: str = field(init=False, repr=False)  # compute on ingestion
     # id: str = field(default_factory=get_id)
     dummy_md5sum: bool = field(
@@ -85,6 +86,7 @@ class DataDir:
     """
 
     path: Path    
+    metadata: dict = field(default_factory=dict) # used to incorporate to additional data asset metadata like publish status etc.
     check_exists: bool = field(default=True)
 
     def __post_init__(self):

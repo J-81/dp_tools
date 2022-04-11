@@ -31,6 +31,7 @@ def find_data_asset_path(
     data_asset_config: dict,
     root_dir: Path,
     search: bool = True,
+    return_parsed_config: bool = True,
     **template_kwargs
     ): # type: ignore
     """ Find a data asset 
@@ -55,6 +56,8 @@ def find_data_asset_path(
 
     # find if matches, else return None
     if search_pattern in targets:
+        if return_parsed_config:
+            return {"path":search_pattern, "metadata":data_asset_config}
         return search_pattern
     else:
         raise FileNotFoundError(f"Did not find {search_pattern} anywhere in {root_dir}")
