@@ -25,7 +25,7 @@ class RawReadsComponent(TemplateComponent):
     fastqGZ: DataFile
     base: BaseComponent = field(repr=False)
     # id: str = field(default_factory=get_id)
-    multiQCDir: Union[DataDir, None] = field(default=None)
+    multiQCDirZIP: Union[DataFile, None] = field(default=None)
     fastqcReportHTML: Union[DataFile, None] = field(default=None)
     fastqcReportZIP: Union[DataFile, None] = field(
         default=None, metadata={"mqc_parse": ["FastQC"]}
@@ -38,7 +38,7 @@ class TrimReadsComponent(TemplateComponent):
     fastqGZ: DataFile
     base: BaseComponent = field(repr=False)
     # id: str = field(default_factory=get_id)
-    multiQCDir: Union[DataDir, None] = field(default=None)
+    fastQCmultiQCDirZIP: Union[DataFile, None] = field(default=None)
     fastqcReportHTML: Union[DataFile, None] = field(default=None)
     fastqcReportZIP: Union[DataFile, None] = field(
         default=None, metadata={"mqc_parse": ["FastQC"]}
@@ -47,6 +47,7 @@ class TrimReadsComponent(TemplateComponent):
     trimmingReportTXT: Union[DataFile, None] = field(
         default=None, metadata={"mqc_parse": ["Cutadapt"]}
     )
+    trimmingMultiQCDirZIP: Union[DataFile, None] = field(default=None)
 
 
 @dataclass(eq=False)
@@ -175,7 +176,7 @@ class GenomeAlignments(TemplateComponent):
     logProgress: Union[DataFile, None] = field(default=None)
     logFull: Union[DataFile, None] = field(default=None)
     sjTab: Union[DataFile, None] = field(default=None)
-    multiQCDir: Union[DataDir, None] = field(default=None)
+    multiQCDirZIP: Union[DataFile, None] = field(default=None)
 
 
 @dataclass(eq=False)
@@ -183,7 +184,7 @@ class GeneCounts(TemplateComponent):
     """ Based on RSEM output gene counts"""
 
     base: BaseComponent = field(repr=False)
-    multiQCDir: Union[DataDir, None] = field(default=None)
+    multiQCDirZIP: Union[DataFile, None] = field(default=None)
     genesResults: Union[DataFile, None] = field(default=None)
     isoformsResults: Union[DataFile, None] = field(default=None)
     statDir: Union[DataDir, None] = field(
@@ -203,19 +204,19 @@ class DatasetGeneCounts(TemplateComponent):
 class RSeQCAnalysis(TemplateComponent):
 
     base: BaseComponent = field(repr=False)
-    geneBodyCoverageMultiQCDir: Union[DataDir, None] = field(default=None)
+    geneBodyCoverageMultiQCDirZIP: Union[DataFile, None] = field(default=None)
     geneBodyCoverageOut: Union[DataDir, None] = field(
         default=None, metadata={"mqc_parse": ["RSeQC"]}
     )
-    inferExperimentMultiQCDir: Union[DataDir, None] = field(default=None)
+    inferExperimentMultiQCDirZIP: Union[DataFile, None] = field(default=None)
     inferExperimentOut: Union[DataFile, None] = field(
         default=None, metadata={"mqc_parse": ["RSeQC"]}
     )
-    innerDistanceMultiQCDir: Union[DataDir, None] = field(default=None)
+    innerDistanceMultiQCDirZIP: Union[DataFile, None] = field(default=None)
     innerDistanceOut: Union[DataDir, None] = field(
         default=None, metadata={"mqc_parse": ["RSeQC"]}
     )
-    readDistributionMultiQCDir: Union[DataDir, None] = field(default=None)
+    readDistributionMultiQCDirZIP: Union[DataFile, None] = field(default=None)
     readDistributionOut: Union[DataFile, None] = field(
         default=None, metadata={"mqc_parse": ["RSeQC"]}
     )
