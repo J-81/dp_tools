@@ -79,7 +79,7 @@ class BulkRNASeqMetadataComponent(TemplateComponent):
 
     @property
     def factor_groups(self) -> Dict[str, str]:
-        """ Returns sample wise dictionary of sample name to concatenated factor group.
+        """Returns sample wise dictionary of sample name to concatenated factor group.
 
         The concatenated group will be consistent with the BulkRNASeq Deseq2 script formatting for constrasts.
         This means:
@@ -87,7 +87,7 @@ class BulkRNASeqMetadataComponent(TemplateComponent):
          - wrapping the factor in quotes
          - joining factors into factor groups with ' & '
          - finally joining factors groups to derive pairwise-contrasts with 'v'
-        
+
         """
         if getattr(self, "_factor_groups", None) == None:  # uncached
             if self.runsheet:
@@ -112,13 +112,13 @@ class BulkRNASeqMetadataComponent(TemplateComponent):
 
     @property
     def contrasts(self) -> pd.DataFrame:
-        """ Returns sample wise dictionary of sample name to concatenated factor group.
+        """Returns sample wise dictionary of sample name to concatenated factor group.
 
         Creates a constrast dataframe in the same fashion as the DESEQ2 contrasts table:
         - determine all permutations of existing factor groups
         - format with header for each permutation in format: {factorGroup1}v{factorGroup2}
-        - format with two rows for each column in format: 
-          - r1: factorGroup1.replace(' & ','...').replace(' ','.').replace('(',"").replace(')',"") 
+        - format with two rows for each column in format:
+          - r1: factorGroup1.replace(' & ','...').replace(' ','.').replace('(',"").replace(')',"")
           - r2: factorGroup1.replace(' & ','...').replace(' ','.').replace('(',"").replace(')',"")
         """
         if getattr(self, "_contrasts_cached", None) == None:  # uncached
@@ -181,7 +181,7 @@ class GenomeAlignments(TemplateComponent):
 
 @dataclass(eq=False)
 class GeneCounts(TemplateComponent):
-    """ Based on RSEM output gene counts"""
+    """Based on RSEM output gene counts"""
 
     base: BaseComponent = field(repr=False)
     multiQCDirZIP: Union[DataFile, None] = field(default=None)

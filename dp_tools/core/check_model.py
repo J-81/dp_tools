@@ -37,8 +37,9 @@ ALLOWED_DEV_EXCEPTIONS = (
     Exception  # Hooking into this with monkeypatch can be handy for testing
 )
 
+
 class FlagCode(enum.Enum):
-    """ Maps a flag code to a severity level. """
+    """Maps a flag code to a severity level."""
 
     DEV_HANDLED = 90  # should be used when an error occurs due to developer related mistakes, rather than from the correctly loaded data
     DEV_UNHANDLED = 91  # should never be used directly, instead this should catch unhandled exceptions in the validate function
@@ -59,7 +60,9 @@ class FlagCode(enum.Enum):
     YELLOW5 = 35
     GREEN = 20
     INFO = 10
-    SKIPPED = 1  # should never be used directly, instead is the flag code for skipping checks
+    SKIPPED = (
+        1  # should never be used directly, instead is the flag code for skipping checks
+    )
     DRY_RUN = 0  # should never be used directly, instead is the flag code for validation dry runs
 
     # allow comparing flag codes
@@ -76,20 +79,25 @@ class FlagCode(enum.Enum):
     def __lt__(self, other):
         return self.value < other.value
 
+
 @dataclass
 class Check(abc.ABC):
 
     description: ClassVar[str]
-    id: ClassVar[str] = field(init=False) # set as class name
+    id: ClassVar[str] = field(init=False)  # set as class name
     flag_desc: ClassVar[Dict[int, str]]
     # flags associated with this check
     flags: List["Flag"] = field(default_factory=list)
-    config: ClassVar[Dict] = dict() # set as empty dict if a check doesn't need config
+    config: ClassVar[Dict] = dict()  # set as empty dict if a check doesn't need config
     allChecks: ClassVar[
         List["Check"]
     ] = list()  # note this is a class attribute list, tracking all checks
-    _dry_run: ClassVar[bool] = field(default=False, repr=False) # controls whether a validation is performed as per dry run
-    skip_this: ClassVar[bool] = field(default=False, repr=False) # controls whether a validation is performed as per explicit skipping
+    _dry_run: ClassVar[bool] = field(
+        default=False, repr=False
+    )  # controls whether a validation is performed as per dry run
+    skip_this: ClassVar[bool] = field(
+        default=False, repr=False
+    )  # controls whether a validation is performed as per explicit skipping
 
     def __post_init__(self, skip: bool = None):
         # format description with config
@@ -98,7 +106,9 @@ class Check(abc.ABC):
         # (however, they should be supplied to make the description complete)
         self._proto_description = self.description
         # assert that this is a string and not a tuple on accident
-        assert not isinstance(self._proto_description, tuple), "Check description must be a string, check that you did not add commas to a multi-line str tuple"
+        assert not isinstance(
+            self._proto_description, tuple
+        ), "Check description must be a string, check that you did not add commas to a multi-line str tuple"
         assert isinstance(self._proto_description, str)
         self.description = self.description.format(**self.config)
 
@@ -128,20 +138,16 @@ class Check(abc.ABC):
         ] = "An unhandled exception occured in {function} with args '{args}' and kwargs: '{kwargs}': {e}.\n{full_traceback}"
 
         # add flag description for handling DRYRUN flags
-        self.flag_desc[
-            FlagCode.DRY_RUN
-        ] = "DRY RUN REQUESTED: check not run"
+        self.flag_desc[FlagCode.DRY_RUN] = "DRY RUN REQUESTED: check not run"
 
         # add flag description for handling SKIPPED flags
-        self.flag_desc[
-            FlagCode.SKIPPED
-        ] = "CHECK SKIP REQUESTED: check not run"
+        self.flag_desc[FlagCode.SKIPPED] = "CHECK SKIP REQUESTED: check not run"
 
     @abc.abstractmethod
-    def validate_func(self) -> 'Flag':
+    def validate_func(self) -> "Flag":
         raise NotImplementedError
 
-    def validate(self, *args, request_skip: bool = False,  **kwargs):
+    def validate(self, *args, request_skip: bool = False, **kwargs):
         # add skipped route that bails out
         # NOTE: this intentionally takes place before the dry run condition is checked
         #       this allows checking if your config will perform as expected, including skips
@@ -168,7 +174,13 @@ class Check(abc.ABC):
             )
             return Flag(
                 codes=FlagCode.DEV_UNHANDLED,
-                message_args={"function": self.validate_func, "e": e, "full_traceback": traceback.format_exc(), "args": args, "kwargs": kwargs},
+                message_args={
+                    "function": self.validate_func,
+                    "e": e,
+                    "full_traceback": traceback.format_exc(),
+                    "args": args,
+                    "kwargs": kwargs,
+                },
                 check=self,
             )
 
@@ -207,7 +219,7 @@ class Flag:
         # that flag should never be reported if higher severity flags are reported
         if FlagCode.GREEN in self.codes and max(self.codes) != FlagCode.GREEN:
             self.codes.remove(FlagCode.GREEN)
-        
+
         # convert codes into sorted list in descending severity order
         self.codes = list(self.codes)
         self.codes.sort(reverse=True)
@@ -226,31 +238,39 @@ class Flag:
             self.message += pre_format_msg.format(**self.message_args)
 
         # check types before final addition and init
-        strict_type_checks(self, exceptions = ["codes"] ) # codes is a list of objects, not currently covered by this check
+        strict_type_checks(
+            self, exceptions=["codes"]
+        )  # codes is a list of objects, not currently covered by this check
 
         # add to check flags records
         self.check.flags.append(self)
 
     @property
     def maxCode(self):
-        """ Returns most severe FlagCode rather than all codes for backwards compatibility """
+        """Returns most severe FlagCode rather than all codes for backwards compatibility"""
         return max(self.codes)
 
     def __str__(self):
         return f"Flag (checkID: {self.check.id}, FlagCodes: {self.codes}, message: {self.message})"
 
-class VVProtocol(abc.ABC):
-    """ A abstract protocol for VV """
 
-    def __init__(self, dataset,
-                       config: Union[Tuple[str, str], Path], 
-                       dry_run: bool = False,
-                       skip_these_checks: set = None, 
-                       stage_names = None,  # TODO: fix typehint here
-                       protocol_name: str = "DEFAULT"):
+class VVProtocol(abc.ABC):
+    """A abstract protocol for VV"""
+
+    def __init__(
+        self,
+        dataset,
+        config: Union[Tuple[str, str], Path],
+        dry_run: bool = False,
+        skip_these_checks: set = None,
+        stage_names=None,  # TODO: fix typehint here
+        protocol_name: str = "DEFAULT",
+    ):
 
         # logging
-        log.info(f"Initiating V&V protocol with config: '{config}' and '{protocol_name}'")
+        log.info(
+            f"Initiating V&V protocol with config: '{config}' and '{protocol_name}'"
+        )
 
         # parse config for values
         # TODO: raise exceptions/warnings when both CLI and config args are double supplied
@@ -258,13 +278,15 @@ class VVProtocol(abc.ABC):
             try:
                 # retrieve from config
                 # at this point, this is a string
-                config_stage_names: Union[str, Set[str]] = validation_config['stage']
+                config_stage_names: Union[str, Set[str]] = validation_config["stage"]
             except KeyError:
-                raise KeyError(f"Config file did not specify a valid stage: valid={[i for i in self.STAGES]}, supplied:{validation_config['stage']}")
+                raise KeyError(
+                    f"Config file did not specify a valid stage: valid={[i for i in self.STAGES]}, supplied:{validation_config['stage']}"
+                )
 
             if skip_these_checks == None:
-                skip_these_checks = validation_config.get('skip these checks', None)
-        
+                skip_these_checks = validation_config.get("skip these checks", None)
+
         # set as final stage_names if not overridden
         # TODO: invert this for clarity
         if not stage_names:
@@ -274,7 +296,9 @@ class VVProtocol(abc.ABC):
         # for a single stage, all stages preceeding should be included
         if isinstance(stage_names, str):
             self._stage_arg = self.STAGES[stage_names]
-            self._stages_loaded = {self._stage_arg}.union(self.STAGES.get_all_preceeding(self._stage_arg))
+            self._stages_loaded = {self._stage_arg}.union(
+                self.STAGES.get_all_preceeding(self._stage_arg)
+            )
         elif isinstance(stage_names, set):
             self._stage_arg = {self.STAGES[stage_name] for stage_name in stage_names}
             # validate contents
@@ -284,7 +308,9 @@ class VVProtocol(abc.ABC):
             # set as loaded stages
             self._stages_loaded = self._stage_arg
         else:
-            raise ValueError("'stage' must be supplied either directly or as part of configuration")
+            raise ValueError(
+                "'stage' must be supplied either directly or as part of configuration"
+            )
 
         log.info(f"Loaded validation stages: {self._stages_loaded}")
 
@@ -304,8 +330,10 @@ class VVProtocol(abc.ABC):
             Check._dry_run = True
 
     def run_check(self, check: Check, *args, **kwargs) -> Flag:
-        """ Runs check and performs validation if skip is not requested """
-        return check.validate(request_skip=(check.id in self.skip_these_checks), *args, **kwargs)
+        """Runs check and performs validation if skip is not requested"""
+        return check.validate(
+            request_skip=(check.id in self.skip_these_checks), *args, **kwargs
+        )
 
     @property
     def flags(self):
@@ -338,25 +366,33 @@ class VVProtocol(abc.ABC):
     def validate_components(self) -> Dict[TemplateComponent, List[Flag]]:
         ...
 
-    def load_config(self, config: Union[Tuple[str, str], Path], protocol_name: str = "DEFAULT") -> dict:
+    def load_config(
+        self, config: Union[Tuple[str, str], Path], protocol_name: str = "DEFAULT"
+    ) -> dict:
         if isinstance(config, tuple):
-            conf_validation = yaml.safe_load(pkg_resources.resource_string(__name__, os.path.join("..","config",f"{config[0]}_v{config[1]}.yaml")))["Validation Protocols"][protocol_name]
+            conf_validation = yaml.safe_load(
+                pkg_resources.resource_string(
+                    __name__,
+                    os.path.join("..", "config", f"{config[0]}_v{config[1]}.yaml"),
+                )
+            )["Validation Protocols"][protocol_name]
         elif isinstance(config, Path):
-            conf_validation = yaml.safe_load(config.open())["Validation Protocols"][protocol_name]
+            conf_validation = yaml.safe_load(config.open())["Validation Protocols"][
+                protocol_name
+            ]
 
         log.debug("Loaded the following validation config: {conf_validation}")
 
         # validate with schema
-        config_schema = Schema({
-            "dry run": bool,
-            "skip checks": set,
-            "stage": Or(set[str], str)
-        })
-        
+        config_schema = Schema(
+            {"dry run": bool, "skip checks": set, "stage": Or(set[str], str)}
+        )
+
         config_schema.validate(conf_validation)
-        
+
         self.config = conf_validation
         return conf_validation
+
     ###################################################################################################################
     # EXPORT RELATED METHODS (POST VALIDATION)
     ###################################################################################################################
@@ -368,22 +404,37 @@ class VVProtocol(abc.ABC):
             # tuple[str, str, str, str], int, str, str
             case "default":
                 records = list()
-                for entity_type in ["dataset","sample","component"]:
+                for entity_type in ["dataset", "sample", "component"]:
                     for entity, flags in self.flags[entity_type].items():
-                        record_partial = {"entity_index": self._get_entity_index(entity)}
+                        record_partial = {
+                            "entity_index": self._get_entity_index(entity)
+                        }
                         for flag in flags:
-                            record_full = record_partial | {"flag_code": flag.maxCode.value, "check_id": flag.check.id, "message": flag.message}
+                            record_full = record_partial | {
+                                "flag_code": flag.maxCode.value,
+                                "check_id": flag.check.id,
+                                "message": flag.message,
+                            }
                             records.append(record_full)
             # verbose dataframe format
             # entity_index, flag_enum, flag_code, message, checkID, checkDescription
             # tuple[str, str, str, str], str, int, str, str
             case "verbose":
                 records = list()
-                for entity_type in ["dataset","sample","component"]:
+                for entity_type in ["dataset", "sample", "component"]:
                     for entity, flags in self.flags[entity_type].items():
-                        record_partial = {"entity_index": self._get_entity_index(entity)}
+                        record_partial = {
+                            "entity_index": self._get_entity_index(entity)
+                        }
                         for flag in flags:
-                            record_full = record_partial | {"flag_name": flag.maxCode.name,"flag_code": flag.maxCode.value, "all_flag_codes": flag.codes, "message": flag.message, "check_id": flag.check.id, "check_description": flag.check.description}
+                            record_full = record_partial | {
+                                "flag_name": flag.maxCode.name,
+                                "flag_code": flag.maxCode.value,
+                                "all_flag_codes": flag.codes,
+                                "message": flag.message,
+                                "check_id": flag.check.id,
+                                "check_description": flag.check.description,
+                            }
                             records.append(record_full)
             case _:
                 raise ValueError(f"Schema: {schema} not defined")
@@ -391,22 +442,41 @@ class VVProtocol(abc.ABC):
         # set up datafrom with simple index
         df = pd.DataFrame.from_records(data=records).set_index("entity_index")
         # convert into multiIndex
-        df.index = pd.MultiIndex.from_tuples(df.index, names=['DataSystem','Dataset','Sample','Component'])
+        df.index = pd.MultiIndex.from_tuples(
+            df.index, names=["DataSystem", "Dataset", "Sample", "Component"]
+        )
         return df
-    
-    def _get_entity_index(self, entity: Union[TemplateDataset, TemplateSample, TemplateComponent]) -> Tuple[str, str, str, str]:
+
+    def _get_entity_index(
+        self, entity: Union[TemplateDataset, TemplateSample, TemplateComponent]
+    ) -> Tuple[str, str, str, str]:
         match entity:
             case TemplateDataset():
                 entity_index = (entity.dataSystem.name, entity.name, "", "")
             case TemplateSample():
-                entity_index = (entity.dataset.dataSystem.name, entity.dataset.name, entity.name, "")
-            case TemplateComponent(entityType='sample'):
+                entity_index = (
+                    entity.dataset.dataSystem.name,
+                    entity.dataset.name,
+                    entity.name,
+                    "",
+                )
+            case TemplateComponent(entityType="sample"):
                 sample_entities = ",".join([sample for sample in entity.entities])
-                attr_index = ",".join([d['attr'] for d in entity.entities.values()])
-                entity_index = (entity.dataset.dataSystem.name, entity.dataset.name, sample_entities, attr_index)
-            case TemplateComponent(entityType='dataset'):
-                attr_index = ",".join([d['attr'] for d in entity.entities.values()])
-                entity_index = (entity.dataset.dataSystem.name, entity.dataset.name, "", attr_index)
+                attr_index = ",".join([d["attr"] for d in entity.entities.values()])
+                entity_index = (
+                    entity.dataset.dataSystem.name,
+                    entity.dataset.name,
+                    sample_entities,
+                    attr_index,
+                )
+            case TemplateComponent(entityType="dataset"):
+                attr_index = ",".join([d["attr"] for d in entity.entities.values()])
+                entity_index = (
+                    entity.dataset.dataSystem.name,
+                    entity.dataset.name,
+                    "",
+                    attr_index,
+                )
             case _:
                 raise ValueError(f"Unable to extract entity index from : {entity}")
         return entity_index

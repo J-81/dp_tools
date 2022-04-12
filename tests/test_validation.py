@@ -22,7 +22,7 @@ def mock_dev_exceptions(monkeypatch):
 
 
 def test_bulkRNASeq_STAGE00_validation_paired(caplog, glds194_dataSystem_STAGE00):
-    """ This tests validation as it would be run on dataset after demultiplexing """
+    """This tests validation as it would be run on dataset after demultiplexing"""
     CAPLEVEL = 20
     caplog.set_level(CAPLEVEL)
     ds = glds194_dataSystem_STAGE00
@@ -56,16 +56,19 @@ def test_bulkRNASeq_STAGE00_validation_paired(caplog, glds194_dataSystem_STAGE00
             #   Component checks :
             #       Reads : 1 per component
             assert len(df) == 41
-            assert [0] == list(df["flag_code"].unique()) # only the dry run code should be returned
+            assert [0] == list(
+                df["flag_code"].unique()
+            )  # only the dry run code should be returned
 
-def test_bulkRNASeq_STAGE00_validation_paired_no_dry_run(caplog, glds194_dataSystem_STAGE00):
-    """ This tests validation as it would be run on dataset after demultiplexing """
+
+def test_bulkRNASeq_STAGE00_validation_paired_no_dry_run(
+    caplog, glds194_dataSystem_STAGE00
+):
+    """This tests validation as it would be run on dataset after demultiplexing"""
     CAPLEVEL = 20
     caplog.set_level(CAPLEVEL)
     ds = glds194_dataSystem_STAGE00
-    vv_protocol = BulkRNASeq_VVProtocol(
-        dataset=ds.dataset, protocol_name="only raw"
-    )
+    vv_protocol = BulkRNASeq_VVProtocol(dataset=ds.dataset, protocol_name="only raw")
 
     with caplog.at_level(CAPLEVEL):
         vv_protocol.validate_all()
@@ -94,13 +97,19 @@ def test_bulkRNASeq_STAGE00_validation_paired_no_dry_run(caplog, glds194_dataSys
             #       Reads : 1 per component
             assert len(df) == 41
 
-def test_bulkRNASeq_STAGE00_validation_paired_with_skips(caplog, glds194_dataSystem_STAGE00):
-    """ This tests validation as it would be run on dataset after demultiplexing """
+
+def test_bulkRNASeq_STAGE00_validation_paired_with_skips(
+    caplog, glds194_dataSystem_STAGE00
+):
+    """This tests validation as it would be run on dataset after demultiplexing"""
     CAPLEVEL = 20
     caplog.set_level(CAPLEVEL)
     ds = glds194_dataSystem_STAGE00
     vv_protocol = BulkRNASeq_VVProtocol(
-        dataset=ds.dataset, protocol_name="only raw", dry_run=True, skip_these_checks = {"DATASET_RAWREADS_0001"}
+        dataset=ds.dataset,
+        protocol_name="only raw",
+        dry_run=True,
+        skip_these_checks={"DATASET_RAWREADS_0001"},
     )
 
     with caplog.at_level(CAPLEVEL):
@@ -132,13 +141,16 @@ def test_bulkRNASeq_STAGE00_validation_paired_with_skips(caplog, glds194_dataSys
             assert 0 in df["flag_code"].values  # ensure dry run flag codes returned
             assert 1 in df["flag_code"].values  # ensure skip flag codes returned
 
-def test_bulkRNASeq_STAGE00_validation_paired_with_config(caplog, glds194_dataSystem_STAGE00):
-    """ This tests validation as it would be run on dataset after demultiplexing """
+
+def test_bulkRNASeq_STAGE00_validation_paired_with_config(
+    caplog, glds194_dataSystem_STAGE00
+):
+    """This tests validation as it would be run on dataset after demultiplexing"""
     CAPLEVEL = 20
     caplog.set_level(CAPLEVEL)
     ds = glds194_dataSystem_STAGE00
     vv_protocol = BulkRNASeq_VVProtocol(
-        dataset=ds.dataset, config=("bulkRNASeq","0"), protocol_name="only raw"
+        dataset=ds.dataset, config=("bulkRNASeq", "0"), protocol_name="only raw"
     )
 
     with caplog.at_level(CAPLEVEL):
@@ -172,7 +184,7 @@ def test_bulkRNASeq_STAGE00_validation_paired_with_config(caplog, glds194_dataSy
 
 
 def test_bulkRNASeq_STAGE00_validation_single(caplog, glds48_dataSystem_STAGE00):
-    """ This tests validation as it would be run on dataset after demultiplexing """
+    """This tests validation as it would be run on dataset after demultiplexing"""
     CAPLEVEL = 20
 
     caplog.set_level(CAPLEVEL)
@@ -195,7 +207,8 @@ def test_bulkRNASeq_STAGE00_validation_single(caplog, glds48_dataSystem_STAGE00)
         #       Reads : 1 per component (1 per sample)
         assert len(df) == 30
 
-'''
+
+"""
 def test_bulkRNASeq_STAGE01_validation_paired(glds194_dataSystem_STAGE01):
     ds = glds194_dataSystem_STAGE01
     vv_protocol = BulkRNASeq_VVProtocol(
@@ -267,7 +280,8 @@ def test_bulkRNASeq_STAGE03_validation_single(glds48_dataSystem_STAGE03):
     df = vv_protocol.flags_to_df()
 
     assert len(df) == 76
-''' # DISABLED PENDING REWORK OF ARGS + CONFIG APPROACH
+"""  # DISABLED PENDING REWORK OF ARGS + CONFIG APPROACH
+
 
 def test_bulkRNASeq_STAGE04_validation_paired(glds194_dataSystem_STAGE04):
     ds = glds194_dataSystem_STAGE04
