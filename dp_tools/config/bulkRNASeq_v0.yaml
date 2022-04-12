@@ -21,6 +21,13 @@ data assets:
 
     resource categories: *neverPublished
 
+  ISA Archive:
+    processed location: 
+      - "Metadata"
+      - "{dataset}_metadata_*-ISA.zip"
+
+    resource categories: *neverPublished
+
   raw MultiQC directory:
     processed location: 
       - *rawDataDir

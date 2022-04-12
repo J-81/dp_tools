@@ -55,6 +55,7 @@ class BulkRNASeqMetadataComponent(TemplateComponent):
 
     base: BaseComponent = field(repr=False)
     runsheet: Union[DataFile, None] = field(default=None)
+    ISAarchive: Union[DataFile, None] = field(default=None)
     samples: List = field(
         init=False
     )  # NOTE: List[str] is a more precise type hint; however, this breaks strict type checking: https://bugs.python.org/issue44529

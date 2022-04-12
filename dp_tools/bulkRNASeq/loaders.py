@@ -108,6 +108,14 @@ def load_BulkRNASeq_STAGE_00(
                     dataset=dataSystem_name,
                 )
             ),
+            ISAarchive=DataFile(
+                **find_data_asset_path(
+                    root_dir=root_path,
+                    data_asset_config=conf_data_assets["ISA Archive"],
+                    glob=True,
+                    dataset=dataSystem_name,
+                )
+            ),
         ),
         attr="metadata",
     )
