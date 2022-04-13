@@ -641,6 +641,24 @@ data assets:
       
     resource categories: *DGEAnalysisData
 
+
+  ERCC analysis HTML:
+    processed location: 
+      - *ERCCAnalysisDir
+      - "ERCC_analysis"
+      
+    resource categories:
+      subcategory: ERCC Analyses
+      subdirectory: ""
+      publish to repo: true
+      include subdirectory in table: false
+      table order: 14
+
+    # NOTE: this is while the ERCC analysis sits outside the full pipeline and
+    # once incoporated, it should be validated for existence!
+    validate exists: false 
+
+
 Validation Protocols:
   dry run all:
     dry run: true
