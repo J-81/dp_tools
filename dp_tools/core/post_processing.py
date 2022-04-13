@@ -75,6 +75,15 @@ def update_curation_tables(
     config: Union[tuple[str, str], Path],
     output_file: str = None,
 ):
+    """Updates existing curation investigation and assay tables with processed data
+
+    :param dataset: A loaded dataset object
+    :type dataset: TemplateDataset
+    :param config: A assay type configuration file specifier formatted as follows: ('assay','version') or local path to configuration file
+    :type config: Union[tuple[str, str], Path]
+    :param output_file: The name of the updated output tables, defaults to using the same name as the original tables
+    :type output_file: str, optional
+    """
     _DATA_ASSET_COL_PREFIX = "Parameter Value["
     _DATA_ASSET_COL_SUFFIX = "]"
 
