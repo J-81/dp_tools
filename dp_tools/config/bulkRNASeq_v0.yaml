@@ -13,6 +13,8 @@ _anchors:
     subcategory: null
     subdirectory: null
     publish to repo: false
+    include subdirectory in table: false
+    table order: -1
 
 ISA Meta:
   Valid Study Assay Technology And Measurement Types:
@@ -51,10 +53,12 @@ data assets:
       - *FastQC_Reports
       - "raw_multiqc_report.zip"
 
-    resource categories:
+    resource categories: &MergedSequenceData_MultiQCReports
       subcategory: Merged sequence data
-      subdirectory: MultiQC report
+      subdirectory: MultiQC reports
       publish to repo: true
+      include subdirectory in table: true
+      table order: 1
 
   raw forward reads fastq GZ:
     processed location:
@@ -62,10 +66,12 @@ data assets:
       - "Fastq"
       - "{sample}_R1_raw.fastq.gz"
 
-    resource categories: &rawFastqGZ
+    resource categories: &MergedSequenceData_Fastq
       subcategory: Merged sequence data
-      subdirectory: Fastqs
+      subdirectory: Fastq
       publish to repo: true
+      include subdirectory in table: false
+      table order: 0
 
   raw reverse reads fastq GZ:
     processed location:
@@ -73,7 +79,7 @@ data assets:
       - "Fastq"
       - "{sample}_R2_raw.fastq.gz"
 
-    resource categories: *rawFastqGZ
+    resource categories: *MergedSequenceData_Fastq
 
   raw reads fastq GZ:
     processed location:
@@ -81,7 +87,7 @@ data assets:
       - "Fastq"
       - "{sample}_R1_raw.fastq.gz"
 
-    resource categories: *rawFastqGZ
+    resource categories: *MergedSequenceData_Fastq
 
   raw forward reads fastQC HTML:
     processed location:
@@ -89,10 +95,7 @@ data assets:
       - *FastQC_Reports
       - "{sample}_R1_raw_fastqc.html"
 
-    resource categories:
-      subcategory: Merged sequence data
-      subdirectory: Fastqs
-      publish to repo: true
+    resource categories: *neverPublished
 
   # J.Oribello: We should revisit this, fastQC includes some unique (not parsed
   # into multiQC) relevant information like the actual overrepresented sequence strings
@@ -102,10 +105,7 @@ data assets:
       - *FastQC_Reports
       - "{sample}_R2_raw_fastqc.html"
 
-    resource categories:
-      subcategory: Merged sequence data
-      subdirectory: Fastqs
-      publish to repo: true
+    resource categories: *neverPublished
 
   raw reads fastQC HTML:
     processed location:
@@ -113,10 +113,7 @@ data assets:
       - *FastQC_Reports
       - "{sample}_R1_raw_fastqc.html"
 
-    resource categories:
-      subcategory: Merged sequence data
-      subdirectory: Fastqs
-      publish to repo: true
+    resource categories: *neverPublished
 
   raw forward reads fastQC ZIP: 
     processed location:
@@ -124,10 +121,7 @@ data assets:
       - *FastQC_Reports
       - "{sample}_R1_raw_fastqc.zip"
 
-    resource categories:
-      subcategory: Merged sequence data
-      subdirectory: Fastqs
-      publish to repo: true
+    resource categories: *MergedSequenceData_Fastq
 
   raw reverse reads fastQC ZIP:
     processed location:
@@ -135,10 +129,7 @@ data assets:
       - *FastQC_Reports
       - "{sample}_R2_raw_fastqc.zip"
 
-    resource categories:
-      subcategory: Merged sequence data
-      subdirectory: Fastqs
-      publish to repo: true
+    resource categories: *MergedSequenceData_Fastq
 
   raw reads fastQC ZIP:
     processed location:
@@ -146,10 +137,7 @@ data assets:
       - *FastQC_Reports
       - "{sample}_R1_raw_fastqc.zip"
 
-    resource categories:
-      subcategory: Merged sequence data
-      subdirectory: Fastqs
-      publish to repo: true
+    resource categories: *MergedSequenceData_Fastq
 
   trimmed fastQC MultiQC directory:
     processed location: 
@@ -165,10 +153,12 @@ data assets:
       - *FastQC_Reports
       - "trimmed_multiqc_report.zip"
 
-    resource categories:
+    resource categories: &TrimmedSequenceData_MultiQCReports
       subcategory: Trimmed sequence data
-      subdirectory: MultiQC report
+      subdirectory: MultiQC reports
       publish to repo: true
+      include subdirectory in table: true
+      table order: 4
 
   trimmed forward reads fastq GZ: &trimmedFastqGZ
     processed location:
@@ -178,8 +168,10 @@ data assets:
 
     resource categories:
       subcategory: Trimmed sequence data
-      subdirectory: Fastqs
+      subdirectory: Fastq
       publish to repo: true
+      include subdirectory in table: false
+      table order: 3
 
   trimmed reverse reads fastq GZ:
     <<: *trimmedFastqGZ
@@ -247,16 +239,17 @@ data assets:
 
     resource categories: *neverPublished
 
+  # DISCUSS: When Trim Galore MQC if made clearer, publishing this should be revisited
+  # Currently this only reports the direct cutadapt related trimming and misses Trim-Galore
+  # Specific metrics.
+  # - Jonathan Oribello
   trimming MultiQC directory ZIP:
     processed location: 
       - *trimDataDir
       - *trimmingReportsDir
       - "trimming_multiqc_report.zip"
 
-    resource categories:
-      subcategory: Trimmed sequence data
-      subdirectory: MultiQC reports
-      publish to repo: true
+    resource categories: *neverPublished
 
   forward reads trimming report: &trimmedForwardReadsFastQCTrimmingReport
     processed location:
@@ -264,7 +257,12 @@ data assets:
       - *trimmingReportsDir
       - "{sample}_R1_raw.fastq.gz_trimming_report.txt"
 
-    resource categories: *neverPublished
+    resource categories: 
+      subcategory: Trimmed sequence data
+      subdirectory: Trimming reports
+      publish to repo: true
+      include subdirectory in table: true
+      table order: 5
 
   reverse reads trimming report: 
     <<: *trimmedForwardReadsFastQCTrimmingReport
@@ -292,10 +290,12 @@ data assets:
       - *alignDataDir
       - "align_multiqc_report.zip"
 
-    resource categories:
+    resource categories: &AlignedSequenceData_MultiQCReports
       subcategory: Aligned sequence data
       subdirectory: MultiQC reports
       publish to repo: true
+      include subdirectory in table: true
+      table order: 8
 
   aligned ToTranscriptome Bam:
     processed location: 
@@ -303,10 +303,12 @@ data assets:
       - "{sample}"
       - "{sample}_Aligned.toTranscriptome.out.bam"
 
-    resource categories:
+    resource categories: &AlignedSequenceData_AlignedData
       subcategory: Aligned sequence data
       subdirectory: Aligned Data
       publish to repo: true
+      include subdirectory in table: false
+      table order: 6
 
   aligned SortedByCoord Bam:
     processed location: 
@@ -314,10 +316,7 @@ data assets:
       - "{sample}"
       - "{sample}_Aligned.sortedByCoord.out.bam"
 
-    resource categories:
-      subcategory: Aligned sequence data
-      subdirectory: Aligned Data
-      publish to repo: true
+    resource categories:  *AlignedSequenceData_AlignedData
 
   aligned SortedByCoord ResortedBam:
     processed location: 
@@ -325,10 +324,7 @@ data assets:
       - "{sample}"
       - "{sample}_Aligned.sortedByCoord_sorted.out.bam.bai"
 
-    resource categories:
-      subcategory: Aligned sequence data
-      subdirectory: Aligned Data
-      publish to repo: true
+    resource categories: *AlignedSequenceData_AlignedData
 
   aligned SortedByCoord ResortedBamIndex:
     processed location: 
@@ -336,10 +332,7 @@ data assets:
       - "{sample}"
       - "{sample}_Aligned.sortedByCoord_sorted.out.bam.bai"
 
-    resource categories:
-      subcategory: Aligned sequence data
-      subdirectory: Aligned Data
-      publish to repo: true
+    resource categories: *AlignedSequenceData_AlignedData
 
   aligned log Final:
     processed location: 
@@ -347,7 +340,12 @@ data assets:
       - "{sample}"
       - "{sample}_Log.final.out"
 
-    resource categories: *neverPublished
+    resource categories: &AlignedSequenceData_AlignmentLogs
+      subcategory: Aligned sequence data
+      subdirectory: Alignment logs
+      publish to repo: true
+      include subdirectory in table: true
+      table order: 7
 
   aligned log Progress:
     processed location: 
@@ -355,10 +353,7 @@ data assets:
       - "{sample}"
       - "{sample}_Log.progress.out"
 
-    resource categories: 
-      subcategory: Aligned sequence data
-      subdirectory: Alignment logs
-      publish to repo: true
+    resource categories: *neverPublished
 
   aligned log Full:
     processed location: 
@@ -390,10 +385,12 @@ data assets:
       - "02_geneBody_coverage"
       - "geneBody_cov_multiqc_report.zip"
 
-    resource categories:
+    resource categories: &RSeQC_MultiQCReports
       subcategory: RSeQC
       subdirectory: MultiQC reports
       publish to repo: true
+      include subdirectory in table: true
+      table order: 9
 
   infer experiment MultiQC directory:
     processed location: 
@@ -409,10 +406,7 @@ data assets:
       - "03_infer_experiment"
       - "infer_exp_multiqc_report.zip"
 
-    resource categories:
-      subcategory: RSeQC
-      subdirectory: MultiQC reports
-      publish to repo: true
+    resource categories: *RSeQC_MultiQCReports
 
   inner distance MultiQC directory:
     processed location: 
@@ -428,10 +422,7 @@ data assets:
       - "04_inner_distance"
       - "inner_dist_multiqc_report.zip"
 
-    resource categories:
-      subcategory: RSeQC
-      subdirectory: MultiQC reports
-      publish to repo: true
+    resource categories: *RSeQC_MultiQCReports
 
   read distribution MultiQC directory:
     processed location: 
@@ -447,10 +438,7 @@ data assets:
       - "05_read_distribution"
       - "read_dist_multiqc_report.zip"
 
-    resource categories:
-      subcategory: RSeQC
-      subdirectory: MultiQC reports
-      publish to repo: true
+    resource categories: *RSeQC_MultiQCReports
 
   genebody coverage out:
     processed location: 
@@ -496,10 +484,12 @@ data assets:
       - *countsDataDir
       - "count_multiqc_report.zip"
 
-    resource categories:
+    resource categories: &RawCountsData_MultiQCReports
       subcategory: Raw counts data
       subdirectory: MultiQC reports
       publish to repo: true
+      include subdirectory in table: true
+      table order: 11
 
   number non-zero count genes table:
     processed location: 
@@ -513,10 +503,12 @@ data assets:
       - *countsDataDir
       - "RSEM_Unnormalized_Counts.csv" # NEW in v0: Renamed from 'Unnormalized_Counts.csv'
 
-    resource categories: 
+    resource categories: &RawCountsData_CountData
       subcategory: Raw counts data
       subdirectory: Count Data
       publish to repo: true
+      include subdirectory in table: false
+      table order: 10
 
   sample gene counts table:
     processed location: 
@@ -524,10 +516,7 @@ data assets:
       - "{sample}"
       - "{sample}.genes.results"
 
-    resource categories: 
-      subcategory: Raw counts data
-      subdirectory: Count Data
-      publish to repo: true
+    resource categories: *RawCountsData_CountData
 
   sample isoform counts table:
     processed location: 
@@ -535,10 +524,7 @@ data assets:
       - "{sample}"
       - "{sample}.isoforms.results"
       
-    resource categories: 
-      subcategory: Raw counts data
-      subdirectory: Count Data
-      publish to repo: true
+    resource categories: *RawCountsData_CountData
 
   sample counts stats directory:
     processed location: 
@@ -546,7 +532,12 @@ data assets:
       - "{sample}"
       - "{sample}.stat"
 
-    resource categories: *neverPublished
+    resource categories:
+      subcategory: Raw counts data
+      subdirectory: Count Data
+      publish to repo: true
+      include subdirectory in table: false
+      table order: 10
 
   DESeq2 normalized counts table:
     processed location: 
@@ -557,6 +548,8 @@ data assets:
       subcategory: Normalized counts data
       subdirectory: ""
       publish to repo: true
+      include subdirectory in table: false
+      table order: 12
 
   ERCC normalized DESeq2 normalized counts table:
     processed location: 
@@ -588,6 +581,8 @@ data assets:
       subcategory: Differential expression analysis data
       subdirectory: ""
       publish to repo: true
+      include subdirectory in table: false
+      table order: 13
 
   ERCC normalized DESeq2 contrasts table:
     processed location: 
