@@ -5,7 +5,7 @@ from collections import defaultdict
 import os
 from pathlib import Path
 import re
-from typing import Union
+from typing import Optional, Union
 from dp_tools.core.entity_model import TemplateDataset
 import pkg_resources
 
@@ -70,25 +70,17 @@ def unmangle_columns(columns: list[str]) -> list[str]:
     return new_cols
 
 
-def update_curation_tables(
-    dataset: TemplateDataset,
-    config: Union[tuple[str, str], Path],
-    output_file: str = None,
-):
-    """Updates existing curation investigation and assay tables with processed data
+def get_assay_table_path(dataset: TemplateDataset, configuration: dict) -> Path:
+    """Retrieve the assay table file name that determined as a valid assay based on configuration.
+    Specifically, defined in subsection 'ISA meta'
 
-    :param dataset: A loaded dataset object
+    :param dataset: A dataset object including a metadata component with an attached ISA archive data asset
     :type dataset: TemplateDataset
-    :param config: A assay type configuration file specifier formatted as follows: ('assay','version') or local path to configuration file
-    :type config: Union[tuple[str, str], Path]
-    :param output_file: The name of the updated output tables, defaults to using the same name as the original tables
-    :type output_file: str, optional
+    :param configuration: Standard assay parsed config
+    :type configuration: dict
+    :return: Path to the found assay table
+    :rtype: Path
     """
-    _DATA_ASSET_COL_PREFIX = "Parameter Value["
-    _DATA_ASSET_COL_SUFFIX = "]"
-
-    configuration = load_config(config)
-
     # retrieve study assay subtable from I_file
     df = dataset.metadata.isa_investigation_subtables["STUDY ASSAYS"]
 
@@ -119,13 +111,29 @@ def update_curation_tables(
     ), f"One and only one should match, instead got these matches: {matches}"
 
     # load assay table
-    assay_file_name = matches[0]
+    assay_file_path = matches[0]
     [assay_path] = [
-        f for f in dataset.metadata.fetch_isa_files() if f.name == assay_file_name.name
+        f for f in dataset.metadata.fetch_isa_files() if f.name == assay_file_path.name
     ]
 
-    df_assay = pd.read_csv(assay_path, sep="\t").set_index(keys="Sample Name")
+    return assay_path
 
+
+def generate_new_column_dicts(
+    dataset: TemplateDataset, configuration: dict
+) -> tuple[dict, dict]:
+    """Based on data assets in the dataset and configuration, generates dictionaries for dataframe extension.
+    Specifically, the "data assets" configuration subsection is used.
+
+    :param dataset: A dataset object
+    :type dataset: TemplateDataset
+    :param configuration: Standard assay parsed config
+    :type configuration: dict
+    :return: Two dictionaries, the first with dataframe ready new data assets and the second denoting the intended order of those new columns
+    :rtype: tuple[dict, dict]
+    """
+    _DATA_ASSET_COL_PREFIX = "Parameter Value["
+    _DATA_ASSET_COL_SUFFIX = "]"
     # e.g.
     # {"Parameter Value[New1/subnew1]" : {"sample1":"asset",...}}
 
@@ -203,38 +211,94 @@ def update_curation_tables(
         ), f"Duplicate column order value ({order}) found for header: {col}"
         order_values.add(order)
 
-    # original columns in order
-    orig_columns = list(df_assay.columns)
-    sorted_new_columns = [
-        col for col in sorted(column_order, key=lambda k: column_order[k])
-    ]
+    return new_cols, column_order
 
-    df_assay_extended = df_assay.join(pd.DataFrame(new_cols))
+
+def extend_assay_dataframe(
+    df_orignal: pd.DataFrame, new_column_data: dict, new_column_order: dict
+):
+    # original columns in order
+    orig_columns = list(df_orignal.columns)
+    sorted_new_columns = [
+        col for col in sorted(new_column_order, key=lambda k: new_column_order[k])
+    ]
+    df_extended = df_orignal.join(pd.DataFrame(new_column_data))
 
     # now reorder with both new and original columns
-    df_assay_extended = df_assay_extended[orig_columns + sorted_new_columns]
+    df_extended = df_extended[orig_columns + sorted_new_columns]
 
     # guards
-    assert len(df_assay_extended.index) == len(
-        df_assay.index
-    ), f"After join, index length did not stay the same: old_length-{len(df_assay.index)} new_length-{len(df_assay_extended.index)}"
-    assert len(df_assay_extended.columns) > len(
-        df_assay.columns
+    assert len(df_extended.index) == len(
+        df_orignal.index
+    ), f"After join, index length did not stay the same: old_length-{len(df_orignal.index)} new_length-{len(df_extended.index)}"
+    assert len(df_extended.columns) > len(
+        df_orignal.columns
     ), f"After join, no new columns were added"
-
-    # create default output file name if not provided
-    OUTPUT_DIR = "updated_tables"
-    output_file = (
-        output_file if output_file is not None else Path(OUTPUT_DIR) / assay_file_name
-    )  # type: ignore
-    Path(OUTPUT_DIR).mkdir(exist_ok=True)
 
     # dropped NA columns
     # these often exist due to an old requirement to include ontology columns
     # even when no such ontology values were present
-    df_assay_extended = df_assay_extended.dropna(axis="columns", how="all")
+    df_extended = df_extended.dropna(axis="columns", how="all")
+
+    return df_extended
+
+
+def setup_output_target(
+    output_file: Optional[str], original_path: Path, output_dir: str = "updated_tables"
+) -> Path:
+    """Set ups target output file location.  Uses specified output_file name if provided.
+    Defaults to the original table filename but saves to a directory 'output_dir' in either case.
+
+    :param output_file: Specifies an alternative output filename for the extended table
+    :type output_file: Optional[str]
+    :param original_path: Specifies the orignal path, used to determine a default filename.
+    :type original_path: Path
+    :param output_dir: Specifies the name of the directory for the output file, defaults to "updated_tables"
+    :type output_dir: str, optional
+    :return: The output target location.
+    :rtype: _type_
+    """
+    # create default output file name if not provided
+
+    final_output_target = (
+        output_file # type: ignore
+        if output_file is not None
+        else Path(output_dir) / original_path.name
+    )
+    Path(output_dir).mkdir(exist_ok=True)
+
+    return final_output_target
+
+def update_curation_tables(
+    dataset: TemplateDataset,
+    config: Union[tuple[str, str], Path],
+    output_file: str = None,
+):
+    """Updates existing curation investigation and assay tables with processed data
+
+    :param dataset: A loaded dataset object
+    :type dataset: TemplateDataset
+    :param config: A assay type configuration file specifier formatted as follows: ('assay','version') or local path to configuration file
+    :type config: Union[tuple[str, str], Path]
+    :param output_file: The name of the updated output tables, defaults to using the same name as the original tables
+    :type output_file: str, optional
+    """
+    configuration = load_config(config)
+
+    # load assay dataframe
+    assay_path = get_assay_table_path(dataset, configuration)
+    df_assay = pd.read_csv(assay_path, sep="\t").set_index(keys="Sample Name")
+
+    column_contents, column_order = generate_new_column_dicts(dataset, configuration)
+
+    df_assay_extended = extend_assay_dataframe(df_assay, column_contents, column_order)
+    #df_investigation_extended = extend_investigation_dataframe(df_assay, column_contents, column_order)
+
+    final_output_target = setup_output_target(output_file, original_path=assay_path)
 
     # used unmangled columns aliases when writing to file
     df_assay_extended.to_csv(
-        output_file, header=unmangle_columns(df_assay_extended.columns), sep="\t"
+        final_output_target,
+        header=unmangle_columns(df_assay_extended.columns),
+        sep="\t",
     )
