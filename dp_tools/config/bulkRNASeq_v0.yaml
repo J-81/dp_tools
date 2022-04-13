@@ -1,3 +1,7 @@
+# TOP LEVEL
+NAME: "bulkRNASeq"
+VERSION: "0"
+
 # anchors for reuse
 _anchors:
   rawDataDir: &rawDataDir "00-RawData"
