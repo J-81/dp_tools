@@ -7,10 +7,10 @@ Loaders SHOULD:
 import os
 from pathlib import Path
 import logging
-from typing import List, Protocol, Union
+from typing import Union
 import pkg_resources
 
-from schema import Schema, Or, SchemaMissingKeyError
+from schema import Schema, Or, SchemaMissingKeyError, Optional
 import pandas as pd
 from dp_tools.components.components import (
     DatasetGeneCounts,
