@@ -1,0 +1,338 @@
+- Study Protocol Components Name: ''
+  Study Protocol Components Type: ''
+  Study Protocol Components Type Term Accession Number: ''
+  Study Protocol Components Type Term Source REF: ''
+  Study Protocol Description: 'A cohort of 16-week-old female C57BL/6J mice (Jackson
+    Lab) were flown to the ISS, housed in the Rodent Habitat and were subject to microgravity
+    for 37 days. Mice of simiar age, sex and strain were used for ground controls
+    housed in the identical hardware and matching ISS environmental conditions. Additionally,
+    mice from the same cohort were used as basal control and vivarium control. Basal
+    control mice were euthanized the day after launch as baseline references. Vivarium
+    mice were housed in the standard vivarium cages for the same amount of time as
+    spaceflight and ground control animals. '
+  Study Protocol Name: mouse habitation
+  Study Protocol Parameters Name: ''
+  Study Protocol Parameters Name Term Accession Number: ''
+  Study Protocol Parameters Name Term Source REF: ''
+  Study Protocol Type: Animal Husbandry
+  Study Protocol Type Term Accession Number: http://purl.bioontology.org/ontology/MESH/D000822
+  Study Protocol Type Term Source REF: MESH
+  Study Protocol URI: ''
+  Study Protocol Version: ''
+- Study Protocol Components Name: ''
+  Study Protocol Components Type: ''
+  Study Protocol Components Type Term Accession Number: ''
+  Study Protocol Components Type Term Source REF: ''
+  Study Protocol Description: 'The flight group mice were euthanized by ISS crew with
+    Euthasol injection followed by cervical dislocation. Liver was collected after
+    spleen upon euthanasia for mice M21 and M22, and was frozen in a pre-chilled Mini
+    Cold Bag (MCB) before transfer to the MELFI freezer (-80 C). For the rest of the
+    spaceflight mice, the carcasses were frozen in a pre-chilled Mini Cold Bag (MCB)
+    before transfer to the MELFI freezer (-80 C) and brought back to Earth where disscetion
+    was held. Ground control mice M31 and M32 followed the same protocol of on-orbit
+    dissected animals (M21 and M22) and the livers were collected immediately followed
+    by euthanasia. Rest of the ground control animals and all the basal and vivarium
+    animals in this dataset have been dissected postflight per the protocol in the
+    following.  Postflight dissection protocol: Mouse carcasses were removed from
+    -80 C storage and thawed at room temperature for 15-20 minutes. Multiple tissues,
+    including liver, were collected from each carcass. Total dissection time for each
+    carcass was no longer than 30 minutes since collection of the first tissue.  Liver
+    was preserved in RLT buffer or protein lysis buffer, homogenized and snap frozen
+    with liquid nitrogren.'
+  Study Protocol Name: animal and tissue sampling
+  Study Protocol Parameters Name: ''
+  Study Protocol Parameters Name Term Accession Number: ''
+  Study Protocol Parameters Name Term Source REF: ''
+  Study Protocol Type: sample collection
+  Study Protocol Type Term Accession Number: ''
+  Study Protocol Type Term Source REF: ''
+  Study Protocol URI: ''
+  Study Protocol Version: ''
+- Study Protocol Components Name: ''
+  Study Protocol Components Type: ''
+  Study Protocol Components Type Term Accession Number: ''
+  Study Protocol Components Type Term Source REF: ''
+  Study Protocol Description: RNA and DNA were extracted usign the AllPrep DNA/RNA
+    Mini Kit (Qiagen, Valencia, CA). Briefly, homogenization buffer for DNA and RNA
+    purification was made by adding 1:100 volumes beta-mercaptoethanol to Buffer RLT
+    (Qiagen, Valenica, CA) and kept on ice until use. Approximately 30 mg of tissue
+    was isolated using a scalpel and immediately placed in 800 uL of the Buffer RLT
+    solution. Each sample was then homogenized for approximately 20 seconds at 21,000
+    RPM using a Polytron PT1300D handheld homogenizer with a 5 mm standard dispersing
+    aggregate tip (Kinematica, Bohemia, NY). Homogenates were centrifuged for 3 minutes
+    at room temperature at 15,000 RPM to remove cell debris. The supernatant from
+    each sample was then used to isolate and purify DNA and RNA following the manufacturer's
+    protocol. RNA was eluted twice per sample in 30 uL H2O per elution. Concentration
+    and absorbance ratios for all RNA and DNA samples were measured using the NanoDrop
+    2000 spectrophotometer (Thermo Fisher Scientific, Waltham, MA). RNA quality was
+    assessed using the Agilent 2100 Bioanalyzer with the Agilent RNA 6000 Nano Kit
+    or Agilent RNA 6000 Pico Kit (Agilent Technologies, Santa Clara, CA).
+  Study Protocol Name: nucleic acid extraction
+  Study Protocol Parameters Name: ''
+  Study Protocol Parameters Name Term Accession Number: ''
+  Study Protocol Parameters Name Term Source REF: ''
+  Study Protocol Type: nucleic acid extraction
+  Study Protocol Type Term Accession Number: ''
+  Study Protocol Type Term Source REF: ''
+  Study Protocol URI: ''
+  Study Protocol Version: ''
+- Study Protocol Components Name: ''
+  Study Protocol Components Type: ''
+  Study Protocol Components Type Term Accession Number: ''
+  Study Protocol Components Type Term Source REF: ''
+  Study Protocol Description: 'RNA sequencing library construction was performed by
+    UC Davis Genome Center using the Illumina TruSeq standard RNA library prep kit
+    after mRNA enrichment (poly-A specific). The libraries were QC-ed by bioanalyzer
+    and quantified by fluorometric Qubit measurements. '
+  Study Protocol Name: RNA sequencing library construction
+  Study Protocol Parameters Name: ''
+  Study Protocol Parameters Name Term Accession Number: ''
+  Study Protocol Parameters Name Term Source REF: ''
+  Study Protocol Type: library construction
+  Study Protocol Type Term Accession Number: ''
+  Study Protocol Type Term Source REF: ''
+  Study Protocol URI: ''
+  Study Protocol Version: ''
+- Study Protocol Components Name: ''
+  Study Protocol Components Type: ''
+  Study Protocol Components Type Term Accession Number: ''
+  Study Protocol Components Type Term Source REF: ''
+  Study Protocol Description: DNA sequencing library construction was performed by
+    UC Davis Genome Center. Aliquots of each DNA sample was bisulfite-converted with
+    the EZ DNA Methylation-Gold kit (Zymo Research). Sequencing libraries was generated
+    from the converted DNA sample with the EpiGnome Methyl-Seq kit (Epicentre). The
+    resulting libraries were QC-ed by bioanalyzer and quantified by fluorometric Qubic
+    measurements and RT-PCR.
+  Study Protocol Name: DNA library construction
+  Study Protocol Parameters Name: ''
+  Study Protocol Parameters Name Term Accession Number: ''
+  Study Protocol Parameters Name Term Source REF: ''
+  Study Protocol Type: library construction
+  Study Protocol Type Term Accession Number: ''
+  Study Protocol Type Term Source REF: ''
+  Study Protocol URI: ''
+  Study Protocol Version: ''
+- Study Protocol Components Name: ''
+  Study Protocol Components Type: ''
+  Study Protocol Components Type Term Accession Number: ''
+  Study Protocol Components Type Term Source REF: ''
+  Study Protocol Description: The RNA library sequencing was performed on the Illumina
+    HiSeq 3000 platform, three high output HiSeq lanes with 50 bp single end reads
+    and index reads. 30 million reads per sample was requested. Performed by UC Davis
+    Genome Center.  The BS-sequencing was performed on the Illumina HiSeq 3000 at
+    UC Davis Genome Center. Each library was sequenced on one HiSeq lane by itself
+    with paired end 100bp reads.
+  Study Protocol Name: nucleic acid sequencing
+  Study Protocol Parameters Name: ''
+  Study Protocol Parameters Name Term Accession Number: ''
+  Study Protocol Parameters Name Term Source REF: ''
+  Study Protocol Type: nucleic acid sequencing
+  Study Protocol Type Term Accession Number: ''
+  Study Protocol Type Term Source REF: ''
+  Study Protocol URI: ''
+  Study Protocol Version: ''
+- Study Protocol Components Name: ''
+  Study Protocol Components Type: ''
+  Study Protocol Components Type Term Accession Number: ''
+  Study Protocol Components Type Term Source REF: ''
+  Study Protocol Description: 'RNA methylation analysis was performed by Epigentek.
+    60 samples of Total mouse liver RNA was prepared by GeneLab and received by Epigentek.
+    The samples were subjected to bisulfite conversion, cDNA reverse transcription,
+    library preparation, Bioanalyzer QC, KAPA library quantification, multiplex NGS
+    on an Illumina HiSeq2500 and advanced data analysis. RNA methylation analysis
+    was performed by Epigentek. Sixty samples of Total mouse liver RNA was prepared
+    by GeneLab and received by Epigentek. The samples were subjected to bisulfite
+    conversion, cDNA reverse transcription, library preparation, Bioanalyzer QC, KAPA
+    library quantification, multiplex NGS on an Illumina HiSeq2500 and advanced data
+    analysis. Bisulfite Conversion: RNA samples were bisulfite treated with the Methylamp
+    RNA Bisulfite Conversion Kit (Epigentek Cat. # P-9003). 200 ng for the samples
+    N1, N2, N4 through N12, and N37 through N60. 100 ng for the samples N3 and N13
+    through N36. Library Preparation: -cDNA was synthesized from bisulfite treated
+    RNA and ligated with adaptors by using random probing method. -Library amplification
+    was performed using indexed primers and library cDNA was purified with magnetic
+    beads -Purified library cDNA was eluted in 12 uL of water. Library QC: Library
+    construction was verified on a Bioanalyzer and KAPA Library Quantification. Sequencing:
+    5 nM of sample libraries were subjected to next generation sequencing on an Illumina
+    HiSeq 2500 in Single Read 50 nts format.'
+  Study Protocol Name: 5mC total RNA methylation analysis
+  Study Protocol Parameters Name: ''
+  Study Protocol Parameters Name Term Accession Number: ''
+  Study Protocol Parameters Name Term Source REF: ''
+  Study Protocol Type: epitranscriptomics
+  Study Protocol Type Term Accession Number: ''
+  Study Protocol Type Term Source REF: ''
+  Study Protocol URI: ''
+  Study Protocol Version: ''
+- Study Protocol Components Name: ''
+  Study Protocol Components Type: ''
+  Study Protocol Components Type Term Accession Number: ''
+  Study Protocol Components Type Term Source REF: ''
+  Study Protocol Description: For protein homogenization the urea based protein lysis
+    buffer consisted of 8 M urea, with 50 mM ammonium bicarbonate, at pH 8.5 in DNase-
+    and RNase-free H2O and was custom ordered from Teknova, Hollister, CA. This recipe
+    was initially provided by Stanford University Mass Spectrometry (SUMS). Protease
+    inhibitors, 1:100 volumes of 0.1 M phenylmethanesulfonyl fluoride solution in
+    ethanol (Sigma-Aldrich, St. Louis, Missouri) and 1:100 volumes of cOmplete EDTA-free
+    tablets (Roche, Indianapolis, IN), were added to the lysis buffer kept on ice.
+    A piece of liver weighing between 20-30 mg was cut from each liver sample and
+    immediately added to 650 uL protein lysis buffer. Each sample was homogenized
+    for approximately 20 seconds at 21,000 RPM using a Polytron PT1300D handheld homogenizer
+    with a 5 mm standard dispersing aggregate tip (Kinematica, Bohemia, NY). Homogenates
+    were centrifuged for 15 minutes at 4 C and at 14,000 X g to remove cell debris.
+    A 30 uL sample of each supernatant was kept on ice for total protein concentration
+    assay, and the rest of the supernatant was snap-frozen with liquid nitrogen in
+    aliquots. The Pierce BCA Protein Assay Kit (Thermo Fisher Scientific, Waltham,
+    MA) was used to measure the total protein concentration of each protein sample.
+  Study Protocol Name: protein extraction
+  Study Protocol Parameters Name: ''
+  Study Protocol Parameters Name Term Accession Number: ''
+  Study Protocol Parameters Name Term Source REF: ''
+  Study Protocol Type: extraction
+  Study Protocol Type Term Accession Number: ''
+  Study Protocol Type Term Source REF: ''
+  Study Protocol URI: ''
+  Study Protocol Version: ''
+- Study Protocol Components Name: ''
+  Study Protocol Components Type: ''
+  Study Protocol Components Type Term Accession Number: ''
+  Study Protocol Components Type Term Source REF: ''
+  Study Protocol Description: 'Samples were processed at the Stanford University Mass
+    Spectrometry (SUMS) omics core facility in two batches, the first batch included
+    spaceflight and ground control samples and the second batch included basal and
+    vivarium control samples.  In the first batch, the samples were divided into two
+    TMT 10-plex labeling groups. Group B consisted of ground control (GC) samples
+    21, 22, 36, 37, 38, 39, 40, a pool of all NASA GC samples, a pool of all NASA
+    and CASIS (GLDS-47) GC samples, and a pool of all CASIS (GLDS-47) basal (BA) samples.
+    Group C consisted of spaceflight (FLT) samples 2, 3, 25, 26, 27, 28, 30, a pool
+    of all NASA FLT samples, a pool of all NASA and CASIS (GLDS-47) FLT samples, and
+    a pool of all CASIS (GLDS-47) basal (BA) samples. This labeling scheme enables
+    comparison across NASA and CASIS specimen groups in the RR-1 study. CASIS FLT
+    and GC samples were labeled separately as TMT 10-plex Group A (GLDS-47).  In the
+    second batch, the ten basal and vivarium control samples were processed in one
+    TMT 11-plex labeling group along with one pool of all samples. TMT Isobaric label
+    reagent lot number RE231321 (https://www.thermofisher.com/order/catalog/product/90110)  SUMS
+    protocol was followed: 50 ug were drawn from each samples defrosted on ice. The
+    remaining sample was immediately placed back in -80C. 25uL of 50mM ammonium bicarbonate,
+    pH 8.0 was added to each sample, followed by 1.5 uL of 500mM DTT, incubated at
+    50C for 30 minutes and cooled to room temperature. 3 uL of 1M propionamide was
+    added to each sample and incubated at room temperature for 1hr. 75 uL of 50mM
+    ammonium bicarbonate, 0.02% protease max was added to each sample followed by
+    1.5 ug of trypsin/lysC (Promega) and overnight incubation at 37C.  10 uL of 10%
+    formic acid, 90% water was added to each sample to quench the digest. The samples
+    were incubated at 37C for 10 minutes, followed by centrifugation at 10,000g for
+    5 minutes. Microspin C18 columns (NEST group, p/n SEM SS18V) were equilibrated
+    with acetonitrile followed by 2 times wash with 0.1% formic acid/water and each
+    sample was cleaned and concentrated independently per vendor protocol. The eluant
+    peptides were dried in a speed vac to <2 uL volume and stored at 4C prior to TMT
+    isobaric labeling. Each peptide pool was reconstituted in 100 uL, 100mM HEPES,
+    pH 8.0. The TMT isobaric labels were reconstituted in 40 uL absolute ethyl alcohol
+    and 20 uL of each isobaric tag as described above was added to the corresponding
+    sample. The samples incubated at room temperature for 1.5hr, followed by the addition
+    of 5 uL hydroxylamine to quench the reaction. 50 uL of each isobaric-tagged peptide
+    pool was drawn and pooled to a final volume of 500 uL, 500 uL of 0.1% formic acid
+    water was added to a final volume of 1mL. This fraction (~250 ug total peptide)
+    was purified on a Water Oasis HLB 3cc C18 cartridge per vendor protocol and the
+    final eluent dried to completion in a speed vac. SCX offline fractionation was
+    performed using a Protea SCX column (p/n SP-155) and the provided buffers. In
+    brief, the previously dried 10plex peptide pool was dissolved in 150 uL reconstitution
+    solution and loaded onto the equilibrated SCX column (3 times) followed by 2 sequential
+    washes. The elution solution provided in the kit was diluted in series to 50mM,
+    100mM, 150mM, 200mM, 300mM and 400mM (stock) concentrations. The peptides were
+    then eluted starting with the 50mM salt concentration and collected in a new tube
+    for the entire series. 200 uL of 0.1% formic acid water was added to each SCX
+    eluted fraction and each was Microspin C18 purified as previously described. Each
+    fraction was reconstituted in 20 uL 0.2% formic acid, 2% acetonitrile, 97.8% water
+    and injected for liquid chromatography mass spectrometry analysis. '
+  Study Protocol Name: TMT isobaric labeling
+  Study Protocol Parameters Name: ''
+  Study Protocol Parameters Name Term Accession Number: ''
+  Study Protocol Parameters Name Term Source REF: ''
+  Study Protocol Type: labeling
+  Study Protocol Type Term Accession Number: ''
+  Study Protocol Type Term Source REF: ''
+  Study Protocol URI: ''
+  Study Protocol Version: ''
+- Study Protocol Components Name: ''
+  Study Protocol Components Type: ''
+  Study Protocol Components Type Term Accession Number: ''
+  Study Protocol Components Type Term Source REF: ''
+  Study Protocol Description: 'Samples were processed at the Stanford University Mass
+    Spectrometry (SUMS) omics core facility using the Thermo Orbitrap Fusion MS. '
+  Study Protocol Name: mass spectrometry
+  Study Protocol Parameters Name: ''
+  Study Protocol Parameters Name Term Accession Number: ''
+  Study Protocol Parameters Name Term Source REF: ''
+  Study Protocol Type: mass spectrometry protocol
+  Study Protocol Type Term Accession Number: ''
+  Study Protocol Type Term Source REF: ''
+  Study Protocol URI: ''
+  Study Protocol Version: ''
+- Study Protocol Components Name: ''
+  Study Protocol Components Type: ''
+  Study Protocol Components Type Term Accession Number: ''
+  Study Protocol Components Type Term Source REF: ''
+  Study Protocol Description: 'Proteome Discoverer/ Byonic Peptide Database: Uniprot
+    mus musculus with isoforms. Raw files were converted into a .mzML file format
+    using ProteoWizard 3.0.10875. '
+  Study Protocol Name: proteomics data transformation
+  Study Protocol Parameters Name: ''
+  Study Protocol Parameters Name Term Accession Number: ''
+  Study Protocol Parameters Name Term Source REF: ''
+  Study Protocol Type: proteomics data transformation
+  Study Protocol Type Term Accession Number: ''
+  Study Protocol Type Term Source REF: ''
+  Study Protocol URI: ''
+  Study Protocol Version: ''
+- Study Protocol Components Name: ''
+  Study Protocol Components Type: ''
+  Study Protocol Components Type Term Accession Number: ''
+  Study Protocol Components Type Term Source REF: ''
+  Study Protocol Description: 'Raw fastq files were assessed for % rRNA using HTStream
+    SeqScreener (version 1.0.0) and filtered using Trim Galore! (version 0.6.2). Raw
+    and trimmed fastq file quality was evaluated with FastQC (version 0.11.8), and
+    MultiQC (version 1.7) was used to generate MultiQC reports. Mus musculus STAR
+    and RSEM references were built using STAR (version 2.7.1a) and RSEM (version 1.3.1),
+    respectively, genome version mm10-GRCm38 (Mus_musculus.GRCm38.dna.toplevel.fa),
+    and the following gtf annotation file: Mus_musculus.GRCm38.96.gtf. Trimmed reads
+    were aligned to the Mus musculus STAR reference with STAR (version 2.7.1a) and
+    aligned reads were quantified using RSEM (version 1.3.1). Quantification data
+    was imported to R (version 3.6.0) with tximport (version 1.14.0) and normalized
+    with DESeq2 (version 1.26.0). Differential expression analysis was performed in
+    R (version 3.6.0) using DESeq2 (version 1.26.0); all groups were compared using
+    the Wald test and the likelihood ratio test was used to generate the F statistic
+    p-value. Gene annotations were assigned using the following Bioconductor and annotation
+    packages: STRINGdb, PANTHER.db, and org.Mm.eg.db.'
+  Study Protocol Name: GeneLab RNAseq data processing protocol
+  Study Protocol Parameters Name: ''
+  Study Protocol Parameters Name Term Accession Number: ''
+  Study Protocol Parameters Name Term Source REF: ''
+  Study Protocol Type: data transformation
+  Study Protocol Type Term Accession Number: http://purl.obolibrary.org/obo/OBI_0200000
+  Study Protocol Type Term Source REF: OBI
+  Study Protocol URI: ''
+  Study Protocol Version: ''
+- Study Protocol Components Name: ''
+  Study Protocol Components Type: ''
+  Study Protocol Components Type Term Accession Number: ''
+  Study Protocol Components Type Term Source REF: ''
+  Study Protocol Description: "Histology on samples was performed by Triangulum Biopharma\
+    \ LLC (San Diego, CA) on archived tissues available from NASA Ames Life Sciences\
+    \ Data Archive (ALSDA). In brief, for each sample, one half was embedded in paraffin,\
+    \ while the second half was embed- ded in Optimal cutting temperature compound\
+    \ (OCT) for cryosectioning. Paraffin embedded samples were sec- tioned at 4 \u03BC\
+    m and stained with hematoxylin and eosin (H&E). OCT-embedded samples were cryosectioned\
+    \ at 5 \u03BCm and lipids stained with Oil Red O (ORO). Whole slide imaging was\
+    \ performed in bright field using a Pannoramic Scan from 3D Histech (a Perkin\
+    \ Elmer Company). Raw files were converted to .tiff and .jpg files using QuPath\
+    \ (https://qupath.github.io/). There are multiple sections per slide, one section\
+    \ from each animal. The order of animal IDs in the file names corresponds to the\
+    \ sections from top to bottom of each slide image."
+  Study Protocol Name: histology
+  Study Protocol Parameters Name: ''
+  Study Protocol Parameters Name Term Accession Number: ''
+  Study Protocol Parameters Name Term Source REF: ''
+  Study Protocol Type: histology
+  Study Protocol Type Term Accession Number: ''
+  Study Protocol Type Term Source REF: ''
+  Study Protocol URI: ''
+  Study Protocol Version: ''
