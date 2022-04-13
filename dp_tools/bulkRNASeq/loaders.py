@@ -59,7 +59,10 @@ def load_config(config: Union[str, Path]) -> dict:
                 "subcategory": Or(None, str),
                 "subdirectory": Or(None, str),
                 "publish to repo": bool,
+                "include subdirectory in table": bool,
+                "table order": int,
             },
+            Optional("validate exists"): bool,
         }
     )
     for key, conf_data_asset in conf_data_assets.items():
