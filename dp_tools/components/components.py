@@ -1,9 +1,11 @@
 from dataclasses import dataclass, field
 import itertools
 from pathlib import Path
-from typing import Dict, List, OrderedDict, Union
+import tempfile
+from typing import ClassVar, Dict, List, OrderedDict, Set, Union
 
 import logging
+import zipfile
 
 log = logging.getLogger(__name__)
 
@@ -56,6 +58,21 @@ class BulkRNASeqMetadataComponent(TemplateComponent):
     base: BaseComponent = field(repr=False)
     runsheet: Union[DataFile, None] = field(default=None)
     ISAarchive: Union[DataFile, None] = field(default=None)
+
+    _ISA_INVESTIGATION_HEADERS: ClassVar[Set[str]] = {
+        "ONTOLOGY SOURCE REFERENCE",
+        "INVESTIGATION",
+        "INVESTIGATION PUBLICATIONS",
+        "INVESTIGATION CONTACTS",
+        "STUDY",
+        "STUDY DESIGN DESCRIPTORS",
+        "STUDY PUBLICATIONS",
+        "STUDY FACTORS",
+        "STUDY ASSAYS",
+        "STUDY PROTOCOLS",
+        "STUDY CONTACTS",
+    }
+
     samples: List = field(
         init=False
     )  # NOTE: List[str] is a more precise type hint; however, this breaks strict type checking: https://bugs.python.org/issue44529
@@ -76,7 +93,7 @@ class BulkRNASeqMetadataComponent(TemplateComponent):
                 self.df["has_ERCC"].unique()[0]
             )  # explicit conversion from numpy bool to standard bool
 
-        strict_type_checks(self)
+        strict_type_checks(self, exceptions=["_ISA_INVESTIGATION_HEADERS"])
 
     @property
     def factor_groups(self) -> Dict[str, str]:
@@ -161,6 +178,87 @@ class BulkRNASeqMetadataComponent(TemplateComponent):
             self._contrasts_cached = True
 
         return self._contrasts
+
+    def fetch_isa_files(self) -> Set[Path]:
+        """Unzips the ISA archive in a temporary directory and reports files
+
+        :return: List of individual file paths
+        :rtype: List[Path]
+        """
+        if getattr(self, "_isa_files", None):
+            self._isa_files: Set[Path]
+            return self._isa_files
+
+        assert self.ISAarchive, "No ISA archive data asset attached."
+
+        temp_dir = tempfile.mkdtemp()
+        log.debug(f"Extracting ISA Archive to temp directory: {temp_dir}")
+        with zipfile.ZipFile(self.ISAarchive.path, "r") as zip_ref:
+            zip_ref.extractall(temp_dir)
+
+        self._isa_files = {f for f in Path(temp_dir).rglob("*") if f.is_file()}
+        return self._isa_files
+
+    def get_assays(self) -> Dict[str, Path]:
+        """From the ISA Investigation file, extract assays mapped to tables
+
+        :return: A mapping of assay name to table paths
+        :rtype: Dict[str, Path]
+        """
+
+    @property
+    def isa_investigation_subtables(self) -> dict[str, pd.DataFrame]:
+        if cached := getattr(self, "_isa_investigation_subtables", None):
+            return cached
+
+        tables: dict[str, pd.DataFrame] = dict()
+
+        # track sub table lines
+        table_lines: List[list] = list()
+        key: str = None  # type: ignore
+
+        [i_file] = (f for f in self.fetch_isa_files() if f.name.startswith("i_"))
+        with open(i_file, "r") as f:
+            for line in [l.rstrip() for l in f.readlines()]:
+                # search for header
+                if line in self._ISA_INVESTIGATION_HEADERS:
+                    if key != None:
+                        tables[key] = pd.DataFrame(
+                            table_lines
+                        ).T  # each subtable is transposed in the i_file
+                        table_lines = list()
+                    key = line  # set next table key
+                else:
+                    tokens = line.split("\t")  # tab separated
+                    table_lines.append(tokens)
+        tables[key] = pd.DataFrame(
+            table_lines
+        ).T  # each subtable is transposed in the i_file
+
+        # reformat each table
+        def clean_quotes(string: str) -> str:
+            SINGLE_OR_DOUBLE_QUOTES = "\"'"
+            # don't perform on non-string elements
+            if not isinstance(string, str):
+                return string
+            else:
+                return string.lstrip(SINGLE_OR_DOUBLE_QUOTES).rstrip(
+                    SINGLE_OR_DOUBLE_QUOTES
+                )
+
+        df: pd.DataFrame
+        for key, df in tables.items():
+
+            # note: as a ref, no reassign needed
+            tables[key] = (
+                df.rename(columns=df.iloc[0]).drop(df.index[0]).applymap(clean_quotes)
+            )
+
+        # ensure all expected subtables present
+        assert set(tables.keys()) == self._ISA_INVESTIGATION_HEADERS
+
+        self._isa_investigation_subtables = tables
+        return tables
 
 
 @dataclass(eq=False)
