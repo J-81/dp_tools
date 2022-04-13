@@ -223,11 +223,11 @@ def update_curation_tables(
     ), f"After join, no new columns were added"
 
     # create default output file name if not provided
+    OUTPUT_DIR = "updated_tables"
     output_file = (
-        output_file
-        if output_file is not None
-        else f"{dataset.name}_assay_table_after_processing.tsv"
-    )
+        output_file if output_file is not None else Path(OUTPUT_DIR) / assay_file_name
+    )  # type: ignore
+    Path(OUTPUT_DIR).mkdir(exist_ok=True)
 
     # dropped NA columns
     # these often exist due to an old requirement to include ontology columns
