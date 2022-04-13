@@ -13,6 +13,14 @@ _anchors:
     subdirectory: null
     publish to repo: false
 
+ISA Meta:
+  Valid Study Assay Technology And Measurement Types:
+    - measurement: "transcription profiling"
+      technology: "RNA Sequencing (RNA-Seq)"
+
+  # this is prepended to all file names in the curation assay table
+  Global file prefix: "{datasystem}_rna_seq_" 
+
 data assets:
   runsheet:
     processed location: 
