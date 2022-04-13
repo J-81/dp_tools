@@ -385,10 +385,15 @@ class VVProtocol(abc.ABC):
 
         # validate with schema
         config_schema = Schema(
-            {"dry run": bool, "skip checks": set, "stage": Or(set[str], str)}
+            {"dry run": bool, "skip checks": list, "stage": Or(list[str], str)}
         )
 
         config_schema.validate(conf_validation)
+
+        # convert list to sets
+        conf_validation["skip checks"] = set(conf_validation["skip checks"])
+        # convert only if this is a list
+        conf_validation["stage"] = set(conf_validation["stage"]) if isinstance(conf_validation["stage"], list) else conf_validation["stage"]
 
         self.config = conf_validation
         return conf_validation

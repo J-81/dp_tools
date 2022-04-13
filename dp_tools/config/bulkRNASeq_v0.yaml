@@ -644,28 +644,28 @@ data assets:
 Validation Protocols:
   dry run all:
     dry run: true
-    skip checks: !!set {}
+    skip checks: []
     stage: "DGE"
 
   full: &full
     dry run: false
-    skip checks: !!set {}
+    skip checks: []
     stage: "DGE"
 
   only processed:
     dry run: false
-    skip checks: !!set {}
-    stage: !!set
-      ? Reads_PreProcessed
-      ? GenomeAligned
-      ? RSeQCAnalysis
-      ? GeneCounted
-      ? DGE
+    skip checks: []
+    stage:
+      - Reads_PreProcessed
+      - GenomeAligned
+      - RSeQCAnalysis
+      - GeneCounted
+      - DGE
 
   only raw:
     dry run: false
-    skip checks: !!set {}
-    stage: !!set
-      ? Demultiplexed
+    skip checks: []
+    stage:
+      - Demultiplexed
 
   DEFAULT: *full
