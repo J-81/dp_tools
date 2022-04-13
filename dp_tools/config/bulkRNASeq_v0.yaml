@@ -7,6 +7,7 @@ _anchors:
   normCountsDataDir: &normCountsDataDir "04-DESeq2_NormCounts"
   DGEDataDir: &DGEDataDir "05-DESeq2_DGE"
   rseqcDataDir: &rseqcDataDir "RSeQC_Analyses"
+  ERCCAnalysisDir: &ERCCAnalysisDir "ERCC_Analysis"
   FastQC_Reports: &FastQC_Reports "FastQC_Reports"
   neverPublished: &neverPublished
     subcategory: null
