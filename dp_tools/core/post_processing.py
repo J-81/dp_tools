@@ -70,7 +70,7 @@ def unmangle_columns(columns: list[str]) -> list[str]:
     return new_cols
 
 
-def export_curation_table(
+def update_curation_tables(
     dataset: TemplateDataset,
     config: Union[tuple[str, str], Path],
     output_file: str = None,
