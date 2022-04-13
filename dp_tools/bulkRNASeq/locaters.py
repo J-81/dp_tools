@@ -81,7 +81,11 @@ def find_data_asset_path(
     # return found or raise Exception
     if found != False:
         if return_parsed_config_as_metadata:
-            return {"metadata": data_asset_config, "path": found}
+            return {
+                "metadata": data_asset_config
+                | {"template_kwargs": {**template_kwargs}},
+                "path": found,
+            }
         else:
             return found
     else:
