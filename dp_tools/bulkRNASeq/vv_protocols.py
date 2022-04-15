@@ -70,6 +70,7 @@ class BulkRNASeq_VVProtocol(VVProtocol):
     dataset_trimReads_0001 = DATASET_TRIMREADS_0001()
     dataset_genomeAlignments_0001 = DATASET_GENOMEALIGNMENTS_0001()
     dataset_rseqcAnalysis_0001 = DATASET_RSEQCANALYSIS_0001()
+    dataset_geneCounts_0001 = DATASET_GENECOUNTS_0001()
     dataset_differentialGeneExpressions_0001 = DATASET_DIFFERENTIALGENEEXPRESSION_0001()
 
     # sample level
