@@ -86,12 +86,10 @@ class BulkRNASeqMetadataComponent(TemplateComponent):
             self.samples = list(
                 self.df["sample_name"]
             )  # explicit conversion from pandas series to standard list
-            self.paired_end = bool(
-                self.df["paired_end"].unique()[0]
-            )  # explicit conversion from numpy bool to standard bool
-            self.has_ercc = bool(
-                self.df["has_ERCC"].unique()[0]
-            )  # explicit conversion from numpy bool to standard bool
+            [self.paired_end] = self.df["paired_end"].unique()
+            self.paired_end = bool(self.paired_end)  # explicit conversion from numpy bool to standard bool
+            [self.has_ercc] = self.df["has_ERCC"].unique()
+            self.has_ercc = bool(self.has_ercc)  # explicit conversion from numpy bool to standard bool
 
         strict_type_checks(self, exceptions=["_ISA_INVESTIGATION_HEADERS"])
 
