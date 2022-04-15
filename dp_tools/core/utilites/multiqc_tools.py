@@ -1,9 +1,11 @@
 # function for running multiqc and getting data objects back
 from collections import defaultdict
 from pathlib import Path
-import logging
 from types import ModuleType
 from typing import List, TypedDict
+
+import logging
+log = logging.getLogger(__name__)
 
 import multiqc
 import pandas as pd
@@ -37,7 +39,7 @@ def clean_messy_sample(messy_sample: str):
     elif (
         len(adaptor_tokens) == 2
     ):  # 'Atha_Ler_0_sl_FLT_uG_Rep4_R2_raw - Adapter 1' should trigger this
-        logging.debug(f"Removing adaptor token to clean sample name")
+        log.debug(f"Removing adaptor token to clean sample name")
         current_sample = adaptor_tokens[0]
         sub_source_suffix = adaptor_tokens[1]
     else:
@@ -48,7 +50,7 @@ def clean_messy_sample(messy_sample: str):
     # remove any substrings that don't indicate sub sources
     for scrub_s in SCRUB_SAMPLES:
         if current_sample.endswith(scrub_s):
-            logging.debug(
+            log.debug(
                 f"Removing {scrub_s} suffix to clean sample name, removing completely (redudant)"
             )
             current_sample = current_sample[: -len(scrub_s)]
@@ -56,7 +58,7 @@ def clean_messy_sample(messy_sample: str):
     # split any true sub sources (e.g. _R1, _R2, _STARpass1)
     for subsource in SUBSOURCES:
         if current_sample.endswith(subsource):
-            logging.debug(
+            log.debug(
                 f"Removing {subsource} suffix to clean sample name, using to indicate sub source"
             )
             current_sample = current_sample[: -len(subsource)]
@@ -65,14 +67,14 @@ def clean_messy_sample(messy_sample: str):
     # sub_source = (
     #    f"{sub_source}:{sub_source_suffix}" if sub_source_suffix else sub_source
     # )
-    logging.info(
+    log.info(
         f"Cleaned {messy_sample} to derive sample: {current_sample} and subsource: {sub_source}"
     )
     return current_sample, sub_source
 
 
 def get_reformated_source_dict(source_dict: dict):
-    logging.info(
+    log.info(
         "Cleaning general data statistics dict and reformating to clean-sample-wise"
     )
     clean_source_dict = defaultdict(dict)
@@ -88,22 +90,22 @@ def get_reformated_source_dict(source_dict: dict):
 def get_parsed_data(
     input_f: List[str], modules: List[str] = [], as_dataframe: bool = True
 ):
-    logging.info(f"Using MQC to parse: {input_f}")
+    log.info(f"Using MQC to parse: {input_f}")
     try:
         # a workaround for flushing handlers in MQC version 1.11
-        logger = logging.getLogger("multiqc")
+        logger = log.getLogger("multiqc")
         [logger.removeHandler(h) for h in logger.handlers]
         mqc_ret = multiqc.run(
             input_f, no_data_dir=True, module=modules
         )  # note: empty list for modules falls back on all modules
-        logging.info(f"Successfully parsed: {input_f}")
+        log.info(f"Successfully parsed: {input_f}")
     except SystemExit as e:
         # a zero exit code indicates no data extracted (expected if the file isn't covered by a multiqc module yet)
         # catch non-zero exit codes, as raised when multiqc has an actual exception.
         assert (
             e.code == 0
         ), "MQC Module error occured: This is very rare and might indicate an edge case unhandled by Multiqc"
-        logging.info(f"MQC does not currently parse: {input_f}, returning None")
+        log.info(f"MQC does not currently parse: {input_f}, returning None")
         # other
         return None
 
@@ -124,7 +126,7 @@ def flatten_raw_data(mqc_rep: dict) -> dict:
     """
     all_raw_data = dict()
     for module_source, raw_data in mqc_rep.saved_raw_data.items():
-        logging.info(f"Ingesting {module_source} from multiqc report into dataframe")
+        log.info(f"Ingesting {module_source} from multiqc report into dataframe")
         sourced_raw_data = get_reformated_source_dict(raw_data)
         # merge into existing data
         for sample, new_data in sourced_raw_data.items():
@@ -132,15 +134,15 @@ def flatten_raw_data(mqc_rep: dict) -> dict:
                 (module_source, "general_stats", k): v for k, v in new_data.items()
             }
             if existing_dict := all_raw_data.get(sample):
-                logging.debug(f"Adding additional data for existing sample: {sample}")
+                log.debug(f"Adding additional data for existing sample: {sample}")
                 existing_dict.update(new_data)
             else:
-                logging.debug(f"Adding new sample: {sample}")
+                log.debug(f"Adding new sample: {sample}")
                 all_raw_data[sample] = new_data
 
     # before final merging, force all sample names to change hypen to underscore
     # This occurs in at least one module in rseqc automatically
-    logging.info(
+    log.info(
         "Converting '-' in sample names to '_' to accommodate these forced changes in RSeQC"
     )
 
@@ -171,7 +173,7 @@ def get_general_stats(mqc_run_output: MQCRunDict) -> dict[str, dict]:
 
 
 def format_plots_as_dataframe(mqc_rep: MQCRunDict) -> pd.DataFrame:
-    logging.info(f"Formatting to dataframe")
+    log.info(f"Formatting to dataframe")
     mqc_rep = mqc_rep["report"]
     # ingest plot data
     flat_plot_dict = format_plot_data(mqc_rep)
@@ -225,7 +227,7 @@ def __parse_xy_line_graph_to_flat_dict(plot_data):
     # return messy sample:[{key (ylab):value}]
     all_flat_dict = dict()
     if categories := plot_data["config"].get("categories"):
-        logging.debug("Plot has categorical data, extracting by category")
+        log.debug("Plot has categorical data, extracting by category")
         for line in plot_data["datasets"][0]:
             sample_flat_dict = list()
             messy_s = line["name"]
@@ -241,7 +243,7 @@ def __parse_xy_line_graph_to_flat_dict(plot_data):
             ]
             all_flat_dict[messy_s] = sample_flat_dict
     else:
-        logging.debug("Plot does not have categorical data, extracting accordingly")
+        log.debug("Plot does not have categorical data, extracting accordingly")
         for line in plot_data["datasets"][0]:
             sample_flat_dict = list()
             messy_s = line["name"]
@@ -272,13 +274,13 @@ def __parse_xy_line_graph_to_flat_dict(plot_data):
 
 
 def format_plot_data(mqc_rep: dict):
-    logging.info(f"Attempting to extract data from {len(mqc_rep.plot_data)} plots")
+    log.info(f"Attempting to extract data from {len(mqc_rep.plot_data)} plots")
     all_clean_data = dict()
     for plot_key, plot_data in mqc_rep.plot_data.items():
-        logging.info(
+        log.info(
             f"Attempting to extract data from plot with Title: {plot_data['config']['title']}"
         )
-        logging.debug(f"Plot type: {plot_data['plot_type']}")
+        log.debug(f"Plot type: {plot_data['plot_type']}")
         # check plot type
         if plot_data["plot_type"] == "bar_graph":
             mapped_data = parse_bar_graph_to_flat_dict(
@@ -307,7 +309,7 @@ def format_plot_data(mqc_rep: dict):
                 for s in [s["name"] for s in plot_data["datasets"][0]]
             }
         elif plot_data["plot_type"] in ["heatmap"]:
-            logging.warning(
+            log.warning(
                 f"Not implemented for dataframe extraction: {plot_data['plot_type']}, skipping this plot with Title: {plot_data['config']['title']}"
             )
         else:
