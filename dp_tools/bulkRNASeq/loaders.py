@@ -58,14 +58,34 @@ def load_config(config: Union[str, Path]) -> dict:
     # validate with schema
     config_schema = Schema(
         {
+            # a list of paths designating the
+            # expected full data asset path
             "processed location": [str],
+            # used to control how curation tables are formatted
+            # and what data assets are included
             "resource categories": {
+                # top level directory in S3 archive,
+                # first and required Parameter Value name component in assay table
                 "subcategory": Or(None, str),
+                # second level directory in S3 archive,
+                # second and optional Parameter Value name component in assay table
                 "subdirectory": Or(None, str),
+                # controls publishing data asset to GLDS repo
+                # controls inclusion of data asset in assay table
                 "publish to repo": bool,
+                # controls if the subdirectory label should be included in the assay table
                 "include subdirectory in table": bool,
+                # controls the order of PROCESSED Parameter Value columns added to
+                # existing RAW DATA assay table
                 "table order": int,
             },
+            # controls validation of expected data asset path,
+            # disabling this means the path will not be checked for existence
+            # some example use cases:
+            #   - a table needs to be updated and the original
+            #       local data is not readily available
+            #
+            #   - a dry run needs to be performed during development
             Optional("validate exists"): bool,
         }
     )
