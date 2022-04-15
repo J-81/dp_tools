@@ -26,7 +26,7 @@ ISA Meta:
       technology: "RNA Sequencing (RNA-Seq)"
 
   # this is prepended to all file names in the curation assay table
-  Global file prefix: "{datasystem}_rna_seq_" 
+  Global file prefix: "{datasystem}_rna_seq_"
 
 data assets:
   runsheet:
