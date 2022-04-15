@@ -313,12 +313,14 @@ def load_BulkRNASeq_STAGE_01(
             data_asset_config=conf_data_assets["trimmed fastQC MultiQC directory ZIP"],
         )
     )
+    """ Archived data asset
     datf_trimmingMQC = DataFile(
         **find_data_asset_path(
             root_dir=root_path,
             data_asset_config=conf_data_assets["trimming MultiQC directory ZIP"],
         )
     )
+    """
 
     # update samples
     for sample_name, sample in dataset.samples.items():
@@ -335,7 +337,7 @@ def load_BulkRNASeq_STAGE_01(
                     )
                 ),
                 fastQCmultiQCDirZIP=datf_readsMQC,
-                trimmingMultiQCDirZIP=datf_trimmingMQC,
+                # Archived data asset trimmingMultiQCDirZIP=datf_trimmingMQC,
                 fastqcReportHTML=DataFile(
                     **find_data_asset_path(
                         root_dir=root_path,
@@ -376,7 +378,7 @@ def load_BulkRNASeq_STAGE_01(
                     )
                 ),
                 fastQCmultiQCDirZIP=datf_readsMQC,
-                trimmingMultiQCDirZIP=datf_trimmingMQC,
+                # Archived data asset trimmingMultiQCDirZIP=datf_trimmingMQC,
                 fastqcReportHTML=DataFile(
                     **find_data_asset_path(
                         root_dir=root_path,
@@ -418,7 +420,7 @@ def load_BulkRNASeq_STAGE_01(
                     )
                 ),
                 fastQCmultiQCDirZIP=datf_readsMQC,
-                trimmingMultiQCDirZIP=datf_trimmingMQC,
+                # Archived data asset trimmingMultiQCDirZIP=datf_trimmingMQC,
                 fastqcReportHTML=DataFile(
                     **find_data_asset_path(
                         root_dir=root_path,
