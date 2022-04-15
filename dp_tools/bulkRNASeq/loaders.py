@@ -4,6 +4,7 @@ Loaders SHOULD:
   - run validation on the dataSystem object
   - return a dataSystem object
 """
+import functools
 import os
 from pathlib import Path
 import logging
