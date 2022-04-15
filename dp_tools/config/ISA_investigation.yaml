@@ -1,0 +1,782 @@
+INVESTIGATION:
+- Comment [Created with configuration]: ''
+  Comment [Last Opened With Configuration]: ''
+  Comment[Created With Configuration]: ''
+  Comment[Last Opened With Configuration]: ''
+  Investigation Description: ''
+  Investigation Identifier: '1.45E+12'
+  Investigation Public Release Date: ''
+  Investigation Submission Date: ''
+  Investigation Title: Investigation
+INVESTIGATION CONTACTS:
+- Investigation Person Address: ''
+  Investigation Person Affiliation: ''
+  Investigation Person Email: ''
+  Investigation Person Fax: ''
+  Investigation Person First Name: ''
+  Investigation Person Last Name: ''
+  Investigation Person Mid Initials: ''
+  Investigation Person Phone: ''
+  Investigation Person Roles: ''
+  Investigation Person Roles Term Accession Number: ''
+  Investigation Person Roles Term Source REF: ''
+INVESTIGATION PUBLICATIONS:
+- Investigation PubMed ID: ''
+  Investigation Publication Author List: ''
+  Investigation Publication DOI: ''
+  Investigation Publication Status: ''
+  Investigation Publication Status Term Accession Number: ''
+  Investigation Publication Status Term Source REF: ''
+  Investigation Publication Title: ''
+ONTOLOGY SOURCE REFERENCE:
+- Term Source Description: National Center for Biotechnology Information (NCBI) Organismal
+    Classification
+  Term Source File: http://data.bioontology.org/ontologies/NCBITAXON
+  Term Source Name: NCBITAXON
+  Term Source Version: '2'
+- Term Source Description: Gene Ontology
+  Term Source File: http://data.bioontology.org/ontologies/GO
+  Term Source Name: GO
+  Term Source Version: '1622'
+- Term Source Description: RxNORM
+  Term Source File: http://data.bioontology.org/ontologies/RXNORM
+  Term Source Name: RXNORM
+  Term Source Version: '12'
+- Term Source Description: Environment Ontology
+  Term Source File: http://data.bioontology.org/ontologies/ENVO
+  Term Source Name: ENVO
+  Term Source Version: '48'
+- Term Source Description: Neuroscience Information Framework (NIF) Standard Ontology
+  Term Source File: http://data.bioontology.org/ontologies/NIFSTD
+  Term Source Name: NIFSTD
+  Term Source Version: '21'
+- Term Source Description: Experimental Factor Ontology
+  Term Source File: http://data.bioontology.org/ontologies/EFO
+  Term Source Name: EFO
+  Term Source Version: '166'
+- Term Source Description: Ontology for Biomedical Investigations
+  Term Source File: http://data.bioontology.org/ontologies/OBI
+  Term Source Name: OBI
+  Term Source Version: '32'
+- Term Source Description: National Cancer Institute Thesaurus
+  Term Source File: http://data.bioontology.org/ontologies/NCIT
+  Term Source Name: NCIT
+  Term Source Version: '52'
+- Term Source Description: Mass Spectrometry Ontology
+  Term Source File: http://data.bioontology.org/ontologies/MS
+  Term Source Name: MS
+  Term Source Version: '83'
+- Term Source Description: Medical Subject Headings
+  Term Source File: http://data.bioontology.org/ontologies/MESH
+  Term Source Name: MESH
+  Term Source Version: '5'
+- Term Source Description: Sequence Types and Features Ontology
+  Term Source File: http://data.bioontology.org/ontologies/SO
+  Term Source Name: SO
+  Term Source Version: '229'
+- Term Source Description: Units of Measurement Ontology
+  Term Source File: http://data.bioontology.org/ontologies/UO
+  Term Source Name: UO
+  Term Source Version: '43'
+STUDY:
+- Comment[Acknowledgments]: ''
+  Comment[Data Source Accession]: ''
+  Comment[Data Source Link]: ''
+  Comment[Experiment Platform]: Rodent Habitat
+  Comment[Flight Program]: International Space Station (ISS)
+  Comment[Funding]: This investigation was funded by the NASA Space Biology Program
+    Office, Space Life and Physical Sciences Research and Applications Division, and
+    additional funding from the International Space Station Research Integration Office
+    to the Space Biology GeneLab Project.
+  Comment[Managing NASA Center]: Ames Research Center (ARC)
+  Comment[Mission End]: 25-Oct-2014
+  Comment[Mission Link]: https://lsda.jsc.nasa.gov/scripts/mission/miss.aspx?mis_index=351
+  Comment[Mission Name]: SpaceX-4
+  Comment[Mission Start]: 21-Sep-2014
+  Comment[Project Identifier]: RR-1
+  Comment[Project Link]: https://lsda.jsc.nasa.gov/scripts/experiment/exper.aspx?exp_index=13380
+  Comment[Project Title]: Rodent Research 1
+  Comment[Project Type]: Spaceflight Study
+  Comment[Space Program]: NASA
+  Comment[Study Grant Number]: ''
+  Study Description: RR-1 is a validation flight to evaluate the hardware, operational
+    and science capabilities of the Rodent Research Project on the ISS. RNA, DNA,
+    and protein were purified from liver tissues from RR-1 mice (female, C57BL/6J,
+    16wk old at time of launch). From each group, two liver samples were collected
+    and frozen immediately after euthanasia. The rest of the liver samples from each
+    group were collected from frozen carcasses dissected post-flight. RNA-Seq, whole
+    genome and RNA BS-Seq (bisulfite sequencing) and proteomic expression profiling
+    were performed. RNA extracted from these tissues was re-sequenced; these data
+    are available as part of GLDS-168 (https://genelab-data.ndc.nasa.gov/genelab/accession/GLDS-168).
+  Study File Name: s_RR1 Spaceflight.txt
+  Study Identifier: Rodent Research-1 (RR1) NASA liver
+  Study Public Release Date: 15-Dec-2015
+  Study Submission Date: ''
+  Study Title: 'Rodent Research-1 (RR1) NASA Validation Flight: Mouse liver transcriptomic,
+    proteomic, and epigenomic data'
+STUDY ASSAYS:
+- Study Assay File Name: a__DNA_methylation_profiling_nucleotide_sequencing.txt
+  Study Assay Measurement Type: DNA methylation profiling
+  Study Assay Measurement Type Term Accession Number: http://purl.obolibrary.org/obo/OBI_0000634
+  Study Assay Measurement Type Term Source REF: OBI
+  Study Assay Technology Platform: Illumina
+  Study Assay Technology Type: nucleotide sequencing
+  Study Assay Technology Type Term Accession Number: obo:OBI_0000626
+  Study Assay Technology Type Term Source REF: OBI
+- Study Assay File Name: a_rr1-nasa_RNA_methylation_profiling_nucleotide_sequencing.txt
+  Study Assay Measurement Type: RNA methylation profiling
+  Study Assay Measurement Type Term Accession Number: http://purl.obolibrary.org/obo/GO_0001510
+  Study Assay Measurement Type Term Source REF: GO
+  Study Assay Technology Platform: Illumina
+  Study Assay Technology Type: nucleotide sequencing
+  Study Assay Technology Type Term Accession Number: obo:OBI_0000626
+  Study Assay Technology Type Term Source REF: OBI
+- Study Assay File Name: a__protein_expression_profiling_mass_spectrometry.txt
+  Study Assay Measurement Type: protein expression profiling
+  Study Assay Measurement Type Term Accession Number: http://purl.obolibrary.org/obo/OBI_0000615
+  Study Assay Measurement Type Term Source REF: OBI
+  Study Assay Technology Platform: LTQ Orbitrap Velos (Thermo Scientific)
+  Study Assay Technology Type: mass spectrometry
+  Study Assay Technology Type Term Accession Number: http://purl.obolibrary.org/obo/OBI_0001478
+  Study Assay Technology Type Term Source REF: OBI
+- Study Assay File Name: a_rodent_research-1_(rr1)_nasa_liver_transcription_profiling_RNA_Sequencing_(RNA-Seq).txt
+  Study Assay Measurement Type: transcription profiling
+  Study Assay Measurement Type Term Accession Number: obo:OBI_0000424
+  Study Assay Measurement Type Term Source REF: OBI
+  Study Assay Technology Platform: Illumina HiSeq 3000
+  Study Assay Technology Type: RNA Sequencing (RNA-Seq)
+  Study Assay Technology Type Term Accession Number: obo:OBI_0001271
+  Study Assay Technology Type Term Source REF: OBI
+- Study Assay File Name: a_rodent_research-1_(rr1)_nasa_liver_histology_imaging.txt
+  Study Assay Measurement Type: histology
+  Study Assay Measurement Type Term Accession Number: obo:OBI_0600020
+  Study Assay Measurement Type Term Source REF: OBI
+  Study Assay Technology Platform: ''
+  Study Assay Technology Type: imaging
+  Study Assay Technology Type Term Accession Number: obo:OBI_0000185
+  Study Assay Technology Type Term Source REF: OBI
+STUDY CONTACTS:
+- Comment[Study Person REF]: ''
+  Study Person Address: ''
+  Study Person Affiliation: NASA
+  Study Person Email: ruth.k.globus@nasa.gov
+  Study Person Fax: ''
+  Study Person First Name: Ruth
+  Study Person Last Name: Globus
+  Study Person Mid Initials: ''
+  Study Person Phone: 650-604-5247
+  Study Person Roles: Conceptualization
+  Study Person Roles Term Accession Number: http://www.cognitiveatlas.org/ontology/cogat.owl#CAO_00218
+  Study Person Roles Term Source REF: NIFSTD
+- Comment[Study Person REF]: ''
+  Study Person Address: ''
+  Study Person Affiliation: NASA GeneLab
+  Study Person Email: jonathan.m.galazka@nasa.gov
+  Study Person Fax: ''
+  Study Person First Name: Jonathan
+  Study Person Last Name: Galazka
+  Study Person Mid Initials: M
+  Study Person Phone: ''
+  Study Person Roles: Conceptualization
+  Study Person Roles Term Accession Number: http://www.cognitiveatlas.org/ontology/cogat.owl#CAO_00218
+  Study Person Roles Term Source REF: NIFSTD
+- Comment[Study Person REF]: ''
+  Study Person Address: ''
+  Study Person Affiliation: NASA
+  Study Person Email: ''
+  Study Person Fax: ''
+  Study Person First Name: Oana
+  Study Person Last Name: Marcu
+  Study Person Mid Initials: ''
+  Study Person Phone: ''
+  Study Person Roles: Conceptualization
+  Study Person Roles Term Accession Number: http://www.cognitiveatlas.org/ontology/cogat.owl#CAO_00218
+  Study Person Roles Term Source REF: NIFSTD
+- Comment[Study Person REF]: ''
+  Study Person Address: ''
+  Study Person Affiliation: NASA GeneLab
+  Study Person Email: ''
+  Study Person Fax: ''
+  Study Person First Name: Samrawit
+  Study Person Last Name: Gebre
+  Study Person Mid Initials: G
+  Study Person Phone: ''
+  Study Person Roles: Data Curation
+  Study Person Roles Term Accession Number: http://purl.bioontology.org/ontology/MESH/D066289
+  Study Person Roles Term Source REF: MESH
+- Comment[Study Person REF]: ''
+  Study Person Address: ''
+  Study Person Affiliation: NASA GeneLab
+  Study Person Email: ''
+  Study Person Fax: ''
+  Study Person First Name: San-Huei
+  Study Person Last Name: Lai Polo
+  Study Person Mid Initials: ''
+  Study Person Phone: ''
+  Study Person Roles: Data Curation
+  Study Person Roles Term Accession Number: http://purl.bioontology.org/ontology/MESH/D066289
+  Study Person Roles Term Source REF: MESH
+- Comment[Study Person REF]: ''
+  Study Person Address: ''
+  Study Person Affiliation: NASA GeneLab
+  Study Person Email: ''
+  Study Person Fax: ''
+  Study Person First Name: Amanda
+  Study Person Last Name: Saravia-Butler
+  Study Person Mid Initials: M
+  Study Person Phone: ''
+  Study Person Roles: Formal Analysis
+  Study Person Roles Term Accession Number: ''
+  Study Person Roles Term Source REF: ''
+- Comment[Study Person REF]: ''
+  Study Person Address: ''
+  Study Person Affiliation: NASA GeneLab
+  Study Person Email: ''
+  Study Person Fax: ''
+  Study Person First Name: Homer
+  Study Person Last Name: Fogle
+  Study Person Mid Initials: W
+  Study Person Phone: ''
+  Study Person Roles: Formal Analysis
+  Study Person Roles Term Accession Number: ''
+  Study Person Roles Term Source REF: ''
+- Comment[Study Person REF]: ''
+  Study Person Address: ''
+  Study Person Affiliation: NASA GeneLab
+  Study Person Email: ''
+  Study Person Fax: ''
+  Study Person First Name: Nicholas
+  Study Person Last Name: Bense
+  Study Person Mid Initials: ''
+  Study Person Phone: ''
+  Study Person Roles: Formal Analysis
+  Study Person Roles Term Accession Number: ''
+  Study Person Roles Term Source REF: ''
+- Comment[Study Person REF]: ''
+  Study Person Address: ''
+  Study Person Affiliation: NASA GeneLab
+  Study Person Email: ''
+  Study Person Fax: ''
+  Study Person First Name: Kaushik
+  Study Person Last Name: 'Chakravarty '
+  Study Person Mid Initials: ''
+  Study Person Phone: ''
+  Study Person Roles: Investigation
+  Study Person Roles Term Accession Number: http://ncicb.nci.nih.gov/xml/owl/EVS/Thesaurus.owl#C41198
+  Study Person Roles Term Source REF: NCIT
+- Comment[Study Person REF]: ''
+  Study Person Address: ''
+  Study Person Affiliation: NASA GeneLab
+  Study Person Email: ''
+  Study Person Fax: ''
+  Study Person First Name: San-Huei
+  Study Person Last Name: Lai Polo
+  Study Person Mid Initials: ''
+  Study Person Phone: ''
+  Study Person Roles: Investigation
+  Study Person Roles Term Accession Number: http://ncicb.nci.nih.gov/xml/owl/EVS/Thesaurus.owl#C41198
+  Study Person Roles Term Source REF: NCIT
+- Comment[Study Person REF]: ''
+  Study Person Address: ''
+  Study Person Affiliation: NASA
+  Study Person Email: ''
+  Study Person Fax: ''
+  Study Person First Name: Rick
+  Study Person Last Name: Chen
+  Study Person Mid Initials: B
+  Study Person Phone: ''
+  Study Person Roles: Investigation
+  Study Person Roles Term Accession Number: http://ncicb.nci.nih.gov/xml/owl/EVS/Thesaurus.owl#C41198
+  Study Person Roles Term Source REF: NCIT
+- Comment[Study Person REF]: ''
+  Study Person Address: ''
+  Study Person Affiliation: NASA GeneLab
+  Study Person Email: ''
+  Study Person Fax: ''
+  Study Person First Name: Valery
+  Study Person Last Name: Boyko
+  Study Person Mid Initials: ''
+  Study Person Phone: ''
+  Study Person Roles: Investigation
+  Study Person Roles Term Accession Number: http://ncicb.nci.nih.gov/xml/owl/EVS/Thesaurus.owl#C41198
+  Study Person Roles Term Source REF: NCIT
+- Comment[Study Person REF]: ''
+  Study Person Address: ''
+  Study Person Affiliation: NASA GeneLab
+  Study Person Email: ''
+  Study Person Fax: ''
+  Study Person First Name: Sylvain
+  Study Person Last Name: Costes
+  Study Person Mid Initials: V
+  Study Person Phone: ''
+  Study Person Roles: Project Administration
+  Study Person Roles Term Accession Number: ''
+  Study Person Roles Term Source REF: ''
+- Comment[Study Person REF]: ''
+  Study Person Address: ''
+  Study Person Affiliation: NASA GeneLab
+  Study Person Email: ''
+  Study Person Fax: ''
+  Study Person First Name: Samrawit
+  Study Person Last Name: Gebre
+  Study Person Mid Initials: G
+  Study Person Phone: ''
+  Study Person Roles: Project Administration
+  Study Person Roles Term Accession Number: ''
+  Study Person Roles Term Source REF: ''
+STUDY DESIGN DESCRIPTORS:
+- Study Design Type: transcription profiling by high throughput sequencing
+  Study Design Type Term Accession Number: http://www.ebi.ac.uk/efo/EFO_0002770
+  Study Design Type Term Source REF: EFO
+- Study Design Type: proteomic profiling by mass spectrometer
+  Study Design Type Term Accession Number: http://www.ebi.ac.uk/efo/EFO_0002766
+  Study Design Type Term Source REF: EFO
+- Study Design Type: methylation profiling by high throughput sequencing
+  Study Design Type Term Accession Number: http://www.ebi.ac.uk/efo/EFO_0002761
+  Study Design Type Term Source REF: EFO
+- Study Design Type: Histology
+  Study Design Type Term Accession Number: http://purl.bioontology.org/ontology/MESH/D006653
+  Study Design Type Term Source REF: MESH
+STUDY FACTORS:
+- Study Factor Name: Spaceflight
+  Study Factor Type: Space Flight
+  Study Factor Type Term Accession Number: http://purl.bioontology.org/ontology/MESH/D013026
+  Study Factor Type Term Source REF: MESH
+- Study Factor Name: Dissection Condition
+  Study Factor Type: dissection
+  Study Factor Type Term Accession Number: http://www.ebi.ac.uk/efo/EFO_0003856
+  Study Factor Type Term Source REF: EFO
+STUDY PROTOCOLS:
+  '5mC total RNA methylation analysis::':
+    Study Protocol Components Name: ''
+    Study Protocol Components Type: ''
+    Study Protocol Components Type Term Accession Number: ''
+    Study Protocol Components Type Term Source REF: ''
+    Study Protocol Description: 'RNA methylation analysis was performed by Epigentek.
+      60 samples of Total mouse liver RNA was prepared by GeneLab and received by
+      Epigentek. The samples were subjected to bisulfite conversion, cDNA reverse
+      transcription, library preparation, Bioanalyzer QC, KAPA library quantification,
+      multiplex NGS on an Illumina HiSeq2500 and advanced data analysis. RNA methylation
+      analysis was performed by Epigentek. Sixty samples of Total mouse liver RNA
+      was prepared by GeneLab and received by Epigentek. The samples were subjected
+      to bisulfite conversion, cDNA reverse transcription, library preparation, Bioanalyzer
+      QC, KAPA library quantification, multiplex NGS on an Illumina HiSeq2500 and
+      advanced data analysis. Bisulfite Conversion: RNA samples were bisulfite treated
+      with the Methylamp RNA Bisulfite Conversion Kit (Epigentek Cat. # P-9003). 200
+      ng for the samples N1, N2, N4 through N12, and N37 through N60. 100 ng for the
+      samples N3 and N13 through N36. Library Preparation: -cDNA was synthesized from
+      bisulfite treated RNA and ligated with adaptors by using random probing method.
+      -Library amplification was performed using indexed primers and library cDNA
+      was purified with magnetic beads -Purified library cDNA was eluted in 12 uL
+      of water. Library QC: Library construction was verified on a Bioanalyzer and
+      KAPA Library Quantification. Sequencing: 5 nM of sample libraries were subjected
+      to next generation sequencing on an Illumina HiSeq 2500 in Single Read 50 nts
+      format.'
+    Study Protocol Name: 5mC total RNA methylation analysis
+    Study Protocol Parameters Name: ''
+    Study Protocol Parameters Name Term Accession Number: ''
+    Study Protocol Parameters Name Term Source REF: ''
+    Study Protocol Type: epitranscriptomics
+    Study Protocol Type Term Accession Number: ''
+    Study Protocol Type Term Source REF: ''
+    Study Protocol URI: ''
+    Study Protocol Version: ''
+  'DNA library construction::':
+    Study Protocol Components Name: ''
+    Study Protocol Components Type: ''
+    Study Protocol Components Type Term Accession Number: ''
+    Study Protocol Components Type Term Source REF: ''
+    Study Protocol Description: DNA sequencing library construction was performed
+      by UC Davis Genome Center. Aliquots of each DNA sample was bisulfite-converted
+      with the EZ DNA Methylation-Gold kit (Zymo Research). Sequencing libraries was
+      generated from the converted DNA sample with the EpiGnome Methyl-Seq kit (Epicentre).
+      The resulting libraries were QC-ed by bioanalyzer and quantified by fluorometric
+      Qubic measurements and RT-PCR.
+    Study Protocol Name: DNA library construction
+    Study Protocol Parameters Name: ''
+    Study Protocol Parameters Name Term Accession Number: ''
+    Study Protocol Parameters Name Term Source REF: ''
+    Study Protocol Type: library construction
+    Study Protocol Type Term Accession Number: ''
+    Study Protocol Type Term Source REF: ''
+    Study Protocol URI: ''
+    Study Protocol Version: ''
+  GeneLab RNAseq data processing protocol::Arabidopsis thaliana V1: &GeneLabRNAseqDataProcessingProtocol
+    Study Protocol Components Name: ''
+    Study Protocol Components Type: ''
+    Study Protocol Components Type Term Accession Number: ''
+    Study Protocol Components Type Term Source REF: ''
+    Study Protocol Description: 'Raw fastq files were assessed for % rRNA using HTStream
+      SeqScreener (version 1.0.0) and filtered using Trim Galore! (version 0.6.2).
+      Raw and trimmed fastq file quality was evaluated with FastQC (version 0.11.8),
+      and MultiQC (version 1.7) was used to generate MultiQC reports. Arabidopsis
+      thaliana STAR and RSEM references were built using STAR (version 2.7.1a) and
+      RSEM (version 1.3.1), respectively, Ensembl release 44, genome version TAIR10
+      (Arabidopsis_thaliana.TAIR10.dna.toplevel.fa) and the following gtf annotation
+      file: Arabidopsis_thaliana.TAIR10.44.gtf. Trimmed reads were aligned to the
+      Arabidopsis thaliana STAR reference with STAR (version 2.7.1a) and aligned reads
+      from 3 samples were assessed for strandedness using RSeQC Infer Experiment (version
+      4.0.0) then aligned reads from all samples were quantified using RSEM (version
+      1.3.1), with strandedness set to none. Quantification data was imported to R
+      (version 4.0.3) with tximport (version 1.18.0) and normalized with DESeq2 (version
+      1.30.0). Differential expression analysis was performed in R (version 4.0.3)
+      using DESeq2 (version 1.30.0); all groups were compared using the Wald test
+      and the likelihood ratio test was used to generate the F statistic p-value.
+      Gene annotations were assigned using the following Bioconductor and annotation
+      packages: STRINGdb (v2.2.0), PANTHER.db (v1.0.10), and org.At.tair.db (v3.12.0).'
+    Study Protocol Name: GeneLab RNAseq data processing protocol
+    Study Protocol Parameters Name:
+      - 'Merged Sequence data'
+      - 'rRNA Contamination'
+      - 'Read Depth'
+      - 'Merged Sequence Data/MultiQC Reports'
+      - 'trimmed sequence data'
+      - 'Trimmed Sequence Data/MultiQC Reports'
+      - 'Trimmed Sequence Data/Trimmed Reports'
+      - 'aligned sequence data'
+      - 'Aligned Sequence Data/Alignment Logs'
+      - 'Aligned Sequence Data/MultiQC Reports'
+      - 'RSeQC/MultiQC Reports'
+      - 'Raw Counts Data'
+      - 'Raw Counts Data/MultiQC Reports'
+      - 'Normalized Counts Data'
+      - 'differential expression analysis data transformation'
+      - 'ERCC Analyses'
+    Study Protocol Parameters Name Term Accession Number: ''
+    Study Protocol Parameters Name Term Source REF: ''
+    Study Protocol Type: data transformation
+    Study Protocol Type Term Accession Number: http://purl.obolibrary.org/obo/OBI_0200000
+    Study Protocol Type Term Source REF: OBI
+    Study Protocol URI: ''
+    Study Protocol Version: Arabidopsis thaliana V1
+  GeneLab RNAseq data processing protocol::Mus musculus V1: 
+    <<: *GeneLabRNAseqDataProcessingProtocol
+    Study Protocol Description: 'Raw fastq files were assessed for % rRNA using HTStream
+      SeqScreener (version 1.0.0) and filtered using Trim Galore! (version 0.6.2).
+      Raw and trimmed fastq file quality was evaluated with FastQC (version 0.11.8),
+      and MultiQC (version 1.7) was used to generate MultiQC reports. Mus musculus
+      STAR and RSEM references were built using STAR (version 2.7.1a) and RSEM (version
+      1.3.1), respectively, genome version mm10-GRCm38 (Mus_musculus.GRCm38.dna.toplevel.fa),
+      and the following gtf annotation file: Mus_musculus.GRCm38.96.gtf. Trimmed reads
+      were aligned to the Mus musculus STAR reference with STAR (version 2.7.1a) and
+      aligned reads were quantified using RSEM (version 1.3.1). Quantification data
+      was imported to R (version 3.6.0) with tximport (version 1.14.0) and normalized
+      with DESeq2 (version 1.26.0). Differential expression analysis was performed
+      in R (version 3.6.0) using DESeq2 (version 1.26.0); all groups were compared
+      using the Wald test and the likelihood ratio test was used to generate the F
+      statistic p-value. Gene annotations were assigned using the following Bioconductor
+      and annotation packages: STRINGdb, PANTHER.db, and org.Mm.eg.db.'
+    Study Protocol Version: Mus musculus V1
+  'RNA sequencing library construction::':
+    Study Protocol Components Name: ''
+    Study Protocol Components Type: ''
+    Study Protocol Components Type Term Accession Number: ''
+    Study Protocol Components Type Term Source REF: ''
+    Study Protocol Description: 'RNA sequencing library construction was performed
+      by UC Davis Genome Center using the Illumina TruSeq standard RNA library prep
+      kit after mRNA enrichment (poly-A specific). The libraries were QC-ed by bioanalyzer
+      and quantified by fluorometric Qubit measurements. '
+    Study Protocol Name: RNA sequencing library construction
+    Study Protocol Parameters Name: ''
+    Study Protocol Parameters Name Term Accession Number: ''
+    Study Protocol Parameters Name Term Source REF: ''
+    Study Protocol Type: library construction
+    Study Protocol Type Term Accession Number: ''
+    Study Protocol Type Term Source REF: ''
+    Study Protocol URI: ''
+    Study Protocol Version: ''
+  'TMT isobaric labeling::':
+    Study Protocol Components Name: ''
+    Study Protocol Components Type: ''
+    Study Protocol Components Type Term Accession Number: ''
+    Study Protocol Components Type Term Source REF: ''
+    Study Protocol Description: 'Samples were processed at the Stanford University
+      Mass Spectrometry (SUMS) omics core facility in two batches, the first batch
+      included spaceflight and ground control samples and the second batch included
+      basal and vivarium control samples.  In the first batch, the samples were divided
+      into two TMT 10-plex labeling groups. Group B consisted of ground control (GC)
+      samples 21, 22, 36, 37, 38, 39, 40, a pool of all NASA GC samples, a pool of
+      all NASA and CASIS (GLDS-47) GC samples, and a pool of all CASIS (GLDS-47) basal
+      (BA) samples. Group C consisted of spaceflight (FLT) samples 2, 3, 25, 26, 27,
+      28, 30, a pool of all NASA FLT samples, a pool of all NASA and CASIS (GLDS-47)
+      FLT samples, and a pool of all CASIS (GLDS-47) basal (BA) samples. This labeling
+      scheme enables comparison across NASA and CASIS specimen groups in the RR-1
+      study. CASIS FLT and GC samples were labeled separately as TMT 10-plex Group
+      A (GLDS-47).  In the second batch, the ten basal and vivarium control samples
+      were processed in one TMT 11-plex labeling group along with one pool of all
+      samples. TMT Isobaric label reagent lot number RE231321 (https://www.thermofisher.com/order/catalog/product/90110)  SUMS
+      protocol was followed: 50 ug were drawn from each samples defrosted on ice.
+      The remaining sample was immediately placed back in -80C. 25uL of 50mM ammonium
+      bicarbonate, pH 8.0 was added to each sample, followed by 1.5 uL of 500mM DTT,
+      incubated at 50C for 30 minutes and cooled to room temperature. 3 uL of 1M propionamide
+      was added to each sample and incubated at room temperature for 1hr. 75 uL of
+      50mM ammonium bicarbonate, 0.02% protease max was added to each sample followed
+      by 1.5 ug of trypsin/lysC (Promega) and overnight incubation at 37C.  10 uL
+      of 10% formic acid, 90% water was added to each sample to quench the digest.
+      The samples were incubated at 37C for 10 minutes, followed by centrifugation
+      at 10,000g for 5 minutes. Microspin C18 columns (NEST group, p/n SEM SS18V)
+      were equilibrated with acetonitrile followed by 2 times wash with 0.1% formic
+      acid/water and each sample was cleaned and concentrated independently per vendor
+      protocol. The eluant peptides were dried in a speed vac to <2 uL volume and
+      stored at 4C prior to TMT isobaric labeling. Each peptide pool was reconstituted
+      in 100 uL, 100mM HEPES, pH 8.0. The TMT isobaric labels were reconstituted in
+      40 uL absolute ethyl alcohol and 20 uL of each isobaric tag as described above
+      was added to the corresponding sample. The samples incubated at room temperature
+      for 1.5hr, followed by the addition of 5 uL hydroxylamine to quench the reaction.
+      50 uL of each isobaric-tagged peptide pool was drawn and pooled to a final volume
+      of 500 uL, 500 uL of 0.1% formic acid water was added to a final volume of 1mL.
+      This fraction (~250 ug total peptide) was purified on a Water Oasis HLB 3cc
+      C18 cartridge per vendor protocol and the final eluent dried to completion in
+      a speed vac. SCX offline fractionation was performed using a Protea SCX column
+      (p/n SP-155) and the provided buffers. In brief, the previously dried 10plex
+      peptide pool was dissolved in 150 uL reconstitution solution and loaded onto
+      the equilibrated SCX column (3 times) followed by 2 sequential washes. The elution
+      solution provided in the kit was diluted in series to 50mM, 100mM, 150mM, 200mM,
+      300mM and 400mM (stock) concentrations. The peptides were then eluted starting
+      with the 50mM salt concentration and collected in a new tube for the entire
+      series. 200 uL of 0.1% formic acid water was added to each SCX eluted fraction
+      and each was Microspin C18 purified as previously described. Each fraction was
+      reconstituted in 20 uL 0.2% formic acid, 2% acetonitrile, 97.8% water and injected
+      for liquid chromatography mass spectrometry analysis. '
+    Study Protocol Name: TMT isobaric labeling
+    Study Protocol Parameters Name: ''
+    Study Protocol Parameters Name Term Accession Number: ''
+    Study Protocol Parameters Name Term Source REF: ''
+    Study Protocol Type: labeling
+    Study Protocol Type Term Accession Number: ''
+    Study Protocol Type Term Source REF: ''
+    Study Protocol URI: ''
+    Study Protocol Version: ''
+  'animal and tissue sampling::':
+    Study Protocol Components Name: ''
+    Study Protocol Components Type: ''
+    Study Protocol Components Type Term Accession Number: ''
+    Study Protocol Components Type Term Source REF: ''
+    Study Protocol Description: 'The flight group mice were euthanized by ISS crew
+      with Euthasol injection followed by cervical dislocation. Liver was collected
+      after spleen upon euthanasia for mice M21 and M22, and was frozen in a pre-chilled
+      Mini Cold Bag (MCB) before transfer to the MELFI freezer (-80 C). For the rest
+      of the spaceflight mice, the carcasses were frozen in a pre-chilled Mini Cold
+      Bag (MCB) before transfer to the MELFI freezer (-80 C) and brought back to Earth
+      where disscetion was held. Ground control mice M31 and M32 followed the same
+      protocol of on-orbit dissected animals (M21 and M22) and the livers were collected
+      immediately followed by euthanasia. Rest of the ground control animals and all
+      the basal and vivarium animals in this dataset have been dissected postflight
+      per the protocol in the following.  Postflight dissection protocol: Mouse carcasses
+      were removed from -80 C storage and thawed at room temperature for 15-20 minutes.
+      Multiple tissues, including liver, were collected from each carcass. Total dissection
+      time for each carcass was no longer than 30 minutes since collection of the
+      first tissue.  Liver was preserved in RLT buffer or protein lysis buffer, homogenized
+      and snap frozen with liquid nitrogren.'
+    Study Protocol Name: animal and tissue sampling
+    Study Protocol Parameters Name: ''
+    Study Protocol Parameters Name Term Accession Number: ''
+    Study Protocol Parameters Name Term Source REF: ''
+    Study Protocol Type: sample collection
+    Study Protocol Type Term Accession Number: ''
+    Study Protocol Type Term Source REF: ''
+    Study Protocol URI: ''
+    Study Protocol Version: ''
+  'histology::':
+    Study Protocol Components Name: ''
+    Study Protocol Components Type: ''
+    Study Protocol Components Type Term Accession Number: ''
+    Study Protocol Components Type Term Source REF: ''
+    Study Protocol Description: "Histology on samples was performed by Triangulum\
+      \ Biopharma LLC (San Diego, CA) on archived tissues available from NASA Ames\
+      \ Life Sciences Data Archive (ALSDA). In brief, for each sample, one half was\
+      \ embedded in paraffin, while the second half was embed- ded in Optimal cutting\
+      \ temperature compound (OCT) for cryosectioning. Paraffin embedded samples were\
+      \ sec- tioned at 4 \u03BCm and stained with hematoxylin and eosin (H&E). OCT-embedded\
+      \ samples were cryosectioned at 5 \u03BCm and lipids stained with Oil Red O\
+      \ (ORO). Whole slide imaging was performed in bright field using a Pannoramic\
+      \ Scan from 3D Histech (a Perkin Elmer Company). Raw files were converted to\
+      \ .tiff and .jpg files using QuPath (https://qupath.github.io/). There are multiple\
+      \ sections per slide, one section from each animal. The order of animal IDs\
+      \ in the file names corresponds to the sections from top to bottom of each slide\
+      \ image."
+    Study Protocol Name: histology
+    Study Protocol Parameters Name: ''
+    Study Protocol Parameters Name Term Accession Number: ''
+    Study Protocol Parameters Name Term Source REF: ''
+    Study Protocol Type: histology
+    Study Protocol Type Term Accession Number: ''
+    Study Protocol Type Term Source REF: ''
+    Study Protocol URI: ''
+    Study Protocol Version: ''
+  'mass spectrometry::':
+    Study Protocol Components Name: ''
+    Study Protocol Components Type: ''
+    Study Protocol Components Type Term Accession Number: ''
+    Study Protocol Components Type Term Source REF: ''
+    Study Protocol Description: 'Samples were processed at the Stanford University
+      Mass Spectrometry (SUMS) omics core facility using the Thermo Orbitrap Fusion
+      MS. '
+    Study Protocol Name: mass spectrometry
+    Study Protocol Parameters Name: ''
+    Study Protocol Parameters Name Term Accession Number: ''
+    Study Protocol Parameters Name Term Source REF: ''
+    Study Protocol Type: mass spectrometry protocol
+    Study Protocol Type Term Accession Number: ''
+    Study Protocol Type Term Source REF: ''
+    Study Protocol URI: ''
+    Study Protocol Version: ''
+  'mouse habitation::':
+    Study Protocol Components Name: ''
+    Study Protocol Components Type: ''
+    Study Protocol Components Type Term Accession Number: ''
+    Study Protocol Components Type Term Source REF: ''
+    Study Protocol Description: 'A cohort of 16-week-old female C57BL/6J mice (Jackson
+      Lab) were flown to the ISS, housed in the Rodent Habitat and were subject to
+      microgravity for 37 days. Mice of simiar age, sex and strain were used for ground
+      controls housed in the identical hardware and matching ISS environmental conditions.
+      Additionally, mice from the same cohort were used as basal control and vivarium
+      control. Basal control mice were euthanized the day after launch as baseline
+      references. Vivarium mice were housed in the standard vivarium cages for the
+      same amount of time as spaceflight and ground control animals. '
+    Study Protocol Name: mouse habitation
+    Study Protocol Parameters Name: ''
+    Study Protocol Parameters Name Term Accession Number: ''
+    Study Protocol Parameters Name Term Source REF: ''
+    Study Protocol Type: Animal Husbandry
+    Study Protocol Type Term Accession Number: http://purl.bioontology.org/ontology/MESH/D000822
+    Study Protocol Type Term Source REF: MESH
+    Study Protocol URI: ''
+    Study Protocol Version: ''
+  'nucleic acid extraction::':
+    Study Protocol Components Name: ''
+    Study Protocol Components Type: ''
+    Study Protocol Components Type Term Accession Number: ''
+    Study Protocol Components Type Term Source REF: ''
+    Study Protocol Description: RNA and DNA were extracted usign the AllPrep DNA/RNA
+      Mini Kit (Qiagen, Valencia, CA). Briefly, homogenization buffer for DNA and
+      RNA purification was made by adding 1:100 volumes beta-mercaptoethanol to Buffer
+      RLT (Qiagen, Valenica, CA) and kept on ice until use. Approximately 30 mg of
+      tissue was isolated using a scalpel and immediately placed in 800 uL of the
+      Buffer RLT solution. Each sample was then homogenized for approximately 20 seconds
+      at 21,000 RPM using a Polytron PT1300D handheld homogenizer with a 5 mm standard
+      dispersing aggregate tip (Kinematica, Bohemia, NY). Homogenates were centrifuged
+      for 3 minutes at room temperature at 15,000 RPM to remove cell debris. The supernatant
+      from each sample was then used to isolate and purify DNA and RNA following the
+      manufacturer's protocol. RNA was eluted twice per sample in 30 uL H2O per elution.
+      Concentration and absorbance ratios for all RNA and DNA samples were measured
+      using the NanoDrop 2000 spectrophotometer (Thermo Fisher Scientific, Waltham,
+      MA). RNA quality was assessed using the Agilent 2100 Bioanalyzer with the Agilent
+      RNA 6000 Nano Kit or Agilent RNA 6000 Pico Kit (Agilent Technologies, Santa
+      Clara, CA).
+    Study Protocol Name: nucleic acid extraction
+    Study Protocol Parameters Name: ''
+    Study Protocol Parameters Name Term Accession Number: ''
+    Study Protocol Parameters Name Term Source REF: ''
+    Study Protocol Type: nucleic acid extraction
+    Study Protocol Type Term Accession Number: ''
+    Study Protocol Type Term Source REF: ''
+    Study Protocol URI: ''
+    Study Protocol Version: ''
+  'nucleic acid sequencing::':
+    Study Protocol Components Name: ''
+    Study Protocol Components Type: ''
+    Study Protocol Components Type Term Accession Number: ''
+    Study Protocol Components Type Term Source REF: ''
+    Study Protocol Description: The RNA library sequencing was performed on the Illumina
+      HiSeq 3000 platform, three high output HiSeq lanes with 50 bp single end reads
+      and index reads. 30 million reads per sample was requested. Performed by UC
+      Davis Genome Center.  The BS-sequencing was performed on the Illumina HiSeq
+      3000 at UC Davis Genome Center. Each library was sequenced on one HiSeq lane
+      by itself with paired end 100bp reads.
+    Study Protocol Name: nucleic acid sequencing
+    Study Protocol Parameters Name: ''
+    Study Protocol Parameters Name Term Accession Number: ''
+    Study Protocol Parameters Name Term Source REF: ''
+    Study Protocol Type: nucleic acid sequencing
+    Study Protocol Type Term Accession Number: ''
+    Study Protocol Type Term Source REF: ''
+    Study Protocol URI: ''
+    Study Protocol Version: ''
+  'protein extraction::':
+    Study Protocol Components Name: ''
+    Study Protocol Components Type: ''
+    Study Protocol Components Type Term Accession Number: ''
+    Study Protocol Components Type Term Source REF: ''
+    Study Protocol Description: For protein homogenization the urea based protein
+      lysis buffer consisted of 8 M urea, with 50 mM ammonium bicarbonate, at pH 8.5
+      in DNase- and RNase-free H2O and was custom ordered from Teknova, Hollister,
+      CA. This recipe was initially provided by Stanford University Mass Spectrometry
+      (SUMS). Protease inhibitors, 1:100 volumes of 0.1 M phenylmethanesulfonyl fluoride
+      solution in ethanol (Sigma-Aldrich, St. Louis, Missouri) and 1:100 volumes of
+      cOmplete EDTA-free tablets (Roche, Indianapolis, IN), were added to the lysis
+      buffer kept on ice. A piece of liver weighing between 20-30 mg was cut from
+      each liver sample and immediately added to 650 uL protein lysis buffer. Each
+      sample was homogenized for approximately 20 seconds at 21,000 RPM using a Polytron
+      PT1300D handheld homogenizer with a 5 mm standard dispersing aggregate tip (Kinematica,
+      Bohemia, NY). Homogenates were centrifuged for 15 minutes at 4 C and at 14,000
+      X g to remove cell debris. A 30 uL sample of each supernatant was kept on ice
+      for total protein concentration assay, and the rest of the supernatant was snap-frozen
+      with liquid nitrogen in aliquots. The Pierce BCA Protein Assay Kit (Thermo Fisher
+      Scientific, Waltham, MA) was used to measure the total protein concentration
+      of each protein sample.
+    Study Protocol Name: protein extraction
+    Study Protocol Parameters Name: ''
+    Study Protocol Parameters Name Term Accession Number: ''
+    Study Protocol Parameters Name Term Source REF: ''
+    Study Protocol Type: extraction
+    Study Protocol Type Term Accession Number: ''
+    Study Protocol Type Term Source REF: ''
+    Study Protocol URI: ''
+    Study Protocol Version: ''
+  'proteomics data transformation::':
+    Study Protocol Components Name: ''
+    Study Protocol Components Type: ''
+    Study Protocol Components Type Term Accession Number: ''
+    Study Protocol Components Type Term Source REF: ''
+    Study Protocol Description: 'Proteome Discoverer/ Byonic Peptide Database: Uniprot
+      mus musculus with isoforms. Raw files were converted into a .mzML file format
+      using ProteoWizard 3.0.10875. '
+    Study Protocol Name: proteomics data transformation
+    Study Protocol Parameters Name: ''
+    Study Protocol Parameters Name Term Accession Number: ''
+    Study Protocol Parameters Name Term Source REF: ''
+    Study Protocol Type: proteomics data transformation
+    Study Protocol Type Term Accession Number: ''
+    Study Protocol Type Term Source REF: ''
+    Study Protocol URI: ''
+    Study Protocol Version: ''
+STUDY PUBLICATIONS:
+- Comment[Study Publication Link]: https://www.ncbi.nlm.nih.gov/pubmed/30044882
+  Study PubMed ID: '30044882'
+  Study Publication Author List: Beheshti A, Ray S, Fogle H, Berrios D, Costes SV
+  Study Publication DOI: 10.1371/journal.pone.0199621
+  Study Publication Status: published
+  Study Publication Status Term Accession Number: http://www.ebi.ac.uk/efo/EFO_0001796
+  Study Publication Status Term Source REF: EFO
+  Study Publication Title: A microRNA signature and TGF-beta1 response were identified
+    as the key master regulators for spaceflight response
+- Comment[Study Publication Link]: https://www.nature.com/articles/s41598-020-58898-4
+  Study PubMed ID: '32047211'
+  Study Publication Author List: Choi SY, Saravia-Butler A, Shirazi-Fard Y, Levenson-Gower
+    D, Stodieck LS, Cadena SM, Beege J, Solis S, Ronca A, Globus RK
+  Study Publication DOI: 10.1038/s41598-020-58898-4
+  Study Publication Status: published
+  Study Publication Status Term Accession Number: http://www.ebi.ac.uk/efo/EFO_0001796
+  Study Publication Status Term Source REF: EFO
+  Study Publication Title: Validation of a New Rodent Experimental System to Investigate
+    Consequences of Long Duration Space Habitation
+- Comment[Study Publication Link]: https://link.springer.com/epdf/10.1186/s40168-019-0724-4?author_access_token=mvrG1BOUNh2aUxpJx6TRcG_BpE1tBhCbnbw3BuzI2RNK3vCUxIAXibhHTHleD_fsaIAPEa3HfCMIMin4q7o1PFYqlGpkvHG68VjlQrFS8ULvgl-6yXu0VqVCZH2iFm3EcTm5G0g6_0TsP0Sc9lFs3w%3D%3D
+  Study PubMed ID: '31399081'
+  Study Publication Author List: Jiang P, Green SJ, Chlipala GE, Turek FW, Vitaterna
+    MH
+  Study Publication DOI: 10.1186/s40168-019-0724-4
+  Study Publication Status: published
+  Study Publication Status Term Accession Number: http://www.ebi.ac.uk/efo/EFO_0001796
+  Study Publication Status Term Source REF: EFO
+  Study Publication Title: Reproducible changes in the gut microbiome suggest a shift
+    in microbial and host metabolism during spaceflight
+- Comment[Study Publication Link]: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5736159/
+  Study PubMed ID: ''
+  Study Publication Author List: Rettig TA, Ward C, Pecaut MJ, Chapes SK
+  Study Publication DOI: ''
+  Study Publication Status: published
+  Study Publication Status Term Accession Number: http://www.ebi.ac.uk/efo/EFO_0001796
+  Study Publication Status Term Source REF: EFO
+  Study Publication Title: Validation of methods to assess the immunoglobulin gene
+    repertoire in tissues obtained from mice on the international space station
