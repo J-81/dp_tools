@@ -179,6 +179,12 @@ class BulkRNASeqMetadataComponent(TemplateComponent):
 
         return self._contrasts
 
+    @functools.cached_property
+    def organism(self):
+        # retrieve from runsheet
+        [organism] = pd.read_csv(self.runsheet.path)["organism"].unique()
+        return organism
+
     def fetch_isa_files(self) -> Set[Path]:
         """Unzips the ISA archive in a temporary directory and reports files
 
