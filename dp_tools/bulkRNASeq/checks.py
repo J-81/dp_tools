@@ -74,34 +74,37 @@ def identify_outliers(
 
     return outliers
 
+
 # TODO: typedict for thresholds
 def identify_values_past_thresholds(thresholds: dict, value: float) -> List[FlagCode]:
-    """ Return empty list if no codes are raised """
-    VALID_THRESHOLD_TYPES = {"lower","upper"}
+    """Return empty list if no codes are raised"""
+    VALID_THRESHOLD_TYPES = {"lower", "upper"}
     new_codes = list()
     for threshold in thresholds:
-        assert threshold.get('type') in VALID_THRESHOLD_TYPES, f"Invalid threshold type configured: valid options {VALID_THRESHOLD_TYPES} got {threshold.get('type')}"
-        if threshold.get('type') == "lower":
+        assert (
+            threshold.get("type") in VALID_THRESHOLD_TYPES
+        ), f"Invalid threshold type configured: valid options {VALID_THRESHOLD_TYPES} got {threshold.get('type')}"
+        if threshold.get("type") == "lower":
             if value < threshold["value"]:
                 new_codes.append(threshold["code"])
-        elif threshold.get('type') == "upper":
+        elif threshold.get("type") == "upper":
             if value > threshold["value"]:
                 new_codes.append(threshold["code"])
     return new_codes
 
 
-
 def convert_nan_to_zero(input: Dict[str, Union[float, int]]) -> Dict:
-    """ Convert any Nan into zero"""
+    """Convert any Nan into zero"""
     output = dict()
     for key, value in input.items():
         output[key] = value if not math.isnan(value) else 0
     return output
 
+
 ## Functions that use the following syntax to merge values from general stats:
 # "stat1 + stat2" should search and sum the stats
 def stat_string_to_value(stat_string: str, mqcData: ModuleLevelMQC) -> float:
-    """ "stat1 + stat2" should search and sum the stats """
+    """ "stat1 + stat2" should search and sum the stats"""
     sum = float(0)
     direct_keys = stat_string.split(" + ")
     for direct_key in direct_keys:
@@ -117,12 +120,12 @@ def nonNull(df: pd.DataFrame) -> bool:
 
 
 def nonNegative(df: pd.DataFrame) -> bool:
-    """ This ignores null values, use nonNull to validate that condition """
+    """This ignores null values, use nonNull to validate that condition"""
     return ((df >= 0) | (df.isnull())).all(axis=None)
 
 
 def onlyAllowedValues(df: pd.DataFrame, allowed_values: list) -> bool:
-    """ This ignores null values, use nonNull to validate that condition """
+    """This ignores null values, use nonNull to validate that condition"""
     return ((df.isin(allowed_values)) | (df.isnull())).all(axis=None)
 
 
@@ -229,7 +232,7 @@ class COMPONENT_RAWREADS_0001(Check):
     }
 
     def validate_func(self: Check, component) -> Flag:
-        """ Checks fastq lines for expected header content
+        """Checks fastq lines for expected header content
         Note: Example of header from GLDS-194
         |  ``@J00113:376:HMJMYBBXX:3:1101:26666:1244 1:N:0:NCGCTCGA\n``
         This also assumes the fastq file does NOT split sequence or quality lines
@@ -353,6 +356,9 @@ class COMPONENT_GENOMEALIGNMENTS_0001(Check):
                 {"code": FlagCode.YELLOW1, "type": "lower", "value": 70},
                 {"code": FlagCode.RED1, "type": "lower", "value": 50},
             ],
+            # DISCUSS: this seems an odd check. Recommending modification
+            # Maybe combine with other metrics for more meaningful assessment
+            # Ref: https://github.com/J-81/JDO_V-V/blob/b3e0f4734eedabaa7ec99119073cf4e263f0963d/CHECKS.md?plain=1#L192
             "multimapped_toomany_percent + multimapped_percent": [
                 {"code": FlagCode.YELLOW1, "type": "lower", "value": 30},
                 {"code": FlagCode.RED1, "type": "lower", "value": 15},
@@ -386,7 +392,9 @@ class COMPONENT_GENOMEALIGNMENTS_0001(Check):
         stdout, stderr = process.communicate()
         return stderr.decode()
 
-    def validate_func(self: Check, component: GenomeAlignments, mqc_name: str = "STAR") -> Flag:
+    def validate_func(
+        self: Check, component: GenomeAlignments, mqc_name: str = "STAR"
+    ) -> Flag:
         codes = {FlagCode.GREEN}
         missing_files = list()
         flagged_values = dict()
@@ -398,23 +406,20 @@ class COMPONENT_GENOMEALIGNMENTS_0001(Check):
                 missing_files.append(expected_file)
 
             # check with samtools (as per "samtoolsQuickCheck")
-            #if constraints.get("samtoolsQuickCheck"):
+            # if constraints.get("samtoolsQuickCheck"):
             #    self._samtoolsQuickCheck(getattr(component, expected_file).path)
 
-        for key, thresholds in self.config["general_stats_metrics"].items(): # type: ignore
+        for key, thresholds in self.config["general_stats_metrics"].items():  # type: ignore
             # key may be a direct general stats key or a stat_string
             # check if direct key
             value = component.mqcData[mqc_name].get(key, None)
-            if not value :
+            if not value:
                 # check if valid stat_string
                 value = stat_string_to_value(key, component.mqcData[mqc_name])
             
             # check against thresholds
             # yellow level outliers
-            if new_codes := identify_values_past_thresholds(
-                thresholds,
-                value
-            ):
+            if new_codes := identify_values_past_thresholds(thresholds, value):
                 # add highest severity new code
                 codes.add(max(new_codes))
                 flagged_values[key] = value
@@ -423,9 +428,9 @@ class COMPONENT_GENOMEALIGNMENTS_0001(Check):
             check=self,
             codes=codes,
             message_args={
-            "missing_files":missing_files,
-            "threshold_config":self.config["general_stats_metrics"],
-            "flagged_values":flagged_values
+                "missing_files": missing_files,
+                "threshold_config": self.config["general_stats_metrics"],
+                "flagged_values": flagged_values,
             },
         )
 
@@ -982,7 +987,7 @@ class DATASET_DIFFERENTIALGENEEXPRESSION_0001(Check):
     }
 
     def _contrasts_check(self, dataset: TemplateDataset, componentTarget: str) -> str:
-        """ Performs contrasts specific subcheck 
+        """Performs contrasts specific subcheck
         
         Returns empty string if no issues are found
         Returns an error message (string) otherwise
@@ -1138,8 +1143,8 @@ class DATASET_DIFFERENTIALGENEEXPRESSION_0001(Check):
     def _viz_output_table_check(
         self, dataset: TemplateDataset, componentTarget: str
     ) -> str:
-        """ Since this effectively extends the differential expression table, 
-        run that first and build on the error message as needed """
+        """Since this effectively extends the differential expression table,
+        run that first and build on the error message as needed"""
         err_msg = self._differential_expression_table_check(
             dataset, componentTarget, componentDataAsset="visualizationTableCSV"
         )
