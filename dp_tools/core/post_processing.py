@@ -18,6 +18,11 @@ from schema import Schema, Or, And
 import yaml
 import pandas as pd
 
+# constants
+_PARAMETER_VALUE_COL_PREFIX = "Parameter Value["
+_PARAMETER_VALUE_COL_SUFFIX = "]"
+_PROTOCOL_REP_COL_PREFIX = "Protocol REF"
+
 
 def load_config(
     config: Union[tuple[str, str], Path], subsection: str = "ISA Meta"
@@ -132,8 +137,6 @@ def generate_new_column_dicts(
     :return: Two dictionaries, the first with dataframe ready new data assets and the second denoting the intended order of those new columns
     :rtype: tuple[dict, dict]
     """
-    _DATA_ASSET_COL_PREFIX = "Parameter Value["
-    _DATA_ASSET_COL_SUFFIX = "]"
     # e.g.
     # {"Parameter Value[New1/subnew1]" : {"sample1":"asset",...}}
 
