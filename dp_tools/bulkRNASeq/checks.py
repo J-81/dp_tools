@@ -379,7 +379,7 @@ class COMPONENT_GENOMEALIGNMENTS_0001(Check):
     }
 
     def UNIMPLEMENTED_samtoolsQuickCheck(self, bamFile: Path) -> str:
-        """ 
+        """
         This function is deprecated until getting subprocesses to use conda envs is properly implemented
         Returns error message if an issue is found, empty string otherwise
         """
@@ -416,7 +416,7 @@ class COMPONENT_GENOMEALIGNMENTS_0001(Check):
             if not value:
                 # check if valid stat_string
                 value = stat_string_to_value(key, component.mqcData[mqc_name])
-            
+
             # check against thresholds
             # yellow level outliers
             if new_codes := identify_values_past_thresholds(thresholds, value):
@@ -538,7 +538,7 @@ class DATASET_RAWREADS_0001(Check):
                     ).mqcData["FastQC"]["General_Stats"][metric]
                     for s in dataset.samples.values()
                 }
-                
+
                 # ensure any NaN convert to zero as implied by MultiQC
                 sampleToMetric = convert_nan_to_zero(sampleToMetric)
 
@@ -991,7 +991,7 @@ class DATASET_DIFFERENTIALGENEEXPRESSION_0001(Check):
 
     def _contrasts_check(self, dataset: TemplateDataset, componentTarget: str) -> str:
         """Performs contrasts specific subcheck
-        
+
         Returns empty string if no issues are found
         Returns an error message (string) otherwise
         """
