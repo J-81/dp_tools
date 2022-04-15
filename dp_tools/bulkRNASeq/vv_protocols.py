@@ -21,6 +21,7 @@ from dp_tools.bulkRNASeq.checks import (
     COMPONENT_GENOMEALIGNMENTS_0001,
     COMPONENT_RAWREADS_0001,
     COMPONENT_TRIMREADS_0001,
+    DATASET_DIFFERENTIALGENEEXPRESSION_0001,
     DATASET_GENECOUNTS_0001,
     DATASET_GENOMEALIGNMENTS_0001,
     DATASET_METADATA_0001,
@@ -69,7 +70,7 @@ class BulkRNASeq_VVProtocol(VVProtocol):
     dataset_trimReads_0001 = DATASET_TRIMREADS_0001()
     dataset_genomeAlignments_0001 = DATASET_GENOMEALIGNMENTS_0001()
     dataset_rseqcAnalysis_0001 = DATASET_RSEQCANALYSIS_0001()
-    dataset_geneCounts = DATASET_GENECOUNTS_0001()
+    dataset_differentialGeneExpressions_0001 = DATASET_DIFFERENTIALGENEEXPRESSION_0001()
 
     # sample level
     sample_rawReads_0001 = SAMPLE_RAWREADS_0001()
@@ -115,7 +116,11 @@ class BulkRNASeq_VVProtocol(VVProtocol):
             )
         if STAGE.GeneCounted in self._stages_loaded:
             flags[self.dataset].append(
-                self.run_check(self.dataset_geneCounts, dataset=self.dataset)
+                self.run_check(self.dataset_geneCounts_0001, dataset=self.dataset)
+            )
+        if STAGE.DGE in self._stages_loaded:
+            flags[self.dataset].append(
+                self.run_check(self.dataset_differentialGeneExpressions_0001, dataset=self.dataset)
             )
         return flags
 
