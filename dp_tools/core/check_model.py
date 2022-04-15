@@ -230,7 +230,7 @@ class Flag:
             if not self.message:
                 self.message = ""
             else:
-                self.message += ":::"
+                self.message += f":::NEXTCODE:{code.name}:::"
             # retrieve proto message
             pre_format_msg = self.check.flag_desc[code]
 
