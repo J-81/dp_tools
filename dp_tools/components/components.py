@@ -55,6 +55,7 @@ class TrimReadsComponent(TemplateComponent):
 
 @dataclass(eq=False)
 class BulkRNASeqMetadataComponent(TemplateComponent):
+    # TODO: refactor runsheet dataframe init
 
     base: BaseComponent = field(repr=False)
     runsheet: Union[DataFile, None] = field(default=None)
