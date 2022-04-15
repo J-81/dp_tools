@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field
+import functools
 import itertools
 from pathlib import Path
 import tempfile
