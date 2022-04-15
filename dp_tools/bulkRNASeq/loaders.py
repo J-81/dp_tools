@@ -41,6 +41,7 @@ from dp_tools.bulkRNASeq.locaters import find_data_asset_path
 from dp_tools.components import RawReadsComponent, BulkRNASeqMetadataComponent
 
 
+@functools.cache
 def load_config(config: Union[str, Path]) -> dict:
     if isinstance(config, str):
         conf_data_assets = yaml.safe_load(
