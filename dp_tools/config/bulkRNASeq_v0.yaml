@@ -28,6 +28,12 @@ ISA Meta:
   # this is prepended to all file names in the curation assay table
   Global file prefix: "{datasystem}_rna_seq_"
 
+  # configuration related to updating investigation file
+  # each must refer to a STUDY PROCESS in the 'ISA_investigation.yaml' file
+  # LEADCAP_organism should be the studied organisms scientific name with a leading cap
+  Post Processing Add Study Protocol: 
+    GeneLab RNAseq data processing protocol::{LEADCAP_organism} V1
+
 data assets:
   runsheet:
     processed location: 
