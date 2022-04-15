@@ -267,6 +267,43 @@ class BulkRNASeqMetadataComponent(TemplateComponent):
         return tables
 
 
+    # TODO: Implement to allow loading any of the following:
+    # runsheet alone
+    # ISA alone (with automatic conversion to runsheet)
+    # both ISA and runsheet (with validation?)
+    '''
+    @staticmethod
+    def isa_to_runsheet_df(isaArchive: Path, config: dict) -> pd.DataFrame:
+        """Convert an ISA archive into a runsheet using a configuration file"""
+        print(1)
+
+    def derive_isa_from_runsheet(self, config: dict, disk_path: Path = None):
+        """Performs conversion from ISA archive to
+        a runsheet data asset and attaches it to the component
+
+        :param config: A configuration file directing the data to extract from ISA archive
+        :type config: dict
+        :param disk_path: A local path to save the runsheet to, defaults to None which stores the runsheet as an in-memory file
+        :type disk_path: Path, optional
+        """
+        match self.isaArchive:
+            case None:
+                raise ValueError(
+                    "Cannot convert: No ISA Archive attached to this component"
+                )
+            case Path():
+                # perform conversion with static method
+                df_runsheet = self.isa_to_runsheet(
+                    isaArchive=self.ISAarchive.path, config=config
+                )
+
+                # save runsheet
+
+                # attach to component
+                self.runsheet    
+    '''
+
+
 @dataclass(eq=False)
 class GenomeAlignments(TemplateComponent):
 
