@@ -944,7 +944,7 @@ class DATASET_DIFFERENTIALGENEEXPRESSION_0001(Check):
             "Sig.1_": {"allowedValues": [False, True], "nonNull": False},
             "Sig.05_": {"allowedValues": [False, True], "nonNull": False},
             "Log2_P.value_": {"nonNegative": False, "nonNull": False},
-            "Updown_": {"allowedValues": [1, -1], "nonNull": True},
+            "Updown_": {"allowedValues": [1, 0, -1], "nonNull": True},
         },
         # these prefix as follows {prefix}{FactorGroup}
         "group_factorwise_columns_prefixes": {
