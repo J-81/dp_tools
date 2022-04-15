@@ -44,12 +44,15 @@ from dp_tools.components import RawReadsComponent, BulkRNASeqMetadataComponent
 @functools.cache
 def load_config(config: Union[str, Path]) -> dict:
     if isinstance(config, str):
+        resolved_config_path = os.path.join(
+            "..", "config", f"bulkRNASeq_v{config}.yaml"
+        )
+        log.info(f"Loading config (relative to package): {resolved_config_path}")
         conf_data_assets = yaml.safe_load(
-            pkg_resources.resource_string(
-                __name__, os.path.join("..", "config", f"bulkRNASeq_v{config}.yaml")
-            )
+            pkg_resources.resource_string(__name__, resolved_config_path)
         )["data assets"]
     elif isinstance(config, Path):
+        log.info(f"Loading config (direct path): {config}")
         conf_data_assets = yaml.safe_load(config.open())["data assets"]
 
     # validate with schema
@@ -71,6 +74,8 @@ def load_config(config: Union[str, Path]) -> dict:
             config_schema.validate(conf_data_asset)
         except SchemaMissingKeyError as e:
             raise ValueError(f"Data asset config: '{key}' failed validation") from e
+
+    log.debug(f"Final config loaded: {conf_data_assets}")
 
     return conf_data_assets
 
