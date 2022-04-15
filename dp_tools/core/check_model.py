@@ -393,7 +393,11 @@ class VVProtocol(abc.ABC):
         # convert list to sets
         conf_validation["skip checks"] = set(conf_validation["skip checks"])
         # convert only if this is a list
-        conf_validation["stage"] = set(conf_validation["stage"]) if isinstance(conf_validation["stage"], list) else conf_validation["stage"]
+        conf_validation["stage"] = (
+            set(conf_validation["stage"])
+            if isinstance(conf_validation["stage"], list)
+            else conf_validation["stage"]
+        )
 
         self.config = conf_validation
         return conf_validation
