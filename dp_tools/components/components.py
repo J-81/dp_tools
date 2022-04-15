@@ -134,8 +134,8 @@ class BulkRNASeqMetadataComponent(TemplateComponent):
         - determine all permutations of existing factor groups
         - format with header for each permutation in format: {factorGroup1}v{factorGroup2}
         - format with two rows for each column in format:
-          - r1: factorGroup1.replace(' & ','...').replace(' ','.').replace('(',"").replace(')',"")
-          - r2: factorGroup1.replace(' & ','...').replace(' ','.').replace('(',"").replace(')',"")
+          - r1: factorGroup1.replace(' & ','...').replace(' ','.').replace(',','.').replace('(',"").replace(')',"")
+          - r2: factorGroup1.replace(' & ','...').replace(' ','.').replace(',','.').replace('(',"").replace(')',"")
         """
         if getattr(self, "_contrasts_cached", None) == None:  # uncached
             # determine all permutations of existing factor groups
@@ -151,6 +151,7 @@ class BulkRNASeqMetadataComponent(TemplateComponent):
                 permute[0]
                 .replace(" & ", "...")
                 .replace(" ", ".")
+                .replace(",", ".")
                 .replace("(", "")
                 .replace(")", "")
                 for permute in permutations
@@ -159,6 +160,7 @@ class BulkRNASeqMetadataComponent(TemplateComponent):
                 permute[1]
                 .replace(" & ", "...")
                 .replace(" ", ".")
+                .replace(",", ".")
                 .replace("(", "")
                 .replace(")", "")
                 for permute in permutations
