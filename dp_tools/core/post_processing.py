@@ -49,6 +49,7 @@ def load_config(
                 {"measurement": str, "technology": str}
             ],
             "Global file prefix": str,
+            "Post Processing Add Study Protocol": str,
         }
     )
 
