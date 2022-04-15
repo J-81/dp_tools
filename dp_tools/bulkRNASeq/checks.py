@@ -910,6 +910,8 @@ class DATASET_GENECOUNTS_0001(Check):
         )
 
 
+# TODO: Flag message gets really messy, convert into a json like string for easier reading/parsing
+# TODO: Check for extra unexpected columns, these should give clues to names differences
 class DATASET_DIFFERENTIALGENEEXPRESSION_0001(Check):
     config = {
         "expected_tables": [
@@ -919,6 +921,7 @@ class DATASET_DIFFERENTIALGENEEXPRESSION_0001(Check):
         ],
         "dge_table_expected_annotation_columns": [
             "ENSEMBL",
+            # OR("ENSEMBL","TAIR"), # BUG:  Need to implement different key check for Arobidobsis
             "SYMBOL",
             "GENENAME",
             "REFSEQ",
