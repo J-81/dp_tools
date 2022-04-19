@@ -29,64 +29,96 @@ class Locator():
 """
 
 
-def find_data_asset_path(
-    data_asset_config: dict,
-    root_dir: Path,
-    search: bool = True,
-    return_parsed_config_as_metadata: bool = True,
-    glob: bool = False,
-    **template_kwargs,
-):  # type: ignore
-    """Find a data asset
-    **template_kwargs include substrings like sample and dataset.
-    This can be 'overloaded' but will throw an exception if a requested template value
-    is not provided.
+@dataclass
+class Locator:
 
-    Uses the data assets yaml format
-    """
+    root_dir: Path
+    data_asset_config: dict
+    validation_enabled: bool = field(default=True)
+    return_parsed_config_as_metadata: bool = field(default=True)
 
-    @cache
-    def _rIterDir(p: Path) -> Set[Path]:
-        files = {f for f in p.rglob("*")}
-        log.debug(f"Caching {len(files)} files found in {p}")
-        return files
+    def find_data_asset_path(
+        self,
+        config_key: str,
+        search: bool = True,
+        glob: bool = False,
+        **template_kwargs,
+    ):  # type: ignore
+        """Find a data asset
+        **template_kwargs include substrings like sample and dataset.
+        This can be 'overloaded' but will throw an exception if a requested template value
+        is not provided.
 
-    # format search pattern
-    search_pattern = Path(root_dir) / Path(
-        os.path.join(*data_asset_config["processed location"]).format(**template_kwargs)
-    )
-    if not search:
-        return search_pattern
+        Uses the data assets yaml format
+        """
+        this_data_asset_config = self.data_asset_config[config_key]
 
-    # get list of a files to check
-    targets = _rIterDir(root_dir)
+        @cache
+        def _rIterDir(p: Path) -> Set[Path]:
+            files = {f for f in p.rglob("*")}
+            log.debug(f"Caching {len(files)} files found in {p}")
+            return files
 
-    # track if data asset is found
-    found: Union[Path, bool]
-
-    if glob:
-        # glob search and check if one unique match found
-        glob_found = fnmatch.filter([str(p) for p in targets], search_pattern)
-        if len(glob_found) == 1:
-            found = Path(glob_found[0])  # make sure to convert back into path
-        elif len(glob_found) > 1:
-            raise ValueError(
-                f"Glob Pattern: {search_pattern} matched multiple targets: {glob_found}. One and only one must match."
+        # format search pattern
+        search_pattern = Path(self.root_dir) / Path(
+            os.path.join(*this_data_asset_config["processed location"]).format(
+                **template_kwargs
             )
-        else:
-            found = False
-    else:
-        found = search_pattern if search_pattern in targets else False
+        )
 
-    # return found or raise Exception
-    if found != False:
-        if return_parsed_config_as_metadata:
-            return {
-                "metadata": data_asset_config
-                | {"template_kwargs": {**template_kwargs}},
-                "path": found,
-            }
+        # check a number of conditions to see if validation is disabled
+        if any(
+            [
+                (not search),  # method invocation control
+                (
+                    not this_data_asset_config.get("validate exists", True)
+                ),  # specific data asset config
+                (not self.validation_enabled),  # global control, runtime initialized
+            ]
+        ):
+            log.debug(f"Skipping validation as configured for {search_pattern}")
+            if self.return_parsed_config_as_metadata:
+                return {
+                    "metadata": this_data_asset_config
+                    | {"template_kwargs": {**template_kwargs}},
+                    "path": search_pattern,
+                }
+            else:
+                return search_pattern
+
+        # get list of a files to check
+        targets = _rIterDir(self.root_dir)
+
+        # track if data asset is found
+        found: Union[Path, bool]
+
+        if glob:
+            # glob search and check if one unique match found
+            glob_found = fnmatch.filter([str(p) for p in targets], search_pattern)  # type: ignore
+            if len(glob_found) == 1:
+                found = Path(
+                    glob_found[0]  # type: ignore
+                )  # make sure to convert back into path
+            elif len(glob_found) > 1:
+                raise ValueError(
+                    f"Glob Pattern: {search_pattern} matched multiple targets: {glob_found}. One and only one must match."
+                )
+            else:
+                found = False
         else:
-            return found
-    else:
-        raise FileNotFoundError(f"Did not find {search_pattern} anywhere in {root_dir}")
+            found = search_pattern if search_pattern in targets else False
+
+        # return found or raise Exception
+        if found != False:
+            if self.return_parsed_config_as_metadata:
+                return {
+                    "metadata": this_data_asset_config
+                    | {"template_kwargs": {**template_kwargs}},
+                    "path": found,
+                }
+            else:
+                return found
+        else:
+            raise FileNotFoundError(
+                f"Did not find {search_pattern} anywhere in {self.root_dir}"
+            )
