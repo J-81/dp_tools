@@ -26,4 +26,10 @@ setup(
     install_requires=[],
     setup_requires=[],
     tests_require=[],
+    entry_points={
+        "console_scripts": [
+            "dpt-get-isa-archive=dp_tools.glds_api.isa:main",
+            "dpt-isa-to-runsheet=dp_tools.scripts.convert:main",
+        ]
+    },
 )
