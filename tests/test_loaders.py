@@ -278,3 +278,24 @@ def test_bulkRNASeq_STAGE04_single(caplog, glds48_test_dir, glds48_sample_names)
     dataset = ds.datasets["GLDS-48__BulkRNASeq"]
 
     assert list(dataset.samples.keys()) == glds48_sample_names
+
+def test_bulkRNASeq_STAGE04_single_global_no_validation(caplog, glds48_test_dir, glds48_sample_names):
+    ds = load_BulkRNASeq_STAGE_04(*load_BulkRNASeq_STAGE_03(
+        *load_BulkRNASeq_STAGE_0201(
+            *load_BulkRNASeq_STAGE_02(
+                *load_BulkRNASeq_STAGE_01(
+                    *load_BulkRNASeq_STAGE_00(
+                        glds48_test_dir, config="0", dataSystem_name="GLDS-48", stack=True, validation_enabled=False
+                    ),
+                    config="0", stack=True, validation_enabled=False
+                ),
+                config="0", stack=True, validation_enabled=False
+            ),
+            config="0", stack=True, validation_enabled=False
+        ), config="0", stack=True, validation_enabled=False
+    ), config="0", validation_enabled=False)
+
+    # pull dataset
+    dataset = ds.datasets["GLDS-48__BulkRNASeq"]
+
+    assert list(dataset.samples.keys()) == glds48_sample_names
