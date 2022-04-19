@@ -40,7 +40,7 @@ from dp_tools.core.entity_model import (
 from dp_tools.bulkRNASeq.entity import BulkRNASeqDataset, BulkRNASeqSample
 from dp_tools.bulkRNASeq.locaters import Locator
 from dp_tools.components import RawReadsComponent, BulkRNASeqMetadataComponent
-
+from dp_tools.core.configuration import load_full_config
 
 @functools.cache
 def load_config(config: Union[str, Path]) -> dict:
@@ -99,27 +99,6 @@ def load_config(config: Union[str, Path]) -> dict:
     log.debug(f"Final config loaded: {conf_data_assets}")
 
     return conf_data_assets
-
-
-def load_full_config(config: Union[str, Path]) -> dict:
-    if isinstance(config, str):
-        resolved_config_path = os.path.join(
-            "..", "config", f"bulkRNASeq_v{config}.yaml"
-        )
-        log.info(f"Loading full config (relative to package): {resolved_config_path}")
-        conf_full = yaml.safe_load(
-            pkg_resources.resource_string(__name__, resolved_config_path)
-        )
-    elif isinstance(config, Path):
-        log.info(f"Loading config (direct path): {config}")
-        conf_full = yaml.safe_load(config.open())
-
-    # validate with schema
-    # config_schema = Schema()
-
-    log.debug(f"Final config loaded: {conf_full}")
-
-    return conf_full
 
 
 # TODO: Attach/associate data assets config with dataset/datasystem
@@ -765,11 +744,12 @@ def load_BulkRNASeq_STAGE_03(
                     sample=sample_name,
                 ),
             ),
-            statDir=DataDir(check_exists=validation_enabled,
+            statDir=DataDir(
+                check_exists=validation_enabled,
                 **loc.find_data_asset_path(
                     config_key="sample counts stats directory",
                     sample=sample_name,
-                )
+                ),
             ),
         )
         sample.attach_component(geneCounts, attr="geneCounts")
