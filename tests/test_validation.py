@@ -293,6 +293,7 @@ def test_bulkRNASeq_STAGE04_validation_paired(glds194_dataSystem_STAGE04):
     df = vv_protocol.flags_to_df()
 
     assert len(df) == 98
+    assert df["flag_code"].max() < 90
 
 
 def test_bulkRNASeq_STAGE04_validation_single(glds48_dataSystem_STAGE04):
@@ -305,3 +306,4 @@ def test_bulkRNASeq_STAGE04_validation_single(glds48_dataSystem_STAGE04):
     df = vv_protocol.flags_to_df()
 
     assert len(df) == 77
+    assert df["flag_code"].max() < 90
