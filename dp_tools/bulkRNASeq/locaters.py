@@ -67,15 +67,19 @@ class Locator:
         )
 
         # check a number of conditions to see if validation is disabled
-        if any(
-            [
-                (not search),  # method invocation control
-                (
-                    not this_data_asset_config.get("validate exists", True)
-                ),  # specific data asset config
-                (not self.validation_enabled),  # global control, runtime initialized
-            ]
-        ):
+        if (
+            any(
+                [
+                    (
+                        not this_data_asset_config.get("validate exists", True)
+                    ),  # specific data asset config
+                    (
+                        not self.validation_enabled
+                    ),  # global control, runtime initialized
+                ]
+            )
+            and not search
+        ):  # runtime controlled, overrides other config
             log.debug(f"Skipping validation as configured for {search_pattern}")
             if self.return_parsed_config_as_metadata:
                 return {
