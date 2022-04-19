@@ -191,6 +191,15 @@ class BulkRNASeqMetadataComponent(TemplateComponent):
         [organism] = pd.read_csv(self.runsheet.path)["organism"].unique()
         return organism
 
+    @staticmethod
+    def fetch_isa_files_external(ISAarchive: Path) -> set[Path]:
+        temp_dir = tempfile.mkdtemp()
+        log.debug(f"Extracting ISA Archive to temp directory: {temp_dir}")
+        with zipfile.ZipFile(ISAarchive, "r") as zip_ref:
+            zip_ref.extractall(temp_dir)
+
+        return {f for f in Path(temp_dir).rglob("*") if f.is_file()}
+
     def fetch_isa_files(self) -> Set[Path]:
         """Unzips the ISA archive in a temporary directory and reports files
 
@@ -202,21 +211,8 @@ class BulkRNASeqMetadataComponent(TemplateComponent):
             return self._isa_files
 
         assert self.ISAarchive, "No ISA archive data asset attached."
-
-        temp_dir = tempfile.mkdtemp()
-        log.debug(f"Extracting ISA Archive to temp directory: {temp_dir}")
-        with zipfile.ZipFile(self.ISAarchive.path, "r") as zip_ref:
-            zip_ref.extractall(temp_dir)
-
-        self._isa_files = {f for f in Path(temp_dir).rglob("*") if f.is_file()}
+        self._isa_files = self.fetch_isa_files_external(self.ISAarchive.path)
         return self._isa_files
-
-    def get_assays(self) -> Dict[str, Path]:
-        """From the ISA Investigation file, extract assays mapped to tables
-
-        :return: A mapping of assay name to table paths
-        :rtype: Dict[str, Path]
-        """
 
     @property
     def isa_investigation_subtables(self) -> dict[str, pd.DataFrame]:
@@ -271,7 +267,6 @@ class BulkRNASeqMetadataComponent(TemplateComponent):
 
         self._isa_investigation_subtables = tables
         return tables
-
 
     # TODO: Implement to allow loading any of the following:
     # runsheet alone
