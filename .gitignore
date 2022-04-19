@@ -3,3 +3,4 @@
 .env
 settings.json
 TODO.md
+build/*
