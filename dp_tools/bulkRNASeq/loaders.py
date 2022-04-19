@@ -636,11 +636,12 @@ def load_BulkRNASeq_STAGE_0201(
                 description="RSeQC Analysis based on reads aligned to genome in context of gene annotations"
             ),
             geneBodyCoverageMultiQCDirZIP=genebody_coverage_MQC,
-            geneBodyCoverageOut=DataDir(check_exists=validation_enabled,
+            geneBodyCoverageOut=DataDir(
+                check_exists=validation_enabled,
                 **loc.find_data_asset_path(
                     config_key="genebody coverage out",
                     sample=sample_name,
-                )
+                ),
             ),
             inferExperimentMultiQCDirZIP=infer_experiment_MQC,
             inferExperimentOut=DataFile(
@@ -661,17 +662,19 @@ def load_BulkRNASeq_STAGE_0201(
         )
         # add pair end specific datafile
         if metadata.paired_end:
-            rSeQCAnalysis.innerDistanceMultiQCDirZIP = DataDir(check_exists=validation_enabled,
+            rSeQCAnalysis.innerDistanceMultiQCDirZIP = DataDir(
+                check_exists=validation_enabled,
                 **loc.find_data_asset_path(
                     config_key="inner distance MultiQC directory",
                     sample=sample_name,
-                )
+                ),
             )
-            rSeQCAnalysis.innerDistanceOut = DataDir(check_exists=validation_enabled,
+            rSeQCAnalysis.innerDistanceOut = DataDir(
+                check_exists=validation_enabled,
                 **loc.find_data_asset_path(
                     config_key="inner distance out",
                     sample=sample_name,
-                )
+                ),
             )
         sample.attach_component(rSeQCAnalysis, attr="rSeQCAnalysis")
 
