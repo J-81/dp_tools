@@ -58,6 +58,22 @@ def load_config(
     return sub_configuration
 
 
+def load_ISA_investigation_config() -> dict:
+    configuration = yaml.safe_load(
+        pkg_resources.resource_string(
+            __name__,
+            os.path.join("..", "config", f"ISA_investigation.yaml"),
+        )
+    )
+
+    log.debug("Loaded the ISA investigation config")
+
+    # TODO: validate with schema
+    # config_schema.validate(sub_configuration)
+
+    return configuration
+
+
 def unmangle_columns(columns: list[str]) -> list[str]:
     """Utility function to convert "X.1...X.N" into "X...X", reversing the normal column name mangle
     ref: https://pandas.pydata.org/docs/reference/api/pandas.read_csv.html
@@ -169,7 +185,9 @@ def generate_new_column_dicts(
             )
             else resource_config["subcategory"]
         )
-        header = _DATA_ASSET_COL_PREFIX + category_string + _DATA_ASSET_COL_SUFFIX
+        header = (
+            _PARAMETER_VALUE_COL_PREFIX + category_string + _PARAMETER_VALUE_COL_SUFFIX
+        )
         associated_samples = (
             [asset.metadata["template_kwargs"].get("sample", None)]
             if asset.metadata["template_kwargs"].get("sample", None)
@@ -247,6 +265,63 @@ def extend_assay_dataframe(
     return df_extended
 
 
+def sync_investigation_and_assay_dataframes(
+    df_investigation, column_contents, column_order, configuration
+):
+    configuration_ISA_investigation = load_ISA_investigation_config()
+
+    print(1)
+
+
+def get_parameter_values(
+    df: pd.DataFrame, drop_ontology: bool = True
+) -> dict[str, list]:
+    """Extract the value from parameter value columns.
+    Such that 'Parameter Value[someVal]' gives 'someVal'
+    These are associated with the first preceeding
+    "Protocol REF" column (which is likely mangled by pandas)
+
+    :param df: A dataframe representing an assay or sample table from the ISA spec
+    :type df: pd.DataFrame
+    :param drop_ontology: In legacy data,
+    :type drop_ontology: pd.DataFrame
+    :return: A mapping of parameter values to their protocol
+    :rtype: dict[str, list]
+    """
+
+    def _extract_value(s: str) -> str:
+        return s.removeprefix(_PARAMETER_VALUE_COL_PREFIX).removesuffix(
+            _PARAMETER_VALUE_COL_SUFFIX
+        )
+
+    result = defaultdict(list)
+
+    for col in df.columns:
+        if col.startswith(_PROTOCOL_REP_COL_PREFIX):
+            [cur_protocol] = df[col].unique()
+        if col.startswith(_PARAMETER_VALUE_COL_PREFIX):
+            result[cur_protocol].append(_extract_value(col))
+
+    return result
+
+
+def add_protocol(
+    df_investigation: pd.DataFrame,
+    protocol_key: str,
+    df_assay: Optional[pd.DataFrame] = None,
+):
+    # retrieve study protocol
+    conf_isa = load_ISA_investigation_config()
+    target_protocol = conf_isa["STUDY PROTOCOLS"][protocol_key]
+
+    # get parameter values
+    if df_assay is not None:
+        params_assay = get_parameter_values(df_assay, drop_ontology=True)
+        # compare against target protocol expected 'Study Protocol Parameters Name' list
+        print(1)
+    print(1)
+
+
 def setup_output_target(
     output_file: Optional[str], original_path: Path, output_dir: str = "updated_tables"
 ) -> Path:
@@ -260,12 +335,12 @@ def setup_output_target(
     :param output_dir: Specifies the name of the directory for the output file, defaults to "updated_tables"
     :type output_dir: str, optional
     :return: The output target location.
-    :rtype: _type_
+    :rtype: Path
     """
     # create default output file name if not provided
 
-    final_output_target = (
-        output_file # type: ignore
+    final_output_target: Path = (
+        Path(output_file)
         if output_file is not None
         else Path(output_dir) / original_path.name
     )
@@ -273,12 +348,16 @@ def setup_output_target(
 
     return final_output_target
 
+
 def update_curation_tables(
     dataset: TemplateDataset,
     config: Union[tuple[str, str], Path],
     output_file: str = None,
+    investigation_table: bool = False,
 ):
-    """Updates existing curation investigation and assay tables with processed data
+    """Updates existing curation investigation and assay tables with processed data.
+    This function extends the existing assay table with processing data assets.
+    The naming and order of the new columns is configured in the data assets config section.
 
     :param dataset: A loaded dataset object
     :type dataset: TemplateDataset
@@ -286,9 +365,12 @@ def update_curation_tables(
     :type config: Union[tuple[str, str], Path]
     :param output_file: The name of the updated output tables, defaults to using the same name as the original tables
     :type output_file: str, optional
+    :param investigation_table: Controls the updating and syncing of the investigation table, defaults to False
+    :type investigation_table: bool, optional
     """
     configuration = load_config(config)
 
+    # first extend the assay table
     # load assay dataframe
     assay_path = get_assay_table_path(dataset, configuration)
     df_assay = pd.read_csv(assay_path, sep="\t").set_index(keys="Sample Name")
@@ -296,7 +378,27 @@ def update_curation_tables(
     column_contents, column_order = generate_new_column_dicts(dataset, configuration)
 
     df_assay_extended = extend_assay_dataframe(df_assay, column_contents, column_order)
-    #df_investigation_extended = extend_investigation_dataframe(df_assay, column_contents, column_order)
+
+    # now modify investigation table accordingly
+    assay_path = get_assay_table_path(dataset, configuration)
+
+    if investigation_table:
+        raise NotImplementedError(
+            "Updating Investigation table is not currently implemented."
+        )
+        df_investigation = dataset.metadata.isa_investigation_subtables[
+            "STUDY PROTOCOLS"
+        ]
+        resolved_protocol_key = configuration[
+            "Post Processing Add Study Protocol"
+        ].format(LEADCAP_organism=dataset.metadata.organism.capitalize())
+        df_investigation = add_protocol(
+            df_investigation, protocol_key=resolved_protocol_key, df_assay=df_assay
+        )
+        df_investigation_extended = sync_investigation_and_assay_dataframes(
+            df_investigation, column_contents, column_order, configuration
+        )
+        # NOT Implemented: write_investigation_table()
 
     final_output_target = setup_output_target(output_file, original_path=assay_path)
 
