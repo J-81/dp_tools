@@ -163,17 +163,19 @@ def load_BulkRNASeq_STAGE_00(
         BulkRNASeqMetadataComponent(
             base=BaseComponent(description="Metadata in a runsheet csv file"),
             runsheet=DataFile(
+                check_exists=validation_enabled,
                 **loc.find_data_asset_path(
                     config_key="runsheet",
                     dataset=dataSystem_name,
-                )
+                ),
             ),
             ISAarchive=DataFile(
+                check_exists=validation_enabled,
                 **loc.find_data_asset_path(
                     config_key="ISA Archive",
                     glob=True,
                     dataset=dataSystem_name,
-                )
+                ),
             ),
         ),
         attr="metadata",
@@ -184,10 +186,11 @@ def load_BulkRNASeq_STAGE_00(
 
     # create shared sample datafiles
     datf_readsMQC = DataFile(
+        check_exists=validation_enabled,
         **loc.find_data_asset_path(
             config_key="raw MultiQC directory ZIP",
             dataset=dataSystem_name,
-        )
+        ),
     )
 
     # create samples
@@ -197,45 +200,51 @@ def load_BulkRNASeq_STAGE_00(
             raw_fwd_reads = RawReadsComponent(
                 base=BaseComponent(description="Raw Forward Reads"),
                 fastqGZ=DataFile(
+                    check_exists=validation_enabled,
                     **loc.find_data_asset_path(
                         config_key="raw forward reads fastq GZ",
                         sample=sample_name,
-                    )
+                    ),
                 ),
                 fastQCmultiQCDirZIP=datf_readsMQC,
                 fastqcReportHTML=DataFile(
+                    check_exists=validation_enabled,
                     **loc.find_data_asset_path(
                         config_key="raw forward reads fastQC HTML",
                         sample=sample_name,
-                    )
+                    ),
                 ),
                 fastqcReportZIP=DataFile(
+                    check_exists=validation_enabled,
                     **loc.find_data_asset_path(
                         config_key="raw forward reads fastQC ZIP",
                         sample=sample_name,
-                    )
+                    ),
                 ),
             )
             raw_rev_reads = RawReadsComponent(
                 base=BaseComponent(description="Raw Reverse Reads"),
                 fastqGZ=DataFile(
+                    check_exists=validation_enabled,
                     **loc.find_data_asset_path(
                         config_key="raw reverse reads fastq GZ",
                         sample=sample_name,
-                    )
+                    ),
                 ),
                 fastQCmultiQCDirZIP=datf_readsMQC,
                 fastqcReportHTML=DataFile(
+                    check_exists=validation_enabled,
                     **loc.find_data_asset_path(
                         config_key="raw reverse reads fastQC HTML",
                         sample=sample_name,
-                    )
+                    ),
                 ),
                 fastqcReportZIP=DataFile(
+                    check_exists=validation_enabled,
                     **loc.find_data_asset_path(
                         config_key="raw reverse reads fastQC ZIP",
                         sample=sample_name,
-                    )
+                    ),
                 ),
             )
             log.debug(f"Attaching components to {sample.name}")
@@ -245,23 +254,26 @@ def load_BulkRNASeq_STAGE_00(
             raw_reads = RawReadsComponent(
                 base=BaseComponent(description="Raw Reads"),
                 fastqGZ=DataFile(
+                    check_exists=validation_enabled,
                     **loc.find_data_asset_path(
                         config_key="raw reads fastq GZ",
                         sample=sample_name,
-                    )
+                    ),
                 ),
                 fastQCmultiQCDirZIP=datf_readsMQC,
                 fastqcReportHTML=DataFile(
+                    check_exists=validation_enabled,
                     **loc.find_data_asset_path(
                         config_key="raw reads fastQC HTML",
                         sample=sample_name,
-                    )
+                    ),
                 ),
                 fastqcReportZIP=DataFile(
+                    check_exists=validation_enabled,
                     **loc.find_data_asset_path(
                         config_key="raw reads fastQC ZIP",
                         sample=sample_name,
-                    )
+                    ),
                 ),
             )
             log.debug(f"Attaching components to {sample.name}")
@@ -313,7 +325,7 @@ def load_BulkRNASeq_STAGE_01(
     # dataSystem.dataset.attach_component(
     #     BulkRNASeqMetadataComponent(
     #         base=BaseComponent(description="Metadata in a runsheet csv file"),
-    #         runsheet=DataFile(runsheet.find(datasystem_name=dataSystem_name)),
+    #         runsheet=DataFile(check_exists=validation_enabled,runsheet.find(datasystem_name=dataSystem_name)),
     #     ),
     #     attr="metadata",
     # )
@@ -324,12 +336,13 @@ def load_BulkRNASeq_STAGE_01(
 
     # create shared sample datafiles
     datf_readsMQC = DataFile(
+        check_exists=validation_enabled,
         **loc.find_data_asset_path(
             config_key="trimmed fastQC MultiQC directory ZIP",
-        )
+        ),
     )
     """ Archived data asset
-    datf_trimmingMQC = DataFile(
+    datf_trimmingMQC = DataFile(check_exists=validation_enabled,
         **loc.find_data_asset_path(config_key = "trimming MultiQC directory ZIP"],
         )
     )
@@ -341,59 +354,67 @@ def load_BulkRNASeq_STAGE_01(
             trim_fwd_reads = TrimReadsComponent(
                 base=BaseComponent(description="Trimmed Forward Reads"),
                 fastqGZ=DataFile(
+                    check_exists=validation_enabled,
                     **loc.find_data_asset_path(
                         config_key="trimmed forward reads fastq GZ",
                         sample=sample_name,
-                    )
+                    ),
                 ),
                 fastQCmultiQCDirZIP=datf_readsMQC,
                 # Archived data asset trimmingMultiQCDirZIP=datf_trimmingMQC,
                 fastqcReportHTML=DataFile(
+                    check_exists=validation_enabled,
                     **loc.find_data_asset_path(
                         config_key="trimmed forward reads fastQC HTML",
                         sample=sample_name,
-                    )
+                    ),
                 ),
                 fastqcReportZIP=DataFile(
+                    check_exists=validation_enabled,
                     **loc.find_data_asset_path(
                         config_key="trimmed forward reads fastQC ZIP",
                         sample=sample_name,
-                    )
+                    ),
                 ),
                 trimmingReportTXT=DataFile(
+                    check_exists=validation_enabled,
                     **loc.find_data_asset_path(
                         config_key="forward reads trimming report",
                         sample=sample_name,
-                    )
+                    ),
                 ),
             )
             trim_rev_reads = TrimReadsComponent(
                 base=BaseComponent(description="Trimmed Reverse Reads"),
                 fastqGZ=DataFile(
+                    check_exists=validation_enabled,
                     **loc.find_data_asset_path(
                         config_key="trimmed reverse reads fastq GZ",
                         sample=sample_name,
-                    )
+                    ),
                 ),
                 fastQCmultiQCDirZIP=datf_readsMQC,
                 # Archived data asset trimmingMultiQCDirZIP=datf_trimmingMQC,
                 fastqcReportHTML=DataFile(
+                    check_exists=validation_enabled,
                     **loc.find_data_asset_path(
                         config_key="trimmed reverse reads fastQC HTML",
                         sample=sample_name,
-                    )
+                    ),
                 ),
                 fastqcReportZIP=DataFile(
+                    check_exists=validation_enabled,
                     **loc.find_data_asset_path(
                         config_key="trimmed reverse reads fastQC ZIP",
                         sample=sample_name,
-                    )
+                    ),
                 ),
                 trimmingReportTXT=DataFile(
+                    check_exists=validation_enabled,
                     **loc.find_data_asset_path(
                         config_key="reverse reads trimming report",
                         sample=sample_name,
-                    )
+                    ),
                 ),
             )
             sample.attach_component(trim_fwd_reads, attr="trimForwardReads")
@@ -402,30 +423,34 @@ def load_BulkRNASeq_STAGE_01(
             trim_reads = TrimReadsComponent(
                 base=BaseComponent(description="Trimmed Reads"),
                 fastqGZ=DataFile(
+                    check_exists=validation_enabled,
                     **loc.find_data_asset_path(
                         config_key="trimmed reads fastq GZ",
                         sample=sample_name,
-                    )
+                    ),
                 ),
                 fastQCmultiQCDirZIP=datf_readsMQC,
                 # Archived data asset trimmingMultiQCDirZIP=datf_trimmingMQC,
                 fastqcReportHTML=DataFile(
+                    check_exists=validation_enabled,
                     **loc.find_data_asset_path(
                         config_key="trimmed reads fastQC HTML",
                         sample=sample_name,
-                    )
+                    ),
                 ),
                 fastqcReportZIP=DataFile(
+                    check_exists=validation_enabled,
                     **loc.find_data_asset_path(
                         config_key="trimmed reads fastQC ZIP",
                         sample=sample_name,
-                    )
+                    ),
                 ),
                 trimmingReportTXT=DataFile(
+                    check_exists=validation_enabled,
                     **loc.find_data_asset_path(
                         config_key="reads trimming report",
                         sample=sample_name,
-                    )
+                    ),
                 ),
             )
             sample.attach_component(trim_reads, attr="trimReads")
@@ -471,9 +496,10 @@ def load_BulkRNASeq_STAGE_02(
 
     # create shared sample datafiles
     datf_alignMQC = DataFile(
+        check_exists=validation_enabled,
         **loc.find_data_asset_path(
             config_key="aligned MultiQC directory ZIP",
-        )
+        ),
     )
 
     # update samples
@@ -482,52 +508,60 @@ def load_BulkRNASeq_STAGE_02(
         genomeAlignments = GenomeAlignments(
             base=BaseComponent(description="Genome alignments"),
             alignedToTranscriptomeBam=DataFile(
+                check_exists=validation_enabled,
                 **loc.find_data_asset_path(
                     config_key="aligned ToTranscriptome Bam",
                     sample=sample_name,
-                )
+                ),
             ),
             alignedSortedByCoordBam=DataFile(
+                check_exists=validation_enabled,
                 **loc.find_data_asset_path(
                     config_key="aligned SortedByCoord Bam",
                     sample=sample_name,
-                )
+                ),
             ),
             alignedSortedByCoordResortedBam=DataFile(
+                check_exists=validation_enabled,
                 **loc.find_data_asset_path(
                     config_key="aligned SortedByCoord ResortedBam",
                     sample=sample_name,
-                )
+                ),
             ),
             alignedSortedByCoordResortedBamIndex=DataFile(
+                check_exists=validation_enabled,
                 **loc.find_data_asset_path(
                     config_key="aligned SortedByCoord ResortedBamIndex",
                     sample=sample_name,
-                )
+                ),
             ),
             logFinal=DataFile(
+                check_exists=validation_enabled,
                 **loc.find_data_asset_path(
                     config_key="aligned log Final",
                     sample=sample_name,
-                )
+                ),
             ),
             logProgress=DataFile(
+                check_exists=validation_enabled,
                 **loc.find_data_asset_path(
                     config_key="aligned log Progress",
                     sample=sample_name,
-                )
+                ),
             ),
             logFull=DataFile(
+                check_exists=validation_enabled,
                 **loc.find_data_asset_path(
                     config_key="aligned log Full",
                     sample=sample_name,
-                )
+                ),
             ),
             sjTab=DataFile(
+                check_exists=validation_enabled,
                 **loc.find_data_asset_path(
                     config_key="aligned sjTab",
                     sample=sample_name,
-                )
+                ),
             ),
             multiQCDirZIP=datf_alignMQC,
         )
@@ -575,20 +609,23 @@ def load_BulkRNASeq_STAGE_0201(
 
     # create shared sample datafiles
     genebody_coverage_MQC = DataFile(
+        check_exists=validation_enabled,
         **loc.find_data_asset_path(
             config_key="genebody coverage MultiQC directory ZIP",
-        )
+        ),
     )
     infer_experiment_MQC = DataFile(
+        check_exists=validation_enabled,
         **loc.find_data_asset_path(
             config_key="infer experiment MultiQC directory ZIP",
-        )
+        ),
     )
     # idMQC moved to metadata controlled block
     read_distribution_MQC = DataFile(
+        check_exists=validation_enabled,
         **loc.find_data_asset_path(
             config_key="read distribution MultiQC directory ZIP",
-        )
+        ),
     )
 
     # update samples
@@ -599,7 +636,7 @@ def load_BulkRNASeq_STAGE_0201(
                 description="RSeQC Analysis based on reads aligned to genome in context of gene annotations"
             ),
             geneBodyCoverageMultiQCDirZIP=genebody_coverage_MQC,
-            geneBodyCoverageOut=DataDir(
+            geneBodyCoverageOut=DataDir(check_exists=validation_enabled,
                 **loc.find_data_asset_path(
                     config_key="genebody coverage out",
                     sample=sample_name,
@@ -607,28 +644,30 @@ def load_BulkRNASeq_STAGE_0201(
             ),
             inferExperimentMultiQCDirZIP=infer_experiment_MQC,
             inferExperimentOut=DataFile(
+                check_exists=validation_enabled,
                 **loc.find_data_asset_path(
                     config_key="infer experiment out",
                     sample=sample_name,
-                )
+                ),
             ),
             readDistributionMultiQCDirZIP=read_distribution_MQC,
             readDistributionOut=DataFile(
+                check_exists=validation_enabled,
                 **loc.find_data_asset_path(
                     config_key="read distribution out",
                     sample=sample_name,
-                )
+                ),
             ),
         )
         # add pair end specific datafile
         if metadata.paired_end:
-            rSeQCAnalysis.innerDistanceMultiQCDirZIP = DataDir(
+            rSeQCAnalysis.innerDistanceMultiQCDirZIP = DataDir(check_exists=validation_enabled,
                 **loc.find_data_asset_path(
                     config_key="inner distance MultiQC directory",
                     sample=sample_name,
                 )
             )
-            rSeQCAnalysis.innerDistanceOut = DataDir(
+            rSeQCAnalysis.innerDistanceOut = DataDir(check_exists=validation_enabled,
                 **loc.find_data_asset_path(
                     config_key="inner distance out",
                     sample=sample_name,
@@ -678,9 +717,10 @@ def load_BulkRNASeq_STAGE_03(
 
     # create shared sample datafiles
     countsMQC = DataFile(
+        check_exists=validation_enabled,
         **loc.find_data_asset_path(
             config_key="RSEM counts MultiQC directory ZIP",
-        )
+        ),
     )
 
     # update dataset
@@ -689,14 +729,16 @@ def load_BulkRNASeq_STAGE_03(
             description="Gene counts at a dataset level from RSEM and DESeq2"
         ),
         numNonZero=DataFile(
+            check_exists=validation_enabled,
             **loc.find_data_asset_path(
                 config_key="number non-zero count genes table",
-            )
+            ),
         ),
         unnormalizedCounts=DataFile(
+            check_exists=validation_enabled,
             **loc.find_data_asset_path(
                 config_key="unnormalized counts table",
-            )
+            ),
         ),
     )
 
@@ -707,18 +749,20 @@ def load_BulkRNASeq_STAGE_03(
             base=BaseComponent(description="Gene counts for the sample"),
             multiQCDirZIP=countsMQC,
             genesResults=DataFile(
+                check_exists=validation_enabled,
                 **loc.find_data_asset_path(
                     config_key="sample gene counts table",
                     sample=sample_name,
-                )
+                ),
             ),
             isoformsResults=DataFile(
+                check_exists=validation_enabled,
                 **loc.find_data_asset_path(
                     config_key="sample isoform counts table",
                     sample=sample_name,
-                )
+                ),
             ),
-            statDir=DataDir(
+            statDir=DataDir(check_exists=validation_enabled,
                 **loc.find_data_asset_path(
                     config_key="sample counts stats directory",
                     sample=sample_name,
@@ -774,19 +818,22 @@ def load_BulkRNASeq_STAGE_04(
     dataset.attach_component(
         NormalizedGeneCounts(
             base=BaseComponent(description="Normalized counts from Deseq2"),
-            # erccNormalizedCountsCSV=DataFile(enc.find()), moved to ERCC block
+            # erccNormalizedCountsCSV=DataFile(check_exists=validation_enabled,enc.find()), moved to ERCC block
             normalizedCountsCSV=DataFile(
-                **loc.find_data_asset_path(config_key="DESeq2 normalized counts table")
+                check_exists=validation_enabled,
+                **loc.find_data_asset_path(config_key="DESeq2 normalized counts table"),
             ),
             sampleTableCSV=DataFile(
+                check_exists=validation_enabled,
                 **loc.find_data_asset_path(
                     config_key="sample table",
-                )
+                ),
             ),
             unnormalizedCountsCSV=DataFile(
+                check_exists=validation_enabled,
                 **loc.find_data_asset_path(
                     config_key="DESeq2 unnormalized counts table",
-                )
+                ),
             ),
         ),
         attr="normalizedGeneCounts",
@@ -795,24 +842,28 @@ def load_BulkRNASeq_STAGE_04(
         DifferentialGeneExpression(
             base=BaseComponent(description="Normalized counts from Deseq2"),
             contrastsCSV=DataFile(
+                check_exists=validation_enabled,
                 **loc.find_data_asset_path(
                     config_key="DESeq2 contrasts table",
-                )
+                ),
             ),
             annotatedTableCSV=DataFile(
+                check_exists=validation_enabled,
                 **loc.find_data_asset_path(
                     config_key="DESeq2 annotated DGE table",
-                )
+                ),
             ),
             visualizationTableCSV=DataFile(
+                check_exists=validation_enabled,
                 **loc.find_data_asset_path(
                     config_key="DESeq2 annotated DGE extended for viz table",
-                )
+                ),
             ),
             visualizationPCATableCSV=DataFile(
+                check_exists=validation_enabled,
                 **loc.find_data_asset_path(
                     config_key="DESeq2 viz PCA table",
-                )
+                ),
             ),
         ),
         attr="differentialGeneExpression",
@@ -822,33 +873,38 @@ def load_BulkRNASeq_STAGE_04(
             DifferentialGeneExpression(
                 base=BaseComponent(description="Normalized counts from Deseq2"),
                 contrastsCSV=DataFile(
+                    check_exists=validation_enabled,
                     **loc.find_data_asset_path(
                         config_key="ERCC normalized DESeq2 contrasts table",
-                    )
+                    ),
                 ),
                 annotatedTableCSV=DataFile(
+                    check_exists=validation_enabled,
                     **loc.find_data_asset_path(
                         config_key="ERCC normalized DESeq2 annotated DGE table",
-                    )
+                    ),
                 ),
                 visualizationTableCSV=DataFile(
+                    check_exists=validation_enabled,
                     **loc.find_data_asset_path(
                         config_key="ERCC normalized DESeq2 annotated DGE extended for viz table",
-                    )
+                    ),
                 ),
                 visualizationPCATableCSV=DataFile(
+                    check_exists=validation_enabled,
                     **loc.find_data_asset_path(
                         config_key="ERCC normalized DESeq2 viz PCA table",
-                    )
+                    ),
                 ),
             ),
             attr="differentialGeneExpressionERCC",
         )
         dataset.normalizedGeneCounts.erccNormalizedCountsCSV = (
             DataFile(
+                check_exists=validation_enabled,
                 **loc.find_data_asset_path(
                     config_key="ERCC normalized DESeq2 normalized counts table",
-                )
+                ),
             ),
         )
 
