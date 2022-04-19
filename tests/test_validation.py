@@ -292,7 +292,7 @@ def test_bulkRNASeq_STAGE04_validation_paired(glds194_dataSystem_STAGE04):
     vv_protocol.validate_all()
     df = vv_protocol.flags_to_df()
 
-    assert len(df) == 97
+    assert len(df) == 98
 
 
 def test_bulkRNASeq_STAGE04_validation_single(glds48_dataSystem_STAGE04):
@@ -304,4 +304,4 @@ def test_bulkRNASeq_STAGE04_validation_single(glds48_dataSystem_STAGE04):
     vv_protocol.validate_all()
     df = vv_protocol.flags_to_df()
 
-    assert len(df) == 76
+    assert len(df) == 77
