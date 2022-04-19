@@ -20,11 +20,16 @@ def isa_investigation_subtables(ISAarchive: Path) -> dict[str, pd.DataFrame]:
     table_lines: List[list] = list()
     key: str = None  # type: ignore
 
-    [i_file] = (
-        f
-        for f in BulkRNASeqMetadataComponent.fetch_isa_files_external(ISAarchive)
-        if f.name.startswith("i_")
-    )
+    try:
+        [i_file] = (
+            f
+            for f in BulkRNASeqMetadataComponent.fetch_isa_files_external(ISAarchive)
+            if f.name.startswith("i_")
+        )
+    except ValueError:
+        raise FileNotFoundError(
+            f"Could not find an i_* file inside: {ISAarchive.name}, is this an ISA archive?"
+        )
     with open(i_file, "r") as f:
         for line in [l.rstrip() for l in f.readlines()]:
             # search for header
