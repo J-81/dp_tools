@@ -38,7 +38,7 @@ from dp_tools.core.entity_model import (
 )
 
 from dp_tools.bulkRNASeq.entity import BulkRNASeqDataset, BulkRNASeqSample
-from dp_tools.bulkRNASeq.locaters import find_data_asset_path
+from dp_tools.bulkRNASeq.locaters import Locator
 from dp_tools.components import RawReadsComponent, BulkRNASeqMetadataComponent
 
 
@@ -101,12 +101,34 @@ def load_config(config: Union[str, Path]) -> dict:
     return conf_data_assets
 
 
+def load_full_config(config: Union[str, Path]) -> dict:
+    if isinstance(config, str):
+        resolved_config_path = os.path.join(
+            "..", "config", f"bulkRNASeq_v{config}.yaml"
+        )
+        log.info(f"Loading full config (relative to package): {resolved_config_path}")
+        conf_full = yaml.safe_load(
+            pkg_resources.resource_string(__name__, resolved_config_path)
+        )
+    elif isinstance(config, Path):
+        log.info(f"Loading config (direct path): {config}")
+        conf_full = yaml.safe_load(config.open())
+
+    # validate with schema
+    # config_schema = Schema()
+
+    log.debug(f"Final config loaded: {conf_full}")
+
+    return conf_full
+
+
 # TODO: Attach/associate data assets config with dataset/datasystem
 def load_BulkRNASeq_STAGE_00(
     root_path: Path,
     config: Union[str, Path] = "Latest",
     dataSystem_name: str = None,
     stack: bool = False,
+    validation_enabled: bool = True,
 ):
     """config is either an string version referring to a packaged config file or a path to a local config file."""
     # ensure root path exists!
@@ -124,7 +146,16 @@ def load_BulkRNASeq_STAGE_00(
     conf_data_assets = load_config(config)
 
     # create dataset
-    dataset = BulkRNASeqDataset(base=BaseDataset(name=dataSystem_name))
+    dataset = BulkRNASeqDataset(
+        base=BaseDataset(name=dataSystem_name, config=load_full_config(config))
+    )
+
+    # create locator
+    loc = Locator(
+        root_dir=root_path,
+        data_asset_config=conf_data_assets,
+        validation_enabled=validation_enabled,
+    )
 
     dataSystem.attach_dataset(dataset)
     # attach dataset components
@@ -132,16 +163,14 @@ def load_BulkRNASeq_STAGE_00(
         BulkRNASeqMetadataComponent(
             base=BaseComponent(description="Metadata in a runsheet csv file"),
             runsheet=DataFile(
-                **find_data_asset_path(
-                    root_dir=root_path,
-                    data_asset_config=conf_data_assets["runsheet"],
+                **loc.find_data_asset_path(
+                    config_key="runsheet",
                     dataset=dataSystem_name,
                 )
             ),
             ISAarchive=DataFile(
-                **find_data_asset_path(
-                    root_dir=root_path,
-                    data_asset_config=conf_data_assets["ISA Archive"],
+                **loc.find_data_asset_path(
+                    config_key="ISA Archive",
                     glob=True,
                     dataset=dataSystem_name,
                 )
@@ -155,9 +184,8 @@ def load_BulkRNASeq_STAGE_00(
 
     # create shared sample datafiles
     datf_readsMQC = DataFile(
-        **find_data_asset_path(
-            root_dir=root_path,
-            data_asset_config=conf_data_assets["raw MultiQC directory ZIP"],
+        **loc.find_data_asset_path(
+            config_key="raw MultiQC directory ZIP",
             dataset=dataSystem_name,
         )
     )
@@ -169,30 +197,21 @@ def load_BulkRNASeq_STAGE_00(
             raw_fwd_reads = RawReadsComponent(
                 base=BaseComponent(description="Raw Forward Reads"),
                 fastqGZ=DataFile(
-                    **find_data_asset_path(
-                        root_dir=root_path,
-                        data_asset_config=conf_data_assets[
-                            "raw forward reads fastq GZ"
-                        ],
+                    **loc.find_data_asset_path(
+                        config_key="raw forward reads fastq GZ",
                         sample=sample_name,
                     )
                 ),
                 fastQCmultiQCDirZIP=datf_readsMQC,
                 fastqcReportHTML=DataFile(
-                    **find_data_asset_path(
-                        root_dir=root_path,
-                        data_asset_config=conf_data_assets[
-                            "raw forward reads fastQC HTML"
-                        ],
+                    **loc.find_data_asset_path(
+                        config_key="raw forward reads fastQC HTML",
                         sample=sample_name,
                     )
                 ),
                 fastqcReportZIP=DataFile(
-                    **find_data_asset_path(
-                        root_dir=root_path,
-                        data_asset_config=conf_data_assets[
-                            "raw forward reads fastQC ZIP"
-                        ],
+                    **loc.find_data_asset_path(
+                        config_key="raw forward reads fastQC ZIP",
                         sample=sample_name,
                     )
                 ),
@@ -200,30 +219,21 @@ def load_BulkRNASeq_STAGE_00(
             raw_rev_reads = RawReadsComponent(
                 base=BaseComponent(description="Raw Reverse Reads"),
                 fastqGZ=DataFile(
-                    **find_data_asset_path(
-                        root_dir=root_path,
-                        data_asset_config=conf_data_assets[
-                            "raw reverse reads fastq GZ"
-                        ],
+                    **loc.find_data_asset_path(
+                        config_key="raw reverse reads fastq GZ",
                         sample=sample_name,
                     )
                 ),
                 fastQCmultiQCDirZIP=datf_readsMQC,
                 fastqcReportHTML=DataFile(
-                    **find_data_asset_path(
-                        root_dir=root_path,
-                        data_asset_config=conf_data_assets[
-                            "raw reverse reads fastQC HTML"
-                        ],
+                    **loc.find_data_asset_path(
+                        config_key="raw reverse reads fastQC HTML",
                         sample=sample_name,
                     )
                 ),
                 fastqcReportZIP=DataFile(
-                    **find_data_asset_path(
-                        root_dir=root_path,
-                        data_asset_config=conf_data_assets[
-                            "raw reverse reads fastQC ZIP"
-                        ],
+                    **loc.find_data_asset_path(
+                        config_key="raw reverse reads fastQC ZIP",
                         sample=sample_name,
                     )
                 ),
@@ -235,24 +245,21 @@ def load_BulkRNASeq_STAGE_00(
             raw_reads = RawReadsComponent(
                 base=BaseComponent(description="Raw Reads"),
                 fastqGZ=DataFile(
-                    **find_data_asset_path(
-                        root_dir=root_path,
-                        data_asset_config=conf_data_assets["raw reads fastq GZ"],
+                    **loc.find_data_asset_path(
+                        config_key="raw reads fastq GZ",
                         sample=sample_name,
                     )
                 ),
                 fastQCmultiQCDirZIP=datf_readsMQC,
                 fastqcReportHTML=DataFile(
-                    **find_data_asset_path(
-                        root_dir=root_path,
-                        data_asset_config=conf_data_assets["raw reads fastQC HTML"],
+                    **loc.find_data_asset_path(
+                        config_key="raw reads fastQC HTML",
                         sample=sample_name,
                     )
                 ),
                 fastqcReportZIP=DataFile(
-                    **find_data_asset_path(
-                        root_dir=root_path,
-                        data_asset_config=conf_data_assets["raw reads fastQC ZIP"],
+                    **loc.find_data_asset_path(
+                        config_key="raw reads fastQC ZIP",
                         sample=sample_name,
                     )
                 ),
@@ -276,6 +283,7 @@ def load_BulkRNASeq_STAGE_01(
     dataSystem: TemplateDataSystem,
     config: Union[str, Path] = "Latest",
     stack: bool = False,
+    validation_enabled: bool = True,
 ):
     """Load data that should be present into stage 01 (TG-PreProc)
 
@@ -294,6 +302,13 @@ def load_BulkRNASeq_STAGE_01(
     # load data assets config
     conf_data_assets = load_config(config)
 
+    # create locator
+    loc = Locator(
+        root_dir=root_path,
+        data_asset_config=conf_data_assets,
+        validation_enabled=validation_enabled,
+    )
+
     # attach dataset components
     # dataSystem.dataset.attach_component(
     #     BulkRNASeqMetadataComponent(
@@ -309,16 +324,13 @@ def load_BulkRNASeq_STAGE_01(
 
     # create shared sample datafiles
     datf_readsMQC = DataFile(
-        **find_data_asset_path(
-            root_dir=root_path,
-            data_asset_config=conf_data_assets["trimmed fastQC MultiQC directory ZIP"],
+        **loc.find_data_asset_path(
+            config_key="trimmed fastQC MultiQC directory ZIP",
         )
     )
     """ Archived data asset
     datf_trimmingMQC = DataFile(
-        **find_data_asset_path(
-            root_dir=root_path,
-            data_asset_config=conf_data_assets["trimming MultiQC directory ZIP"],
+        **loc.find_data_asset_path(config_key = "trimming MultiQC directory ZIP"],
         )
     )
     """
@@ -329,40 +341,28 @@ def load_BulkRNASeq_STAGE_01(
             trim_fwd_reads = TrimReadsComponent(
                 base=BaseComponent(description="Trimmed Forward Reads"),
                 fastqGZ=DataFile(
-                    **find_data_asset_path(
-                        root_dir=root_path,
-                        data_asset_config=conf_data_assets[
-                            "trimmed forward reads fastq GZ"
-                        ],
+                    **loc.find_data_asset_path(
+                        config_key="trimmed forward reads fastq GZ",
                         sample=sample_name,
                     )
                 ),
                 fastQCmultiQCDirZIP=datf_readsMQC,
                 # Archived data asset trimmingMultiQCDirZIP=datf_trimmingMQC,
                 fastqcReportHTML=DataFile(
-                    **find_data_asset_path(
-                        root_dir=root_path,
-                        data_asset_config=conf_data_assets[
-                            "trimmed forward reads fastQC HTML"
-                        ],
+                    **loc.find_data_asset_path(
+                        config_key="trimmed forward reads fastQC HTML",
                         sample=sample_name,
                     )
                 ),
                 fastqcReportZIP=DataFile(
-                    **find_data_asset_path(
-                        root_dir=root_path,
-                        data_asset_config=conf_data_assets[
-                            "trimmed forward reads fastQC ZIP"
-                        ],
+                    **loc.find_data_asset_path(
+                        config_key="trimmed forward reads fastQC ZIP",
                         sample=sample_name,
                     )
                 ),
                 trimmingReportTXT=DataFile(
-                    **find_data_asset_path(
-                        root_dir=root_path,
-                        data_asset_config=conf_data_assets[
-                            "forward reads trimming report"
-                        ],
+                    **loc.find_data_asset_path(
+                        config_key="forward reads trimming report",
                         sample=sample_name,
                     )
                 ),
@@ -370,40 +370,28 @@ def load_BulkRNASeq_STAGE_01(
             trim_rev_reads = TrimReadsComponent(
                 base=BaseComponent(description="Trimmed Reverse Reads"),
                 fastqGZ=DataFile(
-                    **find_data_asset_path(
-                        root_dir=root_path,
-                        data_asset_config=conf_data_assets[
-                            "trimmed reverse reads fastq GZ"
-                        ],
+                    **loc.find_data_asset_path(
+                        config_key="trimmed reverse reads fastq GZ",
                         sample=sample_name,
                     )
                 ),
                 fastQCmultiQCDirZIP=datf_readsMQC,
                 # Archived data asset trimmingMultiQCDirZIP=datf_trimmingMQC,
                 fastqcReportHTML=DataFile(
-                    **find_data_asset_path(
-                        root_dir=root_path,
-                        data_asset_config=conf_data_assets[
-                            "trimmed reverse reads fastQC HTML"
-                        ],
+                    **loc.find_data_asset_path(
+                        config_key="trimmed reverse reads fastQC HTML",
                         sample=sample_name,
                     )
                 ),
                 fastqcReportZIP=DataFile(
-                    **find_data_asset_path(
-                        root_dir=root_path,
-                        data_asset_config=conf_data_assets[
-                            "trimmed reverse reads fastQC ZIP"
-                        ],
+                    **loc.find_data_asset_path(
+                        config_key="trimmed reverse reads fastQC ZIP",
                         sample=sample_name,
                     )
                 ),
                 trimmingReportTXT=DataFile(
-                    **find_data_asset_path(
-                        root_dir=root_path,
-                        data_asset_config=conf_data_assets[
-                            "reverse reads trimming report"
-                        ],
+                    **loc.find_data_asset_path(
+                        config_key="reverse reads trimming report",
                         sample=sample_name,
                     )
                 ),
@@ -414,32 +402,28 @@ def load_BulkRNASeq_STAGE_01(
             trim_reads = TrimReadsComponent(
                 base=BaseComponent(description="Trimmed Reads"),
                 fastqGZ=DataFile(
-                    **find_data_asset_path(
-                        root_dir=root_path,
-                        data_asset_config=conf_data_assets["trimmed reads fastq GZ"],
+                    **loc.find_data_asset_path(
+                        config_key="trimmed reads fastq GZ",
                         sample=sample_name,
                     )
                 ),
                 fastQCmultiQCDirZIP=datf_readsMQC,
                 # Archived data asset trimmingMultiQCDirZIP=datf_trimmingMQC,
                 fastqcReportHTML=DataFile(
-                    **find_data_asset_path(
-                        root_dir=root_path,
-                        data_asset_config=conf_data_assets["trimmed reads fastQC HTML"],
+                    **loc.find_data_asset_path(
+                        config_key="trimmed reads fastQC HTML",
                         sample=sample_name,
                     )
                 ),
                 fastqcReportZIP=DataFile(
-                    **find_data_asset_path(
-                        root_dir=root_path,
-                        data_asset_config=conf_data_assets["trimmed reads fastQC ZIP"],
+                    **loc.find_data_asset_path(
+                        config_key="trimmed reads fastQC ZIP",
                         sample=sample_name,
                     )
                 ),
                 trimmingReportTXT=DataFile(
-                    **find_data_asset_path(
-                        root_dir=root_path,
-                        data_asset_config=conf_data_assets["reads trimming report"],
+                    **loc.find_data_asset_path(
+                        config_key="reads trimming report",
                         sample=sample_name,
                     )
                 ),
@@ -458,6 +442,7 @@ def load_BulkRNASeq_STAGE_02(
     dataSystem: TemplateDataSystem,
     config: Union[str, Path] = "Latest",
     stack: bool = False,
+    validation_enabled: bool = True,
 ):
     """Load data that should be present into stage 02 (GenomeAlignment)
 
@@ -474,14 +459,20 @@ def load_BulkRNASeq_STAGE_02(
     # load data assets config
     conf_data_assets = load_config(config)
 
+    # create locator
+    loc = Locator(
+        root_dir=root_path,
+        data_asset_config=conf_data_assets,
+        validation_enabled=validation_enabled,
+    )
+
     # alias for convenience
     dataset = dataSystem.dataset
 
     # create shared sample datafiles
     datf_alignMQC = DataFile(
-        **find_data_asset_path(
-            root_dir=root_path,
-            data_asset_config=conf_data_assets["aligned MultiQC directory ZIP"],
+        **loc.find_data_asset_path(
+            config_key="aligned MultiQC directory ZIP",
         )
     )
 
@@ -491,62 +482,50 @@ def load_BulkRNASeq_STAGE_02(
         genomeAlignments = GenomeAlignments(
             base=BaseComponent(description="Genome alignments"),
             alignedToTranscriptomeBam=DataFile(
-                **find_data_asset_path(
-                    root_dir=root_path,
-                    data_asset_config=conf_data_assets["aligned ToTranscriptome Bam"],
+                **loc.find_data_asset_path(
+                    config_key="aligned ToTranscriptome Bam",
                     sample=sample_name,
                 )
             ),
             alignedSortedByCoordBam=DataFile(
-                **find_data_asset_path(
-                    root_dir=root_path,
-                    data_asset_config=conf_data_assets["aligned SortedByCoord Bam"],
+                **loc.find_data_asset_path(
+                    config_key="aligned SortedByCoord Bam",
                     sample=sample_name,
                 )
             ),
             alignedSortedByCoordResortedBam=DataFile(
-                **find_data_asset_path(
-                    root_dir=root_path,
-                    data_asset_config=conf_data_assets[
-                        "aligned SortedByCoord ResortedBam"
-                    ],
+                **loc.find_data_asset_path(
+                    config_key="aligned SortedByCoord ResortedBam",
                     sample=sample_name,
                 )
             ),
             alignedSortedByCoordResortedBamIndex=DataFile(
-                **find_data_asset_path(
-                    root_dir=root_path,
-                    data_asset_config=conf_data_assets[
-                        "aligned SortedByCoord ResortedBamIndex"
-                    ],
+                **loc.find_data_asset_path(
+                    config_key="aligned SortedByCoord ResortedBamIndex",
                     sample=sample_name,
                 )
             ),
             logFinal=DataFile(
-                **find_data_asset_path(
-                    root_dir=root_path,
-                    data_asset_config=conf_data_assets["aligned log Final"],
+                **loc.find_data_asset_path(
+                    config_key="aligned log Final",
                     sample=sample_name,
                 )
             ),
             logProgress=DataFile(
-                **find_data_asset_path(
-                    root_dir=root_path,
-                    data_asset_config=conf_data_assets["aligned log Progress"],
+                **loc.find_data_asset_path(
+                    config_key="aligned log Progress",
                     sample=sample_name,
                 )
             ),
             logFull=DataFile(
-                **find_data_asset_path(
-                    root_dir=root_path,
-                    data_asset_config=conf_data_assets["aligned log Full"],
+                **loc.find_data_asset_path(
+                    config_key="aligned log Full",
                     sample=sample_name,
                 )
             ),
             sjTab=DataFile(
-                **find_data_asset_path(
-                    root_dir=root_path,
-                    data_asset_config=conf_data_assets["aligned sjTab"],
+                **loc.find_data_asset_path(
+                    config_key="aligned sjTab",
                     sample=sample_name,
                 )
             ),
@@ -566,6 +545,7 @@ def load_BulkRNASeq_STAGE_0201(
     dataSystem: TemplateDataSystem,
     config: Union[str, Path] = "Latest",
     stack: bool = False,
+    validation_enabled: bool = True,
 ):
     """Load data that should be present into stage 0201 (RSeQCAnalysis)
 
@@ -582,34 +562,32 @@ def load_BulkRNASeq_STAGE_0201(
     # load data assets config
     conf_data_assets = load_config(config)
 
+    # create locator
+    loc = Locator(
+        root_dir=root_path,
+        data_asset_config=conf_data_assets,
+        validation_enabled=validation_enabled,
+    )
+
     # alias for convenience
     dataset = dataSystem.dataset
     metadata = dataset.metadata
 
     # create shared sample datafiles
     genebody_coverage_MQC = DataFile(
-        **find_data_asset_path(
-            root_dir=root_path,
-            data_asset_config=conf_data_assets[
-                "genebody coverage MultiQC directory ZIP"
-            ],
+        **loc.find_data_asset_path(
+            config_key="genebody coverage MultiQC directory ZIP",
         )
     )
     infer_experiment_MQC = DataFile(
-        **find_data_asset_path(
-            root_dir=root_path,
-            data_asset_config=conf_data_assets[
-                "infer experiment MultiQC directory ZIP"
-            ],
+        **loc.find_data_asset_path(
+            config_key="infer experiment MultiQC directory ZIP",
         )
     )
     # idMQC moved to metadata controlled block
     read_distribution_MQC = DataFile(
-        **find_data_asset_path(
-            root_dir=root_path,
-            data_asset_config=conf_data_assets[
-                "read distribution MultiQC directory ZIP"
-            ],
+        **loc.find_data_asset_path(
+            config_key="read distribution MultiQC directory ZIP",
         )
     )
 
@@ -622,25 +600,22 @@ def load_BulkRNASeq_STAGE_0201(
             ),
             geneBodyCoverageMultiQCDirZIP=genebody_coverage_MQC,
             geneBodyCoverageOut=DataDir(
-                **find_data_asset_path(
-                    root_dir=root_path,
-                    data_asset_config=conf_data_assets["genebody coverage out"],
+                **loc.find_data_asset_path(
+                    config_key="genebody coverage out",
                     sample=sample_name,
                 )
             ),
             inferExperimentMultiQCDirZIP=infer_experiment_MQC,
             inferExperimentOut=DataFile(
-                **find_data_asset_path(
-                    root_dir=root_path,
-                    data_asset_config=conf_data_assets["infer experiment out"],
+                **loc.find_data_asset_path(
+                    config_key="infer experiment out",
                     sample=sample_name,
                 )
             ),
             readDistributionMultiQCDirZIP=read_distribution_MQC,
             readDistributionOut=DataFile(
-                **find_data_asset_path(
-                    root_dir=root_path,
-                    data_asset_config=conf_data_assets["read distribution out"],
+                **loc.find_data_asset_path(
+                    config_key="read distribution out",
                     sample=sample_name,
                 )
             ),
@@ -648,18 +623,14 @@ def load_BulkRNASeq_STAGE_0201(
         # add pair end specific datafile
         if metadata.paired_end:
             rSeQCAnalysis.innerDistanceMultiQCDirZIP = DataDir(
-                **find_data_asset_path(
-                    root_dir=root_path,
-                    data_asset_config=conf_data_assets[
-                        "inner distance MultiQC directory"
-                    ],
+                **loc.find_data_asset_path(
+                    config_key="inner distance MultiQC directory",
                     sample=sample_name,
                 )
             )
             rSeQCAnalysis.innerDistanceOut = DataDir(
-                **find_data_asset_path(
-                    root_dir=root_path,
-                    data_asset_config=conf_data_assets["inner distance out"],
+                **loc.find_data_asset_path(
+                    config_key="inner distance out",
                     sample=sample_name,
                 )
             )
@@ -677,6 +648,7 @@ def load_BulkRNASeq_STAGE_03(
     dataSystem: TemplateDataSystem,
     config: Union[str, Path] = "Latest",
     stack: bool = False,
+    validation_enabled: bool = True,
 ):
     """Load data that should be present into stage 03 (RSEM Counts)
 
@@ -693,15 +665,21 @@ def load_BulkRNASeq_STAGE_03(
     # load data assets config
     conf_data_assets = load_config(config)
 
+    # create locator
+    loc = Locator(
+        root_dir=root_path,
+        data_asset_config=conf_data_assets,
+        validation_enabled=validation_enabled,
+    )
+
     # alias for convenience
     dataset = dataSystem.dataset
     metadata = dataset.metadata
 
     # create shared sample datafiles
     countsMQC = DataFile(
-        **find_data_asset_path(
-            root_dir=root_path,
-            data_asset_config=conf_data_assets["RSEM counts MultiQC directory ZIP"],
+        **loc.find_data_asset_path(
+            config_key="RSEM counts MultiQC directory ZIP",
         )
     )
 
@@ -711,15 +689,13 @@ def load_BulkRNASeq_STAGE_03(
             description="Gene counts at a dataset level from RSEM and DESeq2"
         ),
         numNonZero=DataFile(
-            **find_data_asset_path(
-                root_dir=root_path,
-                data_asset_config=conf_data_assets["number non-zero count genes table"],
+            **loc.find_data_asset_path(
+                config_key="number non-zero count genes table",
             )
         ),
         unnormalizedCounts=DataFile(
-            **find_data_asset_path(
-                root_dir=root_path,
-                data_asset_config=conf_data_assets["unnormalized counts table"],
+            **loc.find_data_asset_path(
+                config_key="unnormalized counts table",
             )
         ),
     )
@@ -731,23 +707,20 @@ def load_BulkRNASeq_STAGE_03(
             base=BaseComponent(description="Gene counts for the sample"),
             multiQCDirZIP=countsMQC,
             genesResults=DataFile(
-                **find_data_asset_path(
-                    root_dir=root_path,
-                    data_asset_config=conf_data_assets["sample gene counts table"],
+                **loc.find_data_asset_path(
+                    config_key="sample gene counts table",
                     sample=sample_name,
                 )
             ),
             isoformsResults=DataFile(
-                **find_data_asset_path(
-                    root_dir=root_path,
-                    data_asset_config=conf_data_assets["sample isoform counts table"],
+                **loc.find_data_asset_path(
+                    config_key="sample isoform counts table",
                     sample=sample_name,
                 )
             ),
             statDir=DataDir(
-                **find_data_asset_path(
-                    root_dir=root_path,
-                    data_asset_config=conf_data_assets["sample counts stats directory"],
+                **loc.find_data_asset_path(
+                    config_key="sample counts stats directory",
                     sample=sample_name,
                 )
             ),
@@ -766,6 +739,7 @@ def load_BulkRNASeq_STAGE_04(
     dataSystem: TemplateDataSystem,
     config: Union[str, Path] = "Latest",
     stack: bool = False,
+    validation_enabled: bool = True,
 ):
     """Load data that should be present into stage 03 (RSEM Counts)
 
@@ -782,6 +756,13 @@ def load_BulkRNASeq_STAGE_04(
     # load data assets config
     conf_data_assets = load_config(config)
 
+    # create locator
+    loc = Locator(
+        root_dir=root_path,
+        data_asset_config=conf_data_assets,
+        validation_enabled=validation_enabled,
+    )
+
     # alias for convenience
     dataset = dataSystem.dataset
 
@@ -795,25 +776,16 @@ def load_BulkRNASeq_STAGE_04(
             base=BaseComponent(description="Normalized counts from Deseq2"),
             # erccNormalizedCountsCSV=DataFile(enc.find()), moved to ERCC block
             normalizedCountsCSV=DataFile(
-                **find_data_asset_path(
-                    root_dir=root_path,
-                    data_asset_config=conf_data_assets[
-                        "DESeq2 normalized counts table"
-                    ],
-                )
+                **loc.find_data_asset_path(config_key="DESeq2 normalized counts table")
             ),
             sampleTableCSV=DataFile(
-                **find_data_asset_path(
-                    root_dir=root_path,
-                    data_asset_config=conf_data_assets["sample table"],
+                **loc.find_data_asset_path(
+                    config_key="sample table",
                 )
             ),
             unnormalizedCountsCSV=DataFile(
-                **find_data_asset_path(
-                    root_dir=root_path,
-                    data_asset_config=conf_data_assets[
-                        "DESeq2 unnormalized counts table"
-                    ],
+                **loc.find_data_asset_path(
+                    config_key="DESeq2 unnormalized counts table",
                 )
             ),
         ),
@@ -823,29 +795,23 @@ def load_BulkRNASeq_STAGE_04(
         DifferentialGeneExpression(
             base=BaseComponent(description="Normalized counts from Deseq2"),
             contrastsCSV=DataFile(
-                **find_data_asset_path(
-                    root_dir=root_path,
-                    data_asset_config=conf_data_assets["DESeq2 contrasts table"],
+                **loc.find_data_asset_path(
+                    config_key="DESeq2 contrasts table",
                 )
             ),
             annotatedTableCSV=DataFile(
-                **find_data_asset_path(
-                    root_dir=root_path,
-                    data_asset_config=conf_data_assets["DESeq2 annotated DGE table"],
+                **loc.find_data_asset_path(
+                    config_key="DESeq2 annotated DGE table",
                 )
             ),
             visualizationTableCSV=DataFile(
-                **find_data_asset_path(
-                    root_dir=root_path,
-                    data_asset_config=conf_data_assets[
-                        "DESeq2 annotated DGE extended for viz table"
-                    ],
+                **loc.find_data_asset_path(
+                    config_key="DESeq2 annotated DGE extended for viz table",
                 )
             ),
             visualizationPCATableCSV=DataFile(
-                **find_data_asset_path(
-                    root_dir=root_path,
-                    data_asset_config=conf_data_assets["DESeq2 viz PCA table"],
+                **loc.find_data_asset_path(
+                    config_key="DESeq2 viz PCA table",
                 )
             ),
         ),
@@ -856,35 +822,23 @@ def load_BulkRNASeq_STAGE_04(
             DifferentialGeneExpression(
                 base=BaseComponent(description="Normalized counts from Deseq2"),
                 contrastsCSV=DataFile(
-                    **find_data_asset_path(
-                        root_dir=root_path,
-                        data_asset_config=conf_data_assets[
-                            "ERCC normalized DESeq2 contrasts table"
-                        ],
+                    **loc.find_data_asset_path(
+                        config_key="ERCC normalized DESeq2 contrasts table",
                     )
                 ),
                 annotatedTableCSV=DataFile(
-                    **find_data_asset_path(
-                        root_dir=root_path,
-                        data_asset_config=conf_data_assets[
-                            "ERCC normalized DESeq2 annotated DGE table"
-                        ],
+                    **loc.find_data_asset_path(
+                        config_key="ERCC normalized DESeq2 annotated DGE table",
                     )
                 ),
                 visualizationTableCSV=DataFile(
-                    **find_data_asset_path(
-                        root_dir=root_path,
-                        data_asset_config=conf_data_assets[
-                            "ERCC normalized DESeq2 annotated DGE extended for viz table"
-                        ],
+                    **loc.find_data_asset_path(
+                        config_key="ERCC normalized DESeq2 annotated DGE extended for viz table",
                     )
                 ),
                 visualizationPCATableCSV=DataFile(
-                    **find_data_asset_path(
-                        root_dir=root_path,
-                        data_asset_config=conf_data_assets[
-                            "ERCC normalized DESeq2 viz PCA table"
-                        ],
+                    **loc.find_data_asset_path(
+                        config_key="ERCC normalized DESeq2 viz PCA table",
                     )
                 ),
             ),
@@ -892,11 +846,8 @@ def load_BulkRNASeq_STAGE_04(
         )
         dataset.normalizedGeneCounts.erccNormalizedCountsCSV = (
             DataFile(
-                **find_data_asset_path(
-                    root_dir=root_path,
-                    data_asset_config=conf_data_assets[
-                        "ERCC normalized DESeq2 normalized counts table"
-                    ],
+                **loc.find_data_asset_path(
+                    config_key="ERCC normalized DESeq2 normalized counts table",
                 )
             ),
         )
