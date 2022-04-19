@@ -553,7 +553,7 @@ class BaseDataset:
     # id: str = field(default_factory=get_id)
     name: str = field(default="orphan")
     samples: Dict[str, "BaseSample"] = field(default_factory=dict, repr=False)
-
+    config: dict = field(default_factory=dict, repr=False)
 
 # for subclassing
 class TemplateDataset(abc.ABC, CanAttachComponents):
@@ -571,6 +571,10 @@ class TemplateDataset(abc.ABC, CanAttachComponents):
     @property
     def name(self):
         return self.base.name
+
+    @property
+    def config(self):
+        return self.base.config
 
     # TODO: add type, how to type hint a class in general
     def attach_sample(self, sample):
