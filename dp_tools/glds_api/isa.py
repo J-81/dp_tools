@@ -2,7 +2,13 @@ import argparse
 from pathlib import Path
 from re import search
 from urllib.parse import quote
-from dp_tools.glds_api.commons import FILELISTINGS_URL_PREFIX, GENELAB_ROOT, GLDS_URL_PREFIX, ISA_ZIP_REGEX, read_json
+from dp_tools.glds_api.commons import (
+    FILELISTINGS_URL_PREFIX,
+    GENELAB_ROOT,
+    GLDS_URL_PREFIX,
+    ISA_ZIP_REGEX,
+    read_json,
+)
 
 import requests
 import logging
@@ -96,10 +102,9 @@ def download_isa(accession: str, alternate_url: bool = False) -> str:
     return filename
 
 
-def main() -> str:
+def main():
     args = _parse_args()
-    isazip = download_isa(args.accession, args.alternate_url)
-    return isazip
+    download_isa(args.accession, args.alternate_url)
 
 
 if __name__ == "__main__":
