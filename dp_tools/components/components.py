@@ -86,7 +86,7 @@ class BulkRNASeqMetadataComponent(TemplateComponent):
             # extract runsheet as dataframe
             self.df = pd.read_csv(self.runsheet.path)
             self.samples = list(
-                self.df["sample_name"]
+                self.df["Sample Name"]
             )  # explicit conversion from pandas series to standard list
             [self.paired_end] = self.df["paired_end"].unique()
             self.paired_end = bool(
