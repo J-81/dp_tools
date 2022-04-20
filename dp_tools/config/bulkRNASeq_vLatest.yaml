@@ -1,6 +1,6 @@
 # TOP LEVEL
 NAME: "bulkRNASeq"
-VERSION: "0"
+VERSION: "1"
 
 # anchors for reuse
 _anchors:
@@ -157,7 +157,7 @@ data assets:
   runsheet:
     processed location: 
       - "Metadata"
-      - "AST_autogen_template_RNASeq_RCP_{dataset}_RNASeq_runsheet.csv"
+      - "{dataset}_bulkRNASeq_v1_runsheet.csv"
 
     resource categories: *neverPublished
 
@@ -807,6 +807,30 @@ Validation Protocols:
       - RSeQCAnalysis
       - GeneCounted
       - DGE
+
+  only trimmed reads:
+    dry run: false
+    skip checks: []
+    stage:
+      - Reads_PreProcessed
+
+  only genome aligned:
+    dry run: false
+    skip checks: []
+    stage:
+      - GenomeAligned
+
+  only rseqc:
+    dry run: false
+    skip checks: []
+    stage:
+      - RSeQCAnalysis
+
+  only gene counted:
+    dry run: false
+    skip checks: []
+    stage:
+      - GeneCounted
 
   only dge:
     dry run: false
