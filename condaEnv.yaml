@@ -12,4 +12,4 @@ dependencies:
    - schema
    - pip
    - pip:
-     - git+https://github.com/J-81/dp_tools.git@1.0.2
+     - git+https://github.com/J-81/dp_tools.git@1.0.3
