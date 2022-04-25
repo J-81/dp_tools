@@ -24,7 +24,7 @@ def test_empty_GLDSDataSystem():
 
 def test_datafile(glds194_runsheetPath):
     datf = entity_model.DataFile(path=glds194_runsheetPath)
-    assert datf.compute_md5sum() == "ef85ec532b3e74b720131b3f5430443d"
+    assert datf.compute_md5sum() == "c6c15e6e10d05c78003888604a47ee84"
     assert datf.path == glds194_runsheetPath
 
 
