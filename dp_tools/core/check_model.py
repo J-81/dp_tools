@@ -110,7 +110,13 @@ class Check(abc.ABC):
             self._proto_description, tuple
         ), "Check description must be a string, check that you did not add commas to a multi-line str tuple"
         assert isinstance(self._proto_description, str)
-        self.description = self.description.format(**self.config)
+        try:
+            self.description = self.description.format(**self.config)
+        except Exception as e:
+            log.error(
+                f"Exception occured during description formatting: description_template: '{self.description}', configuration: '{self.config}'"
+            )
+            raise
 
         # set check id as class name
         self.id = self.__class__.__name__
