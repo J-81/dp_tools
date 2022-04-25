@@ -696,27 +696,37 @@ class DATASET_RSEQCANALYSIS_0001(Check):
         "middle": MIDDLE.median,
         "yellow_standard_deviation_threshold": 2,
         "red_standard_deviation_threshold": 4,
-        "yellow_minimum_dominant_strandedness": 75,  # percents
-        "halt_minimum_dominant_strandedness": 65,  # percents
+        "stranded_assessment_range": {"min": 75, "max": 100},  # percents
+        "halt_ambiguous_dominant_strandedness_range": {
+            "min": 60,
+            "max": 75,
+        },  # percents
+        "unstranded_assessment_range": {"min": 40, "max": 60},  # percents
+        "valid_dominant_strandedness_assessments": [
+            "Sense (% Tags)",
+            "Antisense (% Tags)",
+        ],  # this leaves out undetermined, which should raise alarms if it is the dominant assessment
     }
     description = (
-        "Check that the rseqc analysis stats (source from the rseqc logs) have no outlier values among samples "
+        "Check that the rseqc analysis stats (sourced from the rseqc logs) have no outlier values among samples "
         "for the following plots: {plots_all} (Paired end only: {plot_paired_end}). "
         "Yellow Flagged Outliers are defined as a being {yellow_standard_deviation_threshold} - {red_standard_deviation_threshold} standard "
         "deviations away from the {middle.name}. "
         "Red Flagged Outliers are defined as a being {red_standard_deviation_threshold}+ standard "
         "deviations away from the {middle.name}. "
         "Additionally the following is assessed for infer experiment strandedess metrics: "
-        "A Yellow Flag is raised in the case that the dominant strandessness is between {yellow_minimum_dominant_strandedness} - {halt_minimum_dominant_strandedness} "
-        "A Halt Flag is raised in the case that the dominant strandessness is below {halt_minimum_dominant_strandedness} "
-        "Note: the 'dominant strandedness' is the max(datasetwide_average(antisense), datasetwide_average(sense)) "
+        "A Halt Flag is raised in the case that the dominant strandessness is between "
+        "{halt_ambiguous_dominant_strandedness_range} "
+        "Note: the 'dominant strandedness' is the max(datasetwide_median(antisense), datasetwide_median(sense)) "
+        "Valid assessments include {valid_dominant_strandedness_assessments}, other assessments (e.g. 'undetermined') will raise a Halting flag "
     )
     flag_desc = {
         FlagCode.GREEN: "No rseqc analysis metric outliers detected for {metrics}",
         FlagCode.YELLOW1: "Outliers detected as follows (values are rounded number of standard deviations from middle): {formatted_outliers}",
-        FlagCode.YELLOW2: "The dominant strandedness is {dominant_strandedness}, this is lower than the yellow flag threshold.",
         FlagCode.RED1: "Outliers detected as follows (values are rounded number of standard deviations from middle): {formatted_outliers}",
+        FlagCode.RED2: "At least one sample is outside the dominant strandedness assignment range: {samples_outside_range}",
         FlagCode.HALT1: "The dominant strandedness is {dominant_strandedness}, this is lower than the halting flag threshold.",
+        FlagCode.HALT2: "The dominant strandedness is {dominant_strandedness} which is not a invalid assessment.",
     }
 
     def validate_func(self: Check, dataset: TemplateDataset) -> Flag:
@@ -773,43 +783,51 @@ class DATASET_RSEQCANALYSIS_0001(Check):
                         codes.remove(FlagCode.YELLOW1)
                     outliers[metricName] = outliers[metricName] | outliersForThisMetric
 
-        # dominant strandedness related subcheck
-        # assess dominant strandedness
-        yellow_minimum_dominant_strandedness = self.config[
-            "yellow_minimum_dominant_strandedness"
-        ]
-        halt_minimum_dominant_strandedness = self.config[
-            "halt_minimum_dominant_strandedness"
-        ]
-
-        def get_dominant_strandedness(dataset: TemplateDataset) -> tuple[str, float]:
+        def get_median_strandedness(dataset: TemplateDataset) -> tuple[str, float]:
             df = dataset.getMQCDataFrame(
                 sample_component="rSeQCAnalysis",
                 mqc_module="RSeQC",
                 mqc_plot="Infer experiment",
-            )
-            dominant_strandedness_name = df.mean()[
-                ["Antisense (% Tags)", "Sense (% Tags)"]
-            ].idxmax()
-            dominant_strandedness_value = df.mean()[
-                ["Antisense (% Tags)", "Sense (% Tags)"]
-            ].max()
-            return (dominant_strandedness_name, dominant_strandedness_value)
+            ).fillna(0) # Nan is a zero for this MultiQC table
 
-        dominant_strandedness = get_dominant_strandedness(dataset)
+            median_strandedness = df.median().to_dict()
+
+            return median_strandedness
+
+        median_strandedness = get_median_strandedness(dataset)
+
+        # check if dominant assessment is valid
+        strand_assessment: str = max(median_strandedness, key=lambda k: median_strandedness[k])
+        if strand_assessment not in self.config['valid_dominant_strandedness_assessments']:
+            codes.add(FlagCode.HALT2)
 
         # flag based on thresholds
-        dominant_strandedness_value = dominant_strandedness[1]
-        if (
-            yellow_minimum_dominant_strandedness
-            > dominant_strandedness_value
-            > halt_minimum_dominant_strandedness
-        ):
-            codes.add(FlagCode.YELLOW2)
-        elif dominant_strandedness_value < halt_minimum_dominant_strandedness:
-            codes.add(FlagCode.HALT1)
+        assessment_value: float = median_strandedness[strand_assessment]
 
-        # set code to green if no flags added
+        is_stranded: bool = self.config['stranded_assessment_range']['max'] > assessment_value > self.config['stranded_assessment_range']['min']
+        is_unstranded: bool = self.config['unstranded_assessment_range']['max'] > assessment_value > self.config['unstranded_assessment_range']['min']            
+
+        def determine_samples_outside_range(dataset: TemplateDataset, min: float, max: float) -> list[str]:
+            df = dataset.getMQCDataFrame(
+                sample_component="rSeQCAnalysis",
+                mqc_module="RSeQC",
+                mqc_plot="Infer experiment",
+            ).fillna(0) # Nan is a zero for this MultiQC table
+
+            return df.index[df[strand_assessment].between(min, max) == False].to_list()
+
+        # Catalog and flag any samples outside of range
+        # flags based on samples that are out of the assessment range
+        samples_outside_range: list[str]
+        if is_stranded:
+            samples_outside_range = determine_samples_outside_range(dataset, self.config['stranded_assessment_range']['min'], self.config['stranded_assessment_range']['max'])
+            codes.add(FlagCode.RED2)
+        elif is_unstranded:
+            samples_outside_range = determine_samples_outside_range(dataset, self.config['unstranded_assessment_range']['min'], self.config['unstranded_assessment_range']['max'])
+            codes.add(FlagCode.RED2)
+        else: # this means that the standing is ambiguous
+            samples_outside_range = list()
+            codes.add(FlagCode.HALT1)
 
         return Flag(
             codes=codes,
@@ -817,7 +835,8 @@ class DATASET_RSEQCANALYSIS_0001(Check):
             message_args={
                 "outliers": outliers,
                 "formatted_outliers": pformat(outliers, formatfloat),
-                "dominant_strandedness": dominant_strandedness,
+                "dominant_strandedness": (strand_assessment, assessment_value),
+                "samples_outside_range": samples_outside_range,
             },
         )
 
