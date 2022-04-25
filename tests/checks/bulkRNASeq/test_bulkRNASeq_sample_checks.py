@@ -26,7 +26,7 @@ def test_SAMPLE_RAWREADS_0001_paired():
         assert flag.maxCode == check_model.FlagCode.HALT1
         assert (
             flag.message
-            == "Missing expected components: ['rawForwardReads', 'rawReverseReads']"
+            == "{'HALT1':'Missing expected components: ['rawForwardReads', 'rawReverseReads']'}"
         )
 
     # for single end fails
@@ -36,7 +36,7 @@ def test_SAMPLE_RAWREADS_0001_paired():
         mockSample.dataset.metadata.paired_end = False
         flag = testCheck.validate(sample=mockSample)
         assert flag.maxCode == check_model.FlagCode.HALT1
-        assert flag.message == "Missing expected components: ['rawReads']"
+        assert flag.message == "{'HALT1':'Missing expected components: ['rawReads']'}"
 
     # for paired end passes
     with MonkeyPatch.context() as m:
@@ -50,7 +50,7 @@ def test_SAMPLE_RAWREADS_0001_paired():
         mockSample.dataset.metadata.paired_end = True
         flag = testCheck.validate(sample=mockSample)
         assert flag.maxCode == check_model.FlagCode.GREEN
-        assert flag.message == "All expected raw read files present"
+        assert flag.message == "{'GREEN':'All expected raw read files present'}"
 
     # for paired end passes
     with MonkeyPatch.context() as m:
@@ -66,7 +66,7 @@ def test_SAMPLE_RAWREADS_0001_paired():
         assert flag.maxCode == check_model.FlagCode.HALT2
         assert (
             flag.message
-            == "Forward and reverse reads counts differ. Forward: (500) Reverse: (100)"
+            == "{'HALT2':'Forward and reverse reads counts differ. Forward: (500) Reverse: (100)'}"
         )
 
     # for single end passes
@@ -77,7 +77,7 @@ def test_SAMPLE_RAWREADS_0001_paired():
         mockSample.dataset.metadata.paired_end = False
         flag = testCheck.validate(sample=mockSample)
         assert flag.maxCode == check_model.FlagCode.GREEN
-        assert flag.message == "All expected raw read files present"
+        assert flag.message == "{'GREEN':'All expected raw read files present'}"
 
 '''
 def test_SAMPLE_RAWREADS_0001_single():
