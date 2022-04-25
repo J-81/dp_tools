@@ -67,7 +67,7 @@ def test_DATASET_METADATA_0001_paired(
     assert flag.maxCode.name == "GREEN"
     assert (
         flag.message
-        == "All expected metadata is accessible and populated. {'paired_end': True, 'has_ercc': True}"
+        == "{'GREEN':'All expected metadata is accessible and populated. {'paired_end': True, 'has_ercc': True}'}"
     )
 
     # expected HALT1
@@ -75,7 +75,7 @@ def test_DATASET_METADATA_0001_paired(
         m.setattr(dataset.metadata, "has_ercc", None)
         flag = testCheck.validate(dataset)
         assert flag.maxCode.name == "HALT1"
-        assert flag.message == "Missing expected metadata fields: ['has_ercc']"
+        assert flag.message == "{'HALT1':'Missing expected metadata fields: ['has_ercc']'}"
 
 
 def test_DATASET_METADATA_0001_single(
@@ -89,7 +89,7 @@ def test_DATASET_METADATA_0001_single(
     assert flag.maxCode.name == "GREEN"
     assert (
         flag.message
-        == "All expected metadata is accessible and populated. {'paired_end': False, 'has_ercc': False}"
+        == "{'GREEN':'All expected metadata is accessible and populated. {'paired_end': False, 'has_ercc': False}'}"
     )
 
     # expected HALT1
@@ -97,7 +97,7 @@ def test_DATASET_METADATA_0001_single(
         m.setattr(dataset.metadata, "has_ercc", None)
         flag = testCheck.validate(dataset)
         assert flag.maxCode.name == "HALT1"
-        assert flag.message == "Missing expected metadata fields: ['has_ercc']"
+        assert flag.message == "{'HALT1':'Missing expected metadata fields: ['has_ercc']'}"
 
 
 def test_DATASET_RAWREADS_0001_paired(
@@ -115,7 +115,7 @@ def test_DATASET_RAWREADS_0001_paired(
     flag = testCheck.validate(dataset)
     assert flag.maxCode.name == "YELLOW1"
     assert flag.message.startswith(
-        "Outliers detected as follows (values are rounded number of standard deviations from middle):"
+        "{'YELLOW1':'Outliers detected as follows (values are rounded number of standard deviations from middle):"
     )
 
 
@@ -205,8 +205,8 @@ def test_DATASET_RSEQCANALYSIS_0001_paired(
     testCheck = test_DATASET_RSEQCANALYSIS_0001
 
     flag = testCheck.validate(dataset)
-    assert flag.maxCode.name == "YELLOW2"
-    assert [c.name for c in flag.codes] == ["YELLOW2", "YELLOW1"]
+    assert flag.maxCode.name == "HALT1"
+    assert {c.name for c in flag.codes} == {"HALT1", "YELLOW1"}
 
 
 def test_DATASET_RSEQCANALYSIS_0001_single(
@@ -217,7 +217,7 @@ def test_DATASET_RSEQCANALYSIS_0001_single(
 
     # expected YELLOW1
     flag = testCheck.validate(dataset)
-    assert flag.maxCode.name == "YELLOW1"
+    assert flag.maxCode.name == "RED2"
 
 
 def test_DATASET_GENECOUNTS_0001_paired(
