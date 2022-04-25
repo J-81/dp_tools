@@ -90,6 +90,26 @@ Staging:
             including in-house written scripts.
           Example: 'TRUE'
     
+        # this entry denotes the following:
+        # retrive from that ISA field name
+        # multiple values (separated by ",")
+        # index those to certain runsheet columns
+        # if the index doesn't exist, optional prevents raising an exception
+        # GLDS URL Mapping means the names are searched against the GLDS filelisting json for urls
+        # an exception will be raised if one and only one url is not mapped to each filename
+        - ISA Field Name: 
+            - Parameter Value[Merged Sequence Data File]
+          ISA Table Source: Assay
+          Multiple Values Per Entry: true
+          Multiple Values Delimiter: '\s*,\s*' # whitespace surrounded comma
+          Runsheet Column Name: 
+            - {'name':'read1_path', 'index':0}
+            - {'name':'read2_path', 'index':1, 'optional':true}
+          GLDS URL Mapping: true
+          Processing Usage: >-
+            Location to the raw data fastq file. May be a url or local path.
+          Example: 'https://genelab-data.ndc.nasa.gov/genelab/static/media/dataset/GLDS-194_rna...'
+
         - ISA Field Name: Factor Value[{factor_name}]
           ISA Table Source: [Assay, Sample]
           Runsheet Column Name: Factor Value[{factor_name}]
