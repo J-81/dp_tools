@@ -227,17 +227,15 @@ class Flag:
         self.codes.sort(reverse=True)
 
         # set message
-        self.message = None
+        self.message = "{"
         for code in self.codes:
-            if not self.message:
-                self.message = ""
-            else:
-                self.message += f":::NEXTCODE:{code.name}:::"
             # retrieve proto message
             pre_format_msg = self.check.flag_desc[code]
-
             # populate message with message_args
-            self.message += pre_format_msg.format(**self.message_args)
+            add_string = f"{pre_format_msg.format(**self.message_args)}"
+            self.message += f"'{code.name}':'{add_string}',"
+        # the -1 removes the last comma
+        self.message = self.message[:-1] + "}" # to close the json like message
 
         # check types before final addition and init
         strict_type_checks(
