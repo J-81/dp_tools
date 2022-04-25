@@ -114,7 +114,7 @@ class BulkRNASeqMetadataComponent(TemplateComponent):
         if getattr(self, "_factor_groups", None) == None:  # uncached
             if self.runsheet:
                 # read as dataframe
-                df = pd.read_csv(self.runsheet.path).set_index("sample_name")
+                df = pd.read_csv(self.runsheet.path).set_index("Sample Name")
 
                 # find factors columns
                 factor_cols = [c for c in df.columns if c.startswith("Factor Value[")]
