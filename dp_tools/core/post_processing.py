@@ -222,9 +222,6 @@ def generate_new_column_dicts(
 
             new_cols[header][sample] = new_value
 
-    # TODO:
-    # sort columns based on configuration
-    # check that all column order values are unique and non-negative (the value for unpublished items)
     order_values: set[int] = set()
     for col, order in column_order.items():
         assert order >= 0, f"Order value must be non-negative: ({order})"
