@@ -59,7 +59,7 @@ def test_COMPONENT_RAWREADS_0001_paired(
         m.setattr(test_component, "fastqcReportZIP", None)
         flag = testCheck.validate(test_component)
         assert flag.maxCode.name == "HALT1"
-        assert flag.message == "Missing expected files: ['fastqGZ', 'fastqcReportZIP']"
+        assert flag.message == "{'HALT1':'Missing expected files: ['fastqGZ', 'fastqcReportZIP']'}"
 
     # expected HALT2
     # TODO: requires a true truncated test file or something similar
@@ -78,7 +78,7 @@ def test_COMPONENT_RAWREADS_0001_paired(
         assert flag.maxCode.name == "HALT3"
         assert (
             flag.message
-            == "Corrupted Fastq.gz file suspected, last line number encountered: 0"
+            == "{'HALT3':'Corrupted Fastq.gz file suspected, last line number encountered: 0'}"
         )
 
 
@@ -103,7 +103,7 @@ def test_COMPONENT_RAWREADS_0001_single(
         m.setattr(test_component, "fastqcReportZIP", None)
         flag = testCheck.validate(test_component)
         assert flag.maxCode.name == "HALT1"
-        assert flag.message == "Missing expected files: ['fastqGZ', 'fastqcReportZIP']"
+        assert flag.message == "{'HALT1':'Missing expected files: ['fastqGZ', 'fastqcReportZIP']'}"
 
     # expected HALT2
     # TODO: requires a true truncated test file or something similar
@@ -123,7 +123,7 @@ def test_COMPONENT_RAWREADS_0001_single(
         assert flag.maxCode.name == "HALT3"
         assert (
             flag.message
-            == "Corrupted Fastq.gz file suspected, last line number encountered: 0"
+            == "{'HALT3':'Corrupted Fastq.gz file suspected, last line number encountered: 0'}"
         )
 
 
@@ -147,7 +147,7 @@ def test_COMPONENT_TRIMREADS_0001_paired(
         m.setattr(test_component, "trimmingReportTXT", None)
         flag = testCheck.validate(test_component)
         assert flag.maxCode.name == "HALT1"
-        assert flag.message == "Missing expected files: ['trimmingReportTXT']"
+        assert flag.message == "{'HALT1':'Missing expected files: ['trimmingReportTXT']'}"
 
     # expected HALT2
     # TODO: requires a true truncated test file or something similar
@@ -167,7 +167,7 @@ def test_COMPONENT_TRIMREADS_0001_paired(
         assert flag.maxCode.name == "HALT3"
         assert (
             flag.message
-            == "Corrupted Fastq.gz file suspected, last line number encountered: 0"
+            == "{'HALT3':'Corrupted Fastq.gz file suspected, last line number encountered: 0'}"
         )
 
 
@@ -191,7 +191,7 @@ def test_COMPONENT_TRIMREADS_0001_single(
         m.setattr(test_component, "trimmingReportTXT", None)
         flag = testCheck.validate(test_component)
         assert flag.maxCode.name == "HALT1"
-        assert flag.message == "Missing expected files: ['trimmingReportTXT']"
+        assert flag.message == "{'HALT1':'Missing expected files: ['trimmingReportTXT']'}"
 
     # expected HALT2
     # TODO: requires a true truncated test file or something similar
@@ -211,7 +211,7 @@ def test_COMPONENT_TRIMREADS_0001_single(
         assert flag.maxCode.name == "HALT3"
         assert (
             flag.message
-            == "Corrupted Fastq.gz file suspected, last line number encountered: 0"
+            == "{'HALT3':'Corrupted Fastq.gz file suspected, last line number encountered: 0'}"
         )
 
 
