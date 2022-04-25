@@ -10,6 +10,7 @@ dependencies:
    - isatools
    - multiqc
    - schema
+   - pytest
    - pip
    - pip:
      - git+https://github.com/J-81/dp_tools.git@1.0.3
