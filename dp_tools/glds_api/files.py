@@ -6,7 +6,6 @@ from dp_tools.core.entity_model import DataFile, TemplateDataset, TemplateSample
 from dp_tools.glds_api.commons import GENELAB_ROOT, get_glds_filelisting_json
 import logging
 
-logging.basicConfig(level=logging.DEBUG)
 log = logging.getLogger(__name__)
 
 
