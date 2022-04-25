@@ -6,7 +6,9 @@ from dp_tools.bulkRNASeq.loaders import load_BulkRNASeq_STAGE_00
 from dp_tools.core.configuration import load_full_config
 from dp_tools.components.components import BulkRNASeqMetadataComponent
 from dp_tools.glds_api.files import get_urls
+
 import pandas as pd
+from schema import Schema, Optional
 
 import logging
 
@@ -161,8 +163,14 @@ def main():
     args = _parse_args()
     isa_to_runsheet(args.accession, Path(args.isa_archive), str(args.config))
 
-
+# TODO: Needs heavy refactoring and log messaging
 def isa_to_runsheet(accession: str, isa_archive: Path, config: str):
+    ################################################################
+    ################################################################
+    # SETUP CONFIG AND INPUT TABLES
+    ################################################################
+    ################################################################
+    log.info("Setting up to generate runsheet dataframe")
     configuration = load_full_config(config=config)
     i_tables = isa_investigation_subtables(isa_archive)
     a_table = pd.read_csv(
@@ -181,6 +189,13 @@ def isa_to_runsheet(accession: str, isa_archive: Path, config: str):
     df_merged = s_table.merge(a_table, on="Sample Name").set_index(
         "Sample Name", drop=True
     )
+
+    ################################################################
+    ################################################################
+    # GENERATE FINAL DATAFRAME
+    ################################################################
+    ################################################################
+    log.info("Generating runsheet dataframe")
     df_final = pd.DataFrame(index=df_merged.index)
     # extract from Investigation table first
     investigation_source_entries = [
@@ -221,6 +236,39 @@ def isa_to_runsheet(accession: str, isa_archive: Path, config: str):
             # already set and checked above
             continue
         else:
+            # merged sequence data file style extraction
+            if entry.get("Multiple Values Per Entry"):
+                # getting compatible column
+                [target_col] = (col for col in df_merged.columns if col in entry["ISA Field Name"])
+
+                # split into separate values
+                values: pd.DataFrame = df_merged[target_col].str.split(pat=entry["Multiple Values Delimiter"], expand=True)
+
+                # rename columns with runsheet names, checking if optional columns are included
+                runsheet_col: dict
+                for runsheet_col in entry["Runsheet Column Name"]:
+                    if runsheet_col['index'] in values.columns:
+                        values = values.rename(columns={runsheet_col['index']:runsheet_col["name"]})
+                    else: # raise exception if not marked as optional
+                        if not runsheet_col["optional"]:
+                            raise ValueError(f"Could not populate runsheet column (config: {runsheet_col}). Data may be missing in ISA or the configuration may be incorrect")
+
+                if entry.get("GLDS URL Mapping"):
+                    urls = get_urls(accession=accession)
+                    def map_url_to_filename(fn: str) -> str:
+                        try:
+                            return urls.get(fn, dict())["url"]
+                        except KeyError:
+                            raise ValueError(f"{fn} does not have an associated url in {urls}")
+
+                    values2 = values.applymap(map_url_to_filename) # inplace operation doesn't seem to work
+                else:
+                    values2 = values
+
+                # add to final dataframe and check move onto entry
+                df_final = df_final.join(values2)
+                continue
+
             # factor value style extraction
             if entry.get("Matches Multiple Columns") and entry.get("Match Regex"):
                 # find matching columns
@@ -278,50 +326,41 @@ def isa_to_runsheet(accession: str, isa_archive: Path, config: str):
                 else:
                     df_final[entry["Runsheet Column Name"]] = series_to_add
 
-    # now find glds urls and append
-    user_source_entries = [
-        entry
-        for entry in configuration["Staging"]["General"]["Required Metadata"][
-            "From User"
-        ]
-        if entry.get("Data Asset Keys")  # indicates an exact name can be determined
-    ]
+    ################################################################
+    ################################################################
+    # VALIDATION
+    ################################################################
+    ################################################################
+    # TODO: Need to make the validation generalized, maybe load a validation object based on a configuration key?
+    log.info("Validating runsheet dataframe")
+    # validate dataframe contents (incomplete but catches most required columns)
+    # uses dataframe to dict index format: https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.to_dict.html
+    schema = Schema({
+        str: {
+            'has_ERCC':bool,
+            'organism':str,
+            'paired_end':bool,
+            'read1_path':str,
+            Optional('read2_path'):str,
+            str:object # this is used to pass other columns, chiefly Factor Value ones
+        }
+    })
+    schema.validate(df_final.to_dict(orient="index"))
+    # ensure at least on Factor Value is extracted
+    assert len([col for col in df_final.columns if col.startswith("Factor Value[")]) != 0, f"Must extract at least one factor value column but only has the following columns: {df_final.columns}"
 
-    urls = get_urls(accession=accession)
-    for entry in user_source_entries:
-        putative_filenames: set = set()
-        # iterate through keys
-        for key in entry["Data Asset Keys"]:
-            data_asset_conf = configuration["data assets"][key]
-            template = (
-                configuration["ISA Meta"]["Global file prefix"].format(
-                    datasystem=accession
-                )
-                + data_asset_conf["processed location"][-1]
-            )
-            putative_filenames = putative_filenames.union(
-                set(
-                    df_final.index.map(
-                        lambda sample_name: template.format(sample=sample_name)
-                    )
-                )
-            )
-
-            # check if these are listed
-            mapped_to_url = list(
-                map(
-                    lambda fn: urls.get(fn, dict()).get("url", False),
-                    putative_filenames,
-                )
-            )
-            if all(mapped_to_url):
-                df_final[entry["Runsheet Column Name"]] = mapped_to_url
-
+    ################################################################
+    ################################################################
+    # WRITE OUTPUT
+    ################################################################
+    ################################################################
     # output file
     output_fn = (
         f"{accession}_{configuration['NAME']}_v{configuration['VERSION']}_runsheet.csv"
     )
-    log.info(f"Writing runsheet to: {output_fn} with {len(df_final)} columns")
+    log.info(
+        f"Writing runsheet to: {output_fn} with {df_final.shape[0]} rows and {df_final.shape[1]} columns"
+    )
     df_final.to_csv(output_fn)
 
     return df_final
