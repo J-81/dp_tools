@@ -426,6 +426,7 @@ class VVProtocol(abc.ABC):
                         }
                         for flag in flags:
                             record_full = record_partial | {
+                                "flag_name": flag.maxCode.name,
                                 "flag_code": flag.maxCode.value,
                                 "check_id": flag.check.id,
                                 "message": flag.message,
