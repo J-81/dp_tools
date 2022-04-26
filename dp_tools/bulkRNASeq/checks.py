@@ -939,9 +939,11 @@ class DATASET_DIFFERENTIALGENEEXPRESSION_0001(Check):
             "visualization_output_table.csv",
             "visualization_PCA_table.csv",
         ],
+        "dge_table_master_annotation_keys": {
+            "Arobidopsis thaliana":"TAIR",
+            "_DEFAULT":"ENSEMBL"
+        },
         "dge_table_expected_annotation_columns": [
-            "ENSEMBL",
-            # OR("ENSEMBL","TAIR"), # BUG:  Need to implement different key check for Arobidobsis
             "SYMBOL",
             "GENENAME",
             "REFSEQ",
@@ -991,7 +993,8 @@ class DATASET_DIFFERENTIALGENEEXPRESSION_0001(Check):
         "For studies with ERCC spike-in, performs the same check on analogous tables. "
         "Additional performs the file specific validations: "
         "- contrasts.csv: Includes all the existing comparison groups (based on factor values in the metadata) and is formatted correctly"
-        "- differential_expression.csv:  Includes expected annotation columns {dge_table_expected_annotation_columns}, "
+        "- differential_expression.csv:  Includes expected annotation columns {dge_table_expected_annotation_columns}, includes a master annotation key "
+        "column dependent on the dataset organism as follows: {dge_table_master_annotation_keys} ,"
         "includes sample count columns for all samples, all sample count values are non-negative, "
         "all pairwise comparision columns exist with the following prefixes and adhere to the following constraints: {pairwise_columns_prefixes} "
         "all groupFactorWise statistics columns exists with the following prefixes and adhere to the following constraints: {group_factorwise_columns_prefixes} "
@@ -1055,7 +1058,8 @@ class DATASET_DIFFERENTIALGENEEXPRESSION_0001(Check):
 
         # check all constant columns exist
         missing_constant_columns: set
-        expected_columns: list = self.config["dge_table_expected_annotation_columns"]  # type: ignore
+        master_key = self.config["dge_table_master_annotation_keys"].get(dataset.metadata.organism, self.config["dge_table_master_annotation_keys"]["_DEFAULT"])
+        expected_columns: list = self.config["dge_table_expected_annotation_columns"] + [master_key] # type: ignore
         if missing_constant_columns := set(expected_columns) - set(df_dge.columns):
             err_msg += f"Annotation Columns missing: {missing_constant_columns}"
 
