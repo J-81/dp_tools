@@ -821,13 +821,14 @@ class DATASET_RSEQCANALYSIS_0001(Check):
         samples_outside_range: list[str]
         if is_stranded:
             samples_outside_range = determine_samples_outside_range(dataset, self.config['stranded_assessment_range']['min'], self.config['stranded_assessment_range']['max'])
-            codes.add(FlagCode.RED2)
         elif is_unstranded:
             samples_outside_range = determine_samples_outside_range(dataset, self.config['unstranded_assessment_range']['min'], self.config['unstranded_assessment_range']['max'])
-            codes.add(FlagCode.RED2)
         else: # this means that the standing is ambiguous
             samples_outside_range = list()
             codes.add(FlagCode.HALT1)
+
+        if len(samples_outside_range) != 0 :
+            codes.add(FlagCode.RED2)
 
         return Flag(
             codes=codes,
