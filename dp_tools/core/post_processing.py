@@ -320,7 +320,7 @@ def add_protocol(
 
 
 def setup_output_target(
-    output_file: Optional[str], original_path: Path, output_dir: str = "updated_tables"
+    output_file: Optional[str], original_path: Path, output_dir: str = "updated_curation_tables"
 ) -> Path:
     """Set ups target output file location.  Uses specified output_file name if provided.
     Defaults to the original table filename but saves to a directory 'output_dir' in either case.
