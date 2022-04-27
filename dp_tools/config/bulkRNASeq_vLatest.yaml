@@ -99,6 +99,7 @@ Staging:
         # an exception will be raised if one and only one url is not mapped to each filename
         - ISA Field Name: 
             - Parameter Value[Merged Sequence Data File]
+            - Raw Data File
           ISA Table Source: Assay
           Multiple Values Per Entry: true
           Multiple Values Delimiter: '\s*,\s*' # whitespace surrounded comma
