@@ -17,7 +17,7 @@ from dp_tools.bulkRNASeq.loaders import (
 @pytest.fixture
 def root_test_dir():
     """ This should be development machine specific, path should be set by env variable for privacy"""
-    return Path(os.environ["TEST_ASSETS_DIR"])
+    return Path(os.environ["TEST_ASSETS_DIR"]) / "bulkRNASeq"
 
 
 @pytest.fixture
