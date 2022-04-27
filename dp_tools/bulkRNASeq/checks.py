@@ -939,6 +939,7 @@ class DATASET_DIFFERENTIALGENEEXPRESSION_0001(Check):
             "visualization_output_table.csv",
             "visualization_PCA_table.csv",
         ],
+        # Expected column name, but dependent on dataset organism
         "dge_table_master_annotation_keys": {
             "Arobidopsis thaliana":"TAIR",
             "_DEFAULT":"ENSEMBL"
@@ -982,7 +983,11 @@ class DATASET_DIFFERENTIALGENEEXPRESSION_0001(Check):
         "expected_vis_pca_columns": [
             "PC1",
             "PC2",
-        ]  # more may be included but these are REQUIRED
+        ],  # more may be included but these are REQUIRED
+        "float_tolerance": 0.0001, # PERCENT
+        # TODO: DISCUSS, there baseline values - JDO
+        "log2fc_cross_method_percent_difference_threshold": 1, # PERCENT
+        "log2fc_cross_method_tolerance_percent": 80, # PERCENT
         # "middle": MIDDLE.median,
         # "yellow_standard_deviation_threshold": 2,
         # "red_standard_deviation_threshold": 4,
@@ -1002,7 +1007,13 @@ class DATASET_DIFFERENTIALGENEEXPRESSION_0001(Check):
         " - visualization_PCA_table.csv: All samples in index and at the following columns exist {expected_vis_pca_columns} "
         " - visualization_output_table.csv: Performs same checks as differential_expression.csv as well as, "
         "ensuring the additional pairwise comparision columns exist with the following prefixes and "
-        "adhere to the following constraints: {expected_vis_pca_columns} "
+        "adhere to the following constraints: {expected_vis_pca_columns}. "
+        "Confirms that gene counts between differential expression table and normalized counts tables are the same. "
+        "Confirms that computations match expectations with respect to following operations: (Float tolerance: +/-{float_tolerance} %)"
+        "- Group means are correctly computed from normalized counts "
+        "- log2FC values (computed with DESeq2's MLE approach) are comparable to direct computation with log2( mean(group1) / mean(group2) ), specifically "
+        "checking if at least {log2fc_cross_method_tolerance_percent} % of genes are have absolute percent differences between methods "
+        "less than {log2fc_cross_method_percent_difference_threshold} % "
     )
     flag_desc = {
         FlagCode.GREEN: "All described elements checked and no issues arose",
@@ -1141,6 +1152,36 @@ class DATASET_DIFFERENTIALGENEEXPRESSION_0001(Check):
                 and nonNegative(target_df_subset) == False
             ):
                 err_msg += f"At least one value in column ['{target_col}'] fails nonNegative constraint."
+
+        # mathematical checks
+        groups: list[str] = list({group for group in dataset.metadata.factor_groups.values()})
+        # check means are computed correctly
+        for query_group in groups:
+            query_column = f"Group.Mean_{query_group}"
+            group_samples = [sample for sample, this_group in dataset.metadata.factor_groups.items() if this_group == query_group]
+            abs_percent_difference = abs((((df_dge[group_samples].mean(axis="columns") - df_dge[query_column])/df_dge[query_column]) * 100 ))
+            within_tolerance = abs_percent_difference < self.config["float_tolerance"]
+            if not within_tolerance.all() == True:
+                err_msg += f"Group Mean value in table is out of float tolerance. This means {query_group} has improperly computed values"
+        # check that log2FC are within a reasonable range
+        # the log2FC computation within DESEQ2 is NOT directly computed from the ratio of group means
+        # 
+        for comparision in dataset.metadata.contrasts.columns:
+            query_column = f"Log2fc_{comparision}"
+            group1_mean_col = "Group.Mean_" + comparision.split(')v(')[0] + ")" # Uses parens and adds them back to prevent slicing on 'v' within factor names
+            group2_mean_col = "Group.Mean_" + "(" + comparision.split(')v(')[1]
+            computed_log2fc = (df_dge[group1_mean_col] / df_dge[group2_mean_col]).apply(math.log, args=[2])
+            abs_percent_difference =  abs( ( ( computed_log2fc - df_dge[query_column]) / df_dge[query_column]) * 100 )
+            percent_within_tolerance = mean(abs_percent_difference < self.config["log2fc_cross_method_percent_difference_threshold"]) * 100
+            # flag if not enough within tolerance
+            if percent_within_tolerance < self.config["log2fc_cross_method_tolerance_percent"]:
+                err_msg += (
+                    f"For comparison: '{comparision}' {100 - percent_within_tolerance} % of genes have absolute percent differences "
+                    f"(between log2fc direct computation and DESeq2's approach) "
+                    f"greater than {self.config['log2fc_cross_method_percent_difference_threshold']} % which exceeds tolerated percentage "
+                    f"({self.config['log2fc_cross_method_tolerance_percent']} %) of genes.  "
+                    f"This may indicate misassigned or misaligned columns. "
+                )
 
         return err_msg
 
