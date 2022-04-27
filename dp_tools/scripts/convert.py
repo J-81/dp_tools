@@ -1,7 +1,7 @@
 import argparse
 from pathlib import Path
 import re
-from typing import List
+from typing import List, Union
 from dp_tools.bulkRNASeq.loaders import load_BulkRNASeq_STAGE_00
 from dp_tools.core.configuration import load_full_config
 from dp_tools.components.components import BulkRNASeqMetadataComponent
@@ -163,6 +163,32 @@ def main():
     args = _parse_args()
     isa_to_runsheet(args.accession, Path(args.isa_archive), str(args.config))
 
+def get_column_name(df: pd.DataFrame, target: Union[str,list]) -> str:
+    try:
+        match target:
+            case str():
+                [target_col] = (col for col in df.columns if col in target)
+                return target_col
+            case list():
+                for query in target:
+                    try:
+                        [target_col] = (col for col in df.columns if col in query)
+                        return target_col
+                    except ValueError:
+                        continue
+                # if this runs, the list did not match anything!
+                raise ValueError(
+                    f"Could not find required column '{target}' "
+                    f"in either ISA sample or assay table. These columns were found: {list(df.columns)}"
+                    ) from e
+    except ValueError as e:
+        raise ValueError(
+            f"Could not find required column '{target}' "
+            f"in either ISA sample or assay table. These columns were found: {list(df.columns)}"
+            ) from e
+        
+                    
+
 # TODO: Needs heavy refactoring and log messaging
 def isa_to_runsheet(accession: str, isa_archive: Path, config: str):
     ################################################################
@@ -239,7 +265,7 @@ def isa_to_runsheet(accession: str, isa_archive: Path, config: str):
             # merged sequence data file style extraction
             if entry.get("Multiple Values Per Entry"):
                 # getting compatible column
-                [target_col] = (col for col in df_merged.columns if col in entry["ISA Field Name"])
+                target_col = get_column_name(df_merged, entry["ISA Field Name"])
 
                 # split into separate values
                 values: pd.DataFrame = df_merged[target_col].str.split(pat=entry["Multiple Values Delimiter"], expand=True)
@@ -312,12 +338,9 @@ def isa_to_runsheet(accession: str, isa_archive: Path, config: str):
                         series_to_add = df_merged[entry["ISA Field Name"]]
                     # handles cases where the field name varies
                     case list():
-                        [found_col] = (
-                            col
-                            for col in df_merged.columns
-                            if col in entry["ISA Field Name"]
-                        )
-                        series_to_add = df_merged[found_col]
+                        target_col = get_column_name(df_merged, entry["ISA Field Name"])
+
+                        series_to_add = df_merged[target_col]
 
                 if entry.get("Remapping"):
                     df_final[entry["Runsheet Column Name"]] = series_to_add.map(
