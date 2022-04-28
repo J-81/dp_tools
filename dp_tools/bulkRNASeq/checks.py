@@ -985,9 +985,9 @@ class DATASET_DIFFERENTIALGENEEXPRESSION_0001(Check):
             "PC2",
         ],  # more may be included but these are REQUIRED
         "float_tolerance": 0.0001, # PERCENT
-        # TODO: DISCUSS, there baseline values - JDO
-        "log2fc_cross_method_percent_difference_threshold": 1, # PERCENT
-        "log2fc_cross_method_tolerance_percent": 80, # PERCENT
+        # TODO: DISCUSS, these baseline values, should indicate a very heavy left-hand skewed histogram of differences - JDO
+        "log2fc_cross_method_percent_difference_threshold": 10, # PERCENT
+        "log2fc_cross_method_tolerance_percent": 60, # PERCENT
         # "middle": MIDDLE.median,
         # "yellow_standard_deviation_threshold": 2,
         # "red_standard_deviation_threshold": 4,
@@ -1012,7 +1012,7 @@ class DATASET_DIFFERENTIALGENEEXPRESSION_0001(Check):
         "Confirms that computations match expectations with respect to following operations: (Float tolerance: +/-{float_tolerance} %)"
         "- Group means are correctly computed from normalized counts "
         "- log2FC values (computed with DESeq2's MLE approach) are comparable to direct computation with log2( mean(group1) / mean(group2) ), specifically "
-        "checking if at least {log2fc_cross_method_tolerance_percent} % of genes are have absolute percent differences between methods "
+        "checking if at least {log2fc_cross_method_tolerance_percent} % of all genes have absolute percent differences between methods "
         "less than {log2fc_cross_method_percent_difference_threshold} % "
     )
     flag_desc = {
@@ -1176,10 +1176,10 @@ class DATASET_DIFFERENTIALGENEEXPRESSION_0001(Check):
             # flag if not enough within tolerance
             if percent_within_tolerance < self.config["log2fc_cross_method_tolerance_percent"]:
                 err_msg += (
-                    f"For comparison: '{comparision}' {100 - percent_within_tolerance} % of genes have absolute percent differences "
+                    f"For comparison: '{comparision}' {percent_within_tolerance:.2f} % of genes have absolute percent differences "
                     f"(between log2fc direct computation and DESeq2's approach) "
-                    f"greater than {self.config['log2fc_cross_method_percent_difference_threshold']} % which exceeds tolerated percentage "
-                    f"({self.config['log2fc_cross_method_tolerance_percent']} %) of genes.  "
+                    f"less than {self.config['log2fc_cross_method_percent_difference_threshold']} % which does not met the minimum percentage "
+                    f"({self.config['log2fc_cross_method_tolerance_percent']} %) of genes required.  "
                     f"This may indicate misassigned or misaligned columns. "
                 )
 
