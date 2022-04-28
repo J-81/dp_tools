@@ -180,7 +180,7 @@ def get_column_name(df: pd.DataFrame, target: Union[str,list]) -> str:
                 raise ValueError(
                     f"Could not find required column '{target}' "
                     f"in either ISA sample or assay table. These columns were found: {list(df.columns)}"
-                    ) from e
+                    )
     except ValueError as e:
         raise ValueError(
             f"Could not find required column '{target}' "
