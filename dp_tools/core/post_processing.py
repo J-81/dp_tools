@@ -188,11 +188,23 @@ def generate_new_column_dicts(
         header = (
             _PARAMETER_VALUE_COL_PREFIX + category_string + _PARAMETER_VALUE_COL_SUFFIX
         )
+
+        # sample names here are based on processing sample names!
         associated_samples = (
             [asset.metadata["template_kwargs"].get("sample", None)]
             if asset.metadata["template_kwargs"].get("sample", None)
             else all_samples
         )
+
+        # now remap those processing sample names to their orignal names, 
+        # required for joining to orignal assay table
+        processing_to_orignal_mapping = pd.read_csv(dataset.metadata.runsheet.path, index_col="Sample Name")["Original Sample Name"].to_dict()
+        # TODO: ineffecient, should only iterate once
+        remapped_samples = [f"{sample} remapped to {processing_to_orignal_mapping[sample]}" for sample in associated_samples if sample != processing_to_orignal_mapping[sample]]
+        associated_samples = [processing_to_orignal_mapping[sample] for sample in associated_samples]
+        if remapped_samples:
+            log.info(f"Post processing using remapped samples for the following: {remapped_samples} for header: '{header}'")
+
 
         # TODO: this likely will be better placed elsewhere but for now this is fine
         # Track column order here as a dict

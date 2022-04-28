@@ -8,7 +8,7 @@ def test_paired_isa_to_runsheet(glds194_dataSystem_STAGE00):
         ds.name, ds.dataset.metadata.ISAarchive.path, config="0"
     )
 
-    assert df_runsheet.shape == (13, 6)
+    assert df_runsheet.shape == (13, 7)
 
 
 def test_single_isa_to_runsheet(glds48_dataSystem_STAGE00):
@@ -18,4 +18,4 @@ def test_single_isa_to_runsheet(glds48_dataSystem_STAGE00):
         ds.name, ds.dataset.metadata.ISAarchive.path, config="0"
     )
 
-    assert df_runsheet.shape == (14, 6)
+    assert df_runsheet.shape == (14, 7)

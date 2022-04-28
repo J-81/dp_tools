@@ -348,6 +348,23 @@ def isa_to_runsheet(accession: str, isa_archive: Path, config: str):
                     )
                 else:
                     df_final[entry["Runsheet Column Name"]] = series_to_add
+    ################################################################
+    ################################################################
+    # PREPROCESSING
+    # - Create new column
+    #   - Original Sample Name (used for post processing consistency)
+    # - Reworks Sample Name for processing compatibility
+    ################################################################
+    ################################################################
+    # to preserve the original sample name for post processing
+    # make a new column
+    df_final['Original Sample Name'] = df_final.index
+
+    # then modify the index as needed
+    df_final.index = df_final.index.str.replace(" ","_")
+    modified_samples: list[str] = list(df_final.loc[df_final.index != df_final['Original Sample Name']].index)
+    if len(modified_samples) != 0:
+        log.info(f"The following orignal sample names modified for processing: {modified_samples}")
 
     ################################################################
     ################################################################
@@ -360,6 +377,7 @@ def isa_to_runsheet(accession: str, isa_archive: Path, config: str):
     # uses dataframe to dict index format: https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.to_dict.html
     schema = Schema({
         str: {
+            'Original Sample Name':str,
             'has_ERCC':bool,
             'organism':str,
             'paired_end':bool,

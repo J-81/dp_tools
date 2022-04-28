@@ -10,6 +10,7 @@ dependencies:
    - isatools
    - multiqc
    - schema
+   - tabulate # used to generate markdown tables from pandas dataframe in post processing
    - pytest
    - pip
    - pip:
