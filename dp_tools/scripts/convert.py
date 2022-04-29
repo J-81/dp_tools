@@ -168,7 +168,11 @@ def _parse_args():
 
 def main():
     args = _parse_args()
-    isa_to_runsheet(args.accession, Path(args.isa_archive), str(args.config))
+    assert (
+        args.config_type in SUPPORTED_CONFIG_TYPES
+    ), f"Invalid config type supplied: '{args.config_type}' Supported config types: {SUPPORTED_CONFIG_TYPES} "
+    config = (args.config_type, args.config_version)
+    isa_to_runsheet(args.accession, Path(args.isa_archive), config)
 
 
 def get_column_name(df: pd.DataFrame, target: Union[str, list]) -> str:
