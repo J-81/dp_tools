@@ -137,6 +137,9 @@ def get_assay_table_path(
     return assay_path
 
 
+SUPPORTED_CONFIG_TYPES = ["microarray", "bulkRNASeq"]
+
+
 def _parse_args():
     """Parse command line args."""
     parser = argparse.ArgumentParser(
@@ -146,7 +149,12 @@ def _parse_args():
         "--accession", metavar="GLDS-001", required=True, help="GLDS accession number"
     )
     parser.add_argument(
-        "--config", metavar="0", default="Latest", help="Packaged config to use"
+        "--config-type",
+        required=True,
+        help=f"Packaged config type to use. Currently supports: {SUPPORTED_CONFIG_TYPES}",
+    )
+    parser.add_argument(
+        "--config-version", default="Latest", help="Packaged config version to use"
     )
     parser.add_argument(
         "--isa-archive",
