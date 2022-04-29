@@ -8,7 +8,6 @@ from dp_tools.components.components import BulkRNASeqMetadataComponent
 from dp_tools.glds_api.files import get_urls
 
 import pandas as pd
-from schema import Schema, Optional
 
 import logging
 
