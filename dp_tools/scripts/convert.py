@@ -269,26 +269,37 @@ def isa_to_runsheet(accession: str, isa_archive: Path, config: tuple[str, str]):
                 target_col = get_column_name(df_merged, entry["ISA Field Name"])
 
                 # split into separate values
-                values: pd.DataFrame = df_merged[target_col].str.split(pat=entry["Multiple Values Delimiter"], expand=True)
+                values: pd.DataFrame = df_merged[target_col].str.split(
+                    pat=entry["Multiple Values Delimiter"], expand=True
+                )
 
                 # rename columns with runsheet names, checking if optional columns are included
                 runsheet_col: dict
                 for runsheet_col in entry["Runsheet Column Name"]:
-                    if runsheet_col['index'] in values.columns:
-                        values = values.rename(columns={runsheet_col['index']:runsheet_col["name"]})
-                    else: # raise exception if not marked as optional
+                    if runsheet_col["index"] in values.columns:
+                        values = values.rename(
+                            columns={runsheet_col["index"]: runsheet_col["name"]}
+                        )
+                    else:  # raise exception if not marked as optional
                         if not runsheet_col["optional"]:
-                            raise ValueError(f"Could not populate runsheet column (config: {runsheet_col}). Data may be missing in ISA or the configuration may be incorrect")
+                            raise ValueError(
+                                f"Could not populate runsheet column (config: {runsheet_col}). Data may be missing in ISA or the configuration may be incorrect"
+                            )
 
                 if entry.get("GLDS URL Mapping"):
                     urls = get_urls(accession=accession)
+
                     def map_url_to_filename(fn: str) -> str:
                         try:
                             return urls.get(fn, dict())["url"]
                         except KeyError:
-                            raise ValueError(f"{fn} does not have an associated url in {urls}")
+                            raise ValueError(
+                                f"{fn} does not have an associated url in {urls}"
+                            )
 
-                    values2 = values.applymap(map_url_to_filename) # inplace operation doesn't seem to work
+                    values2 = values.applymap(
+                        map_url_to_filename
+                    )  # inplace operation doesn't seem to work
                 else:
                     values2 = values
 
