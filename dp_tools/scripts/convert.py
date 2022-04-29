@@ -356,15 +356,22 @@ def isa_to_runsheet(accession: str, isa_archive: Path, config: tuple[str, str]):
             else:
                 # CAUTION: normally this wouldn't be safe as the order of rows isn't considered.
                 # In this block, the indices are checked for parity already making this okay
-                match entry["ISA Field Name"]:
-                    case str():
-                        series_to_add = df_merged[entry["ISA Field Name"]]
-                    # handles cases where the field name varies
-                    case list():
+                if entry.get("Value If Not Found"):
+                    try:
                         target_col = get_column_name(df_merged, entry["ISA Field Name"])
-
                         series_to_add = df_merged[target_col]
-
+                    except ValueError:
+                        series_to_add = pd.DataFrame(
+                            data={
+                                "FALLING_BACK_TO_DEFAULT": entry.get(
+                                    "Value If Not Found"
+                                )
+                            },
+                            index=df_merged.index,
+                        )
+                else:
+                    target_col = get_column_name(df_merged, entry["ISA Field Name"])
+                    series_to_add = df_merged[target_col]
                 if entry.get("GLDS URL Mapping"):
                     urls = get_urls(accession=accession)
 
@@ -380,7 +387,6 @@ def isa_to_runsheet(accession: str, isa_archive: Path, config: tuple[str, str]):
                         map_url_to_filename
                     )  # inplace operation doesn't seem to work
                     series_to_add = _swap
-
                 if entry.get("Remapping"):
                     df_final[entry["Runsheet Column Name"]] = series_to_add.map(
                         lambda val: entry.get("Remapping")[val]
