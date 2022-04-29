@@ -354,6 +354,22 @@ def isa_to_runsheet(accession: str, isa_archive: Path, config: tuple[str, str]):
 
                         series_to_add = df_merged[target_col]
 
+                if entry.get("GLDS URL Mapping"):
+                    urls = get_urls(accession=accession)
+
+                    def map_url_to_filename(fn: str) -> str:
+                        try:
+                            return urls.get(fn, dict())["url"]
+                        except KeyError:
+                            raise ValueError(
+                                f"{fn} does not have an associated url in {urls}"
+                            )
+
+                    _swap = series_to_add.map(
+                        map_url_to_filename
+                    )  # inplace operation doesn't seem to work
+                    series_to_add = _swap
+
                 if entry.get("Remapping"):
                     df_final[entry["Runsheet Column Name"]] = series_to_add.map(
                         lambda val: entry.get("Remapping")[val]
