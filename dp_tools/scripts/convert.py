@@ -163,7 +163,8 @@ def main():
     args = _parse_args()
     isa_to_runsheet(args.accession, Path(args.isa_archive), str(args.config))
 
-def get_column_name(df: pd.DataFrame, target: Union[str,list]) -> str:
+
+def get_column_name(df: pd.DataFrame, target: Union[str, list]) -> str:
     try:
         match target:
             case str():
@@ -180,14 +181,13 @@ def get_column_name(df: pd.DataFrame, target: Union[str,list]) -> str:
                 raise ValueError(
                     f"Could not find required column '{target}' "
                     f"in either ISA sample or assay table. These columns were found: {list(df.columns)}"
-                    )
+                )
     except ValueError as e:
         raise ValueError(
             f"Could not find required column '{target}' "
             f"in either ISA sample or assay table. These columns were found: {list(df.columns)}"
-            ) from e
-        
-                    
+        ) from e
+
 
 # TODO: Needs heavy refactoring and log messaging
 def isa_to_runsheet(accession: str, isa_archive: Path, config: str):
