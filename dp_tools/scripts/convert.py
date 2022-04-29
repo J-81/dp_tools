@@ -190,14 +190,14 @@ def get_column_name(df: pd.DataFrame, target: Union[str, list]) -> str:
 
 
 # TODO: Needs heavy refactoring and log messaging
-def isa_to_runsheet(accession: str, isa_archive: Path, config: str):
+def isa_to_runsheet(accession: str, isa_archive: Path, config: tuple[str, str]):
     ################################################################
     ################################################################
     # SETUP CONFIG AND INPUT TABLES
     ################################################################
     ################################################################
     log.info("Setting up to generate runsheet dataframe")
-    configuration = load_full_config(config=config)
+    configuration = load_config(config=config)
     i_tables = isa_investigation_subtables(isa_archive)
     a_table = pd.read_csv(
         get_assay_table_path(ISAarchive=isa_archive, configuration=configuration),
