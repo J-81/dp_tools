@@ -2,8 +2,8 @@ import argparse
 from pathlib import Path
 import re
 from typing import List, Union
-from dp_tools.bulkRNASeq.loaders import load_BulkRNASeq_STAGE_00
-from dp_tools.core.configuration import load_full_config
+from dp_tools.config import schemas
+from dp_tools.core.configuration import load_config
 from dp_tools.components.components import BulkRNASeqMetadataComponent
 from dp_tools.glds_api.files import get_urls
 
