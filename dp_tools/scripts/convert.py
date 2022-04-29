@@ -115,7 +115,7 @@ def get_assay_table_path(
     # guard, one and only one should match
     assert (
         len(matches) == 1
-    ), f"One and only one should match, instead got these matches: {matches}"
+    ), f"One and only one should match, instead got these matches: {matches} using there queries: {valid_measurements_and_technology_types} against these listed in the ISA archive: {df[['Study Assay Measurement Type', 'Study Assay Technology Type']]}"
 
     # load assay table
     assay_file_path = matches[0]
