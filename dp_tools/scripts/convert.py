@@ -198,6 +198,7 @@ def isa_to_runsheet(accession: str, isa_archive: Path, config: tuple[str, str]):
     ################################################################
     log.info("Setting up to generate runsheet dataframe")
     configuration = load_config(config=config)
+    runsheet_schema = schemas.runsheet[config[0]]
     i_tables = isa_investigation_subtables(isa_archive)
     a_table = pd.read_csv(
         get_assay_table_path(ISAarchive=isa_archive, configuration=configuration),
@@ -379,20 +380,12 @@ def isa_to_runsheet(accession: str, isa_archive: Path, config: tuple[str, str]):
     log.info("Validating runsheet dataframe")
     # validate dataframe contents (incomplete but catches most required columns)
     # uses dataframe to dict index format: https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.to_dict.html
-    schema = Schema({
-        str: {
-            'Original Sample Name':str,
-            'has_ERCC':bool,
-            'organism':str,
-            'paired_end':bool,
-            'read1_path':str,
-            Optional('read2_path'):str,
-            str:object # this is used to pass other columns, chiefly Factor Value ones
-        }
-    })
-    schema.validate(df_final.to_dict(orient="index"))
+
+    runsheet_schema.validate(df_final.to_dict(orient="index"))
     # ensure at least on Factor Value is extracted
-    assert len([col for col in df_final.columns if col.startswith("Factor Value[")]) != 0, f"Must extract at least one factor value column but only has the following columns: {df_final.columns}"
+    assert (
+        len([col for col in df_final.columns if col.startswith("Factor Value[")]) != 0
+    ), f"Must extract at least one factor value column but only has the following columns: {df_final.columns}"
 
     ################################################################
     ################################################################
