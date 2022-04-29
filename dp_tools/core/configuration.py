@@ -2,6 +2,7 @@ import os
 from pathlib import Path
 from typing import Union
 import pkg_resources
+from warnings import warn
 
 import yaml
 import logging
@@ -10,6 +11,11 @@ log = logging.getLogger(__name__)
 
 
 def load_full_config(config: Union[str, Path]) -> dict:
+    warn(
+        "Calls to this function should be migrated to 'load_config'; version=2.0.0",
+        DeprecationWarning,
+        stacklevel=2,
+    )
     if isinstance(config, str):
         resolved_config_path = os.path.join(
             "..", "config", f"bulkRNASeq_v{config}.yaml"
