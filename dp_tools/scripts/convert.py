@@ -358,13 +358,17 @@ def isa_to_runsheet(accession: str, isa_archive: Path, config: tuple[str, str]):
     ################################################################
     # to preserve the original sample name for post processing
     # make a new column
-    df_final['Original Sample Name'] = df_final.index
+    df_final["Original Sample Name"] = df_final.index
 
     # then modify the index as needed
-    df_final.index = df_final.index.str.replace(" ","_")
-    modified_samples: list[str] = list(df_final.loc[df_final.index != df_final['Original Sample Name']].index)
+    df_final.index = df_final.index.str.replace(" ", "_")
+    modified_samples: list[str] = list(
+        df_final.loc[df_final.index != df_final["Original Sample Name"]].index
+    )
     if len(modified_samples) != 0:
-        log.info(f"The following orignal sample names modified for processing: {modified_samples}")
+        log.info(
+            f"The following orignal sample names modified for processing: {modified_samples}"
+        )
 
     ################################################################
     ################################################################
