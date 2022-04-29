@@ -73,11 +73,18 @@ Staging:
             Note: Actual locations are denoted in 'array_data_file_path'
           Example: Atha_Col-0_HypocotylCC_WT_GC_Rep2_GSM2152575_raw.CEL.gz
     
-
         - ISA Field Name: Array Data File
           ISA Table Source: Assay
           Runsheet Column Name: Array Data File Path
           GLDS URL Mapping: true
+          Processing Usage: >-
+            Actual locations of the raw data files.  Can be either a local path or a uri.
+          Example: 'https://genelab-data.ndc.nasa.gov/genelab/static/media/dataset/GLDS-205/...'
+
+        - ISA Field Name: Comment[Array Data File Name]
+          ISA Table Source: Assay
+          Runsheet Column Name: Comment[Array Data File Name]
+          Value If Not Found: "N/A"
           Processing Usage: >-
             Actual locations of the raw data files.  Can be either a local path or a uri.
           Example: 'https://genelab-data.ndc.nasa.gov/genelab/static/media/dataset/GLDS-205/...'
