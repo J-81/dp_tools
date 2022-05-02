@@ -987,7 +987,7 @@ class DATASET_DIFFERENTIALGENEEXPRESSION_0001(Check):
         "float_tolerance": 0.0001, # PERCENT
         # TODO: DISCUSS, these baseline values, should indicate a very heavy left-hand skewed histogram of differences - JDO
         "log2fc_cross_method_percent_difference_threshold": 10, # PERCENT
-        "log2fc_cross_method_tolerance_percent": 60, # PERCENT
+        "log2fc_cross_method_tolerance_percent": 50, # PERCENT
         # "middle": MIDDLE.median,
         # "yellow_standard_deviation_threshold": 2,
         # "red_standard_deviation_threshold": 4,
