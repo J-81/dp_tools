@@ -179,12 +179,12 @@ def get_column_name(df: pd.DataFrame, target: Union[str, list]) -> str:
     try:
         match target:
             case str():
-                [target_col] = (col for col in df.columns if col in target)
+                [target_col] = (col for col in df.columns if col == target)
                 return target_col
             case list():
                 for query in target:
                     try:
-                        [target_col] = (col for col in df.columns if col in query)
+                        [target_col] = (col for col in df.columns if col == query)
                         return target_col
                     except ValueError:
                         continue
@@ -226,6 +226,9 @@ def isa_to_runsheet(accession: str, isa_archive: Path, config: tuple[str, str]):
     s_table = pd.read_csv(s_file, sep="\t")
     df_merged = s_table.merge(a_table, on="Sample Name").set_index(
         "Sample Name", drop=True
+    )
+    log.debug(
+        f"Merged assay and sample table have the following columns: {df_merged.columns}"
     )
 
     ################################################################
@@ -358,15 +361,16 @@ def isa_to_runsheet(accession: str, isa_archive: Path, config: tuple[str, str]):
                 # In this block, the indices are checked for parity already making this okay
                 if entry.get("Value If Not Found"):
                     try:
+                        log.info(f"Attempting to retrieve entry: {entry}")
                         target_col = get_column_name(df_merged, entry["ISA Field Name"])
                         series_to_add = df_merged[target_col]
                     except ValueError:
+                        default_value = entry.get("Value If Not Found")
+                        log.warning(
+                            f"Could not find column, using default value: {default_value}"
+                        )
                         series_to_add = pd.DataFrame(
-                            data={
-                                "FALLING_BACK_TO_DEFAULT": entry.get(
-                                    "Value If Not Found"
-                                )
-                            },
+                            data={"FALLING_BACK_TO_DEFAULT": default_value},
                             index=df_merged.index,
                         )
                 else:
