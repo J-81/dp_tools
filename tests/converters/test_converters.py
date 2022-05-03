@@ -42,7 +42,7 @@ def test_microarray_glds205_isa_to_runsheet(glds205_isazip_path):
     assert df_runsheet.shape == (16, 13)  # 2 factor values
     assert (
         hashlib.sha1(pd.util.hash_pandas_object(df_runsheet).values).hexdigest()
-        == "c316e9e8b6013795395fab270a2bc96bd917d778"
+        == "f8bab4078c8b4715708f6fccc1c314d853f4fb9c"
     ), "Hash did not match, the means the contents changed. Manually validation and reset of test hash is in order"
 
 
@@ -55,5 +55,5 @@ def test_microarray_glds123_isa_to_runsheet(glds123_isazip_path):
     assert df_runsheet.shape == (16, 12)  # 1 factor values
     assert (
         hashlib.sha1(pd.util.hash_pandas_object(df_runsheet).values).hexdigest()
-        == "0dce69a3de3783856f7f6acc7f1eb9e634d4e2c8"
+        == "2cd5f640d5b0ced45be1f845e0aa9313bd2e0803"
     ), "Hash did not match, the means the contents changed. Manually validation and reset of test hash is in order"
