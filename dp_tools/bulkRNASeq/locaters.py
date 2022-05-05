@@ -28,6 +28,11 @@ class Locator():
     data_asset_config: dict
 """
 
+@cache
+def _rIterDir(p: Path) -> Set[Path]:
+    files = {f for f in p.rglob("*")}
+    log.debug(f"Caching {len(files)} files found in {p}")
+    return files
 
 @dataclass
 class Locator:
@@ -52,12 +57,6 @@ class Locator:
         Uses the data assets yaml format
         """
         this_data_asset_config = self.data_asset_config[config_key]
-
-        @cache
-        def _rIterDir(p: Path) -> Set[Path]:
-            files = {f for f in p.rglob("*")}
-            log.debug(f"Caching {len(files)} files found in {p}")
-            return files
 
         # format search pattern
         search_pattern = Path(self.root_dir) / Path(
