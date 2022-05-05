@@ -968,6 +968,7 @@ class DATASET_DIFFERENTIALGENEEXPRESSION_0001(Check):
         ],
         # Expected column name, but dependent on dataset organism
         "dge_table_master_annotation_keys": {
+            "Arabidopsis thaliana": "TAIR",
             "_DEFAULT": "ENSEMBL",
         },
         "dge_table_expected_annotation_columns": [
