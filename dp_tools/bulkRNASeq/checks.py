@@ -788,7 +788,9 @@ class DATASET_RSEQCANALYSIS_0001(Check):
                 sample_component="rSeQCAnalysis",
                 mqc_module="RSeQC",
                 mqc_plot="Infer experiment",
-            ).fillna(0) # Nan is a zero for this MultiQC table
+            ).fillna(
+                0
+            )  # Nan is a zero for this MultiQC table
 
             median_strandedness = df.median().to_dict()
 
@@ -797,22 +799,39 @@ class DATASET_RSEQCANALYSIS_0001(Check):
         median_strandedness = get_median_strandedness(dataset)
 
         # check if dominant assessment is valid
-        strand_assessment: str = max(median_strandedness, key=lambda k: median_strandedness[k])
-        if strand_assessment not in self.config['valid_dominant_strandedness_assessments']:
+        strand_assessment: str = max(
+            median_strandedness, key=lambda k: median_strandedness[k]
+        )
+        if (
+            strand_assessment
+            not in self.config["valid_dominant_strandedness_assessments"]
+        ):
             codes.add(FlagCode.HALT2)
 
         # flag based on thresholds
         assessment_value: float = median_strandedness[strand_assessment]
 
-        is_stranded: bool = self.config['stranded_assessment_range']['max'] > assessment_value > self.config['stranded_assessment_range']['min']
-        is_unstranded: bool = self.config['unstranded_assessment_range']['max'] > assessment_value > self.config['unstranded_assessment_range']['min']            
+        is_stranded: bool = (
+            self.config["stranded_assessment_range"]["max"]
+            > assessment_value
+            > self.config["stranded_assessment_range"]["min"]
+        )
+        is_unstranded: bool = (
+            self.config["unstranded_assessment_range"]["max"]
+            > assessment_value
+            > self.config["unstranded_assessment_range"]["min"]
+        )
 
-        def determine_samples_outside_range(dataset: TemplateDataset, min: float, max: float) -> list[str]:
+        def determine_samples_outside_range(
+            dataset: TemplateDataset, min: float, max: float
+        ) -> list[str]:
             df = dataset.getMQCDataFrame(
                 sample_component="rSeQCAnalysis",
                 mqc_module="RSeQC",
                 mqc_plot="Infer experiment",
-            ).fillna(0) # Nan is a zero for this MultiQC table
+            ).fillna(
+                0
+            )  # Nan is a zero for this MultiQC table
 
             return df.index[df[strand_assessment].between(min, max) == False].to_list()
 
@@ -820,14 +839,22 @@ class DATASET_RSEQCANALYSIS_0001(Check):
         # flags based on samples that are out of the assessment range
         samples_outside_range: list[str]
         if is_stranded:
-            samples_outside_range = determine_samples_outside_range(dataset, self.config['stranded_assessment_range']['min'], self.config['stranded_assessment_range']['max'])
+            samples_outside_range = determine_samples_outside_range(
+                dataset,
+                self.config["stranded_assessment_range"]["min"],
+                self.config["stranded_assessment_range"]["max"],
+            )
         elif is_unstranded:
-            samples_outside_range = determine_samples_outside_range(dataset, self.config['unstranded_assessment_range']['min'], self.config['unstranded_assessment_range']['max'])
-        else: # this means that the standing is ambiguous
+            samples_outside_range = determine_samples_outside_range(
+                dataset,
+                self.config["unstranded_assessment_range"]["min"],
+                self.config["unstranded_assessment_range"]["max"],
+            )
+        else:  # this means that the standing is ambiguous
             samples_outside_range = list()
             codes.add(FlagCode.HALT1)
 
-        if len(samples_outside_range) != 0 :
+        if len(samples_outside_range) != 0:
             codes.add(FlagCode.RED2)
 
         return Flag(
@@ -941,8 +968,7 @@ class DATASET_DIFFERENTIALGENEEXPRESSION_0001(Check):
         ],
         # Expected column name, but dependent on dataset organism
         "dge_table_master_annotation_keys": {
-            "Arobidopsis thaliana":"TAIR",
-            "_DEFAULT":"ENSEMBL"
+            "_DEFAULT": "ENSEMBL",
         },
         "dge_table_expected_annotation_columns": [
             "SYMBOL",
@@ -984,10 +1010,10 @@ class DATASET_DIFFERENTIALGENEEXPRESSION_0001(Check):
             "PC1",
             "PC2",
         ],  # more may be included but these are REQUIRED
-        "float_tolerance": 0.0001, # PERCENT
+        "float_tolerance": 0.0001,  # PERCENT
         # TODO: DISCUSS, these baseline values, should indicate a very heavy left-hand skewed histogram of differences - JDO
-        "log2fc_cross_method_percent_difference_threshold": 10, # PERCENT
-        "log2fc_cross_method_tolerance_percent": 50, # PERCENT
+        "log2fc_cross_method_percent_difference_threshold": 10,  # PERCENT
+        "log2fc_cross_method_tolerance_percent": 50,  # PERCENT
         # "middle": MIDDLE.median,
         # "yellow_standard_deviation_threshold": 2,
         # "red_standard_deviation_threshold": 4,
@@ -1069,8 +1095,14 @@ class DATASET_DIFFERENTIALGENEEXPRESSION_0001(Check):
 
         # check all constant columns exist
         missing_constant_columns: set
-        master_key = self.config["dge_table_master_annotation_keys"].get(dataset.metadata.organism, self.config["dge_table_master_annotation_keys"]["_DEFAULT"])
-        expected_columns: list = self.config["dge_table_expected_annotation_columns"] + [master_key] # type: ignore
+        master_key = self.config["dge_table_master_annotation_keys"].get(
+            dataset.metadata.organism,
+            self.config["dge_table_master_annotation_keys"]["_DEFAULT"],
+        )
+        log.debug(
+            f"Resolved master annotation key for {dataset.metadata.organism} is {master_key}"
+        )
+        expected_columns: list = self.config["dge_table_expected_annotation_columns"] + [master_key]  # type: ignore
         if missing_constant_columns := set(expected_columns) - set(df_dge.columns):
             err_msg += f"Annotation Columns missing: {missing_constant_columns}"
 
@@ -1154,27 +1186,59 @@ class DATASET_DIFFERENTIALGENEEXPRESSION_0001(Check):
                 err_msg += f"At least one value in column ['{target_col}'] fails nonNegative constraint."
 
         # mathematical checks
-        groups: list[str] = list({group for group in dataset.metadata.factor_groups.values()})
+        groups: list[str] = list(
+            {group for group in dataset.metadata.factor_groups.values()}
+        )
         # check means are computed correctly
         for query_group in groups:
             query_column = f"Group.Mean_{query_group}"
-            group_samples = [sample for sample, this_group in dataset.metadata.factor_groups.items() if this_group == query_group]
-            abs_percent_difference = abs((((df_dge[group_samples].mean(axis="columns") - df_dge[query_column])/df_dge[query_column]) * 100 ))
+            group_samples = [
+                sample
+                for sample, this_group in dataset.metadata.factor_groups.items()
+                if this_group == query_group
+            ]
+            abs_percent_difference = abs(
+                (
+                    (
+                        (
+                            df_dge[group_samples].mean(axis="columns")
+                            - df_dge[query_column]
+                        )
+                        / df_dge[query_column]
+                    )
+                    * 100
+                )
+            )
             within_tolerance = abs_percent_difference < self.config["float_tolerance"]
             if not within_tolerance.all() == True:
                 err_msg += f"Group Mean value in table is out of float tolerance. This means {query_group} has improperly computed values"
         # check that log2FC are within a reasonable range
         # the log2FC computation within DESEQ2 is NOT directly computed from the ratio of group means
-        # 
+        #
         for comparision in dataset.metadata.contrasts.columns:
             query_column = f"Log2fc_{comparision}"
-            group1_mean_col = "Group.Mean_" + comparision.split(')v(')[0] + ")" # Uses parens and adds them back to prevent slicing on 'v' within factor names
-            group2_mean_col = "Group.Mean_" + "(" + comparision.split(')v(')[1]
-            computed_log2fc = (df_dge[group1_mean_col] / df_dge[group2_mean_col]).apply(math.log, args=[2])
-            abs_percent_difference =  abs( ( ( computed_log2fc - df_dge[query_column]) / df_dge[query_column]) * 100 )
-            percent_within_tolerance = mean(abs_percent_difference < self.config["log2fc_cross_method_percent_difference_threshold"]) * 100
+            group1_mean_col = (
+                "Group.Mean_" + comparision.split(")v(")[0] + ")"
+            )  # Uses parens and adds them back to prevent slicing on 'v' within factor names
+            group2_mean_col = "Group.Mean_" + "(" + comparision.split(")v(")[1]
+            computed_log2fc = (df_dge[group1_mean_col] / df_dge[group2_mean_col]).apply(
+                math.log, args=[2]
+            )
+            abs_percent_difference = abs(
+                ((computed_log2fc - df_dge[query_column]) / df_dge[query_column]) * 100
+            )
+            percent_within_tolerance = (
+                mean(
+                    abs_percent_difference
+                    < self.config["log2fc_cross_method_percent_difference_threshold"]
+                )
+                * 100
+            )
             # flag if not enough within tolerance
-            if percent_within_tolerance < self.config["log2fc_cross_method_tolerance_percent"]:
+            if (
+                percent_within_tolerance
+                < self.config["log2fc_cross_method_tolerance_percent"]
+            ):
                 err_msg += (
                     f"For comparison: '{comparision}' {percent_within_tolerance:.2f} % of genes have absolute percent differences "
                     f"(between log2fc direct computation and DESeq2's approach) "
