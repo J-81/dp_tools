@@ -2,13 +2,12 @@ import argparse
 from pathlib import Path
 import re
 from typing import List, Union
-from dp_tools.bulkRNASeq.loaders import load_BulkRNASeq_STAGE_00
-from dp_tools.core.configuration import load_full_config
+from dp_tools.config import schemas
+from dp_tools.core.configuration import load_config
 from dp_tools.components.components import BulkRNASeqMetadataComponent
 from dp_tools.glds_api.files import get_urls
 
 import pandas as pd
-from schema import Schema, Optional
 
 import logging
 
@@ -115,7 +114,7 @@ def get_assay_table_path(
     # guard, one and only one should match
     assert (
         len(matches) == 1
-    ), f"One and only one should match, instead got these matches: {matches}"
+    ), f"One and only one should match, instead got these matches: {matches} using there queries: {valid_measurements_and_technology_types} against these listed in the ISA archive: {df[['Study Assay Measurement Type', 'Study Assay Technology Type']]}"
 
     # load assay table
     assay_file_path = matches[0]
@@ -138,6 +137,9 @@ def get_assay_table_path(
     return assay_path
 
 
+SUPPORTED_CONFIG_TYPES = ["microarray", "bulkRNASeq"]
+
+
 def _parse_args():
     """Parse command line args."""
     parser = argparse.ArgumentParser(
@@ -147,7 +149,12 @@ def _parse_args():
         "--accession", metavar="GLDS-001", required=True, help="GLDS accession number"
     )
     parser.add_argument(
-        "--config", metavar="0", default="Latest", help="Packaged config to use"
+        "--config-type",
+        required=True,
+        help=f"Packaged config type to use. Currently supports: {SUPPORTED_CONFIG_TYPES}",
+    )
+    parser.add_argument(
+        "--config-version", default="Latest", help="Packaged config version to use"
     )
     parser.add_argument(
         "--isa-archive",
@@ -161,7 +168,11 @@ def _parse_args():
 
 def main():
     args = _parse_args()
-    isa_to_runsheet(args.accession, Path(args.isa_archive), str(args.config))
+    assert (
+        args.config_type in SUPPORTED_CONFIG_TYPES
+    ), f"Invalid config type supplied: '{args.config_type}' Supported config types: {SUPPORTED_CONFIG_TYPES} "
+    config = (args.config_type, args.config_version)
+    isa_to_runsheet(args.accession, Path(args.isa_archive), config)
 
 
 def get_column_name(df: pd.DataFrame, target: Union[str, list]) -> str:
@@ -190,14 +201,15 @@ def get_column_name(df: pd.DataFrame, target: Union[str, list]) -> str:
 
 
 # TODO: Needs heavy refactoring and log messaging
-def isa_to_runsheet(accession: str, isa_archive: Path, config: str):
+def isa_to_runsheet(accession: str, isa_archive: Path, config: tuple[str, str]):
     ################################################################
     ################################################################
     # SETUP CONFIG AND INPUT TABLES
     ################################################################
     ################################################################
     log.info("Setting up to generate runsheet dataframe")
-    configuration = load_full_config(config=config)
+    configuration = load_config(config=config)
+    runsheet_schema = schemas.runsheet[config[0]]
     i_tables = isa_investigation_subtables(isa_archive)
     a_table = pd.read_csv(
         get_assay_table_path(ISAarchive=isa_archive, configuration=configuration),
@@ -344,15 +356,37 @@ def isa_to_runsheet(accession: str, isa_archive: Path, config: str):
             else:
                 # CAUTION: normally this wouldn't be safe as the order of rows isn't considered.
                 # In this block, the indices are checked for parity already making this okay
-                match entry["ISA Field Name"]:
-                    case str():
-                        series_to_add = df_merged[entry["ISA Field Name"]]
-                    # handles cases where the field name varies
-                    case list():
+                if entry.get("Value If Not Found"):
+                    try:
                         target_col = get_column_name(df_merged, entry["ISA Field Name"])
-
                         series_to_add = df_merged[target_col]
+                    except ValueError:
+                        series_to_add = pd.DataFrame(
+                            data={
+                                "FALLING_BACK_TO_DEFAULT": entry.get(
+                                    "Value If Not Found"
+                                )
+                            },
+                            index=df_merged.index,
+                        )
+                else:
+                    target_col = get_column_name(df_merged, entry["ISA Field Name"])
+                    series_to_add = df_merged[target_col]
+                if entry.get("GLDS URL Mapping"):
+                    urls = get_urls(accession=accession)
 
+                    def map_url_to_filename(fn: str) -> str:
+                        try:
+                            return urls.get(fn, dict())["url"]
+                        except KeyError:
+                            raise ValueError(
+                                f"{fn} does not have an associated url in {urls}"
+                            )
+
+                    _swap = series_to_add.map(
+                        map_url_to_filename
+                    )  # inplace operation doesn't seem to work
+                    series_to_add = _swap
                 if entry.get("Remapping"):
                     df_final[entry["Runsheet Column Name"]] = series_to_add.map(
                         lambda val: entry.get("Remapping")[val]
@@ -390,20 +424,8 @@ def isa_to_runsheet(accession: str, isa_archive: Path, config: str):
     log.info("Validating runsheet dataframe")
     # validate dataframe contents (incomplete but catches most required columns)
     # uses dataframe to dict index format: https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.to_dict.html
-    schema = Schema(
-        {
-            str: {
-                "Original Sample Name": str,
-                "has_ERCC": bool,
-                "organism": str,
-                "paired_end": bool,
-                "read1_path": str,
-                Optional("read2_path"): str,
-                str: object,  # this is used to pass other columns, chiefly Factor Value ones
-            }
-        }
-    )
-    schema.validate(df_final.to_dict(orient="index"))
+
+    runsheet_schema.validate(df_final.to_dict(orient="index"))
     # ensure at least on Factor Value is extracted
     assert (
         len([col for col in df_final.columns if col.startswith("Factor Value[")]) != 0

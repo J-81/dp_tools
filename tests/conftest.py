@@ -12,12 +12,39 @@ from dp_tools.bulkRNASeq.loaders import (
     load_BulkRNASeq_STAGE_04,
 )
 
-
 # set for testing
 @pytest.fixture
 def root_test_dir():
-    """ This should be development machine specific, path should be set by env variable for privacy"""
+    """This should be development machine specific, path should be set by env variable for privacy"""
     return Path(os.environ["TEST_ASSETS_DIR"]) / "bulkRNASeq"
+
+
+@pytest.fixture
+def root_test_dir_microarray():
+    """This should be development machine specific, path should be set by env variable for privacy"""
+    return Path(os.environ["TEST_ASSETS_DIR"]) / "microarray"
+
+
+@pytest.fixture
+def glds205_isazip_path(root_test_dir_microarray):
+    """This should be development machine specific, path should be set by env variable for privacy"""
+    return (
+        root_test_dir_microarray
+        / "GLDS-205"
+        / "Metadata"
+        / "GLDS-205_metadata_GSE95388-ISA.zip"
+    )
+
+
+@pytest.fixture
+def glds123_isazip_path(root_test_dir_microarray):
+    """This should be development machine specific, path should be set by env variable for privacy"""
+    return (
+        root_test_dir_microarray
+        / "GLDS-123"
+        / "Metadata"
+        / "GLDS-123_metadata_GLDS-123-ISA.zip"
+    )
 
 
 @pytest.fixture
@@ -86,7 +113,9 @@ def typo_test_dir(root_test_dir):
 @pytest.fixture
 def glds194_dataSystem_STAGE00(glds194_test_dir):
     return copy.deepcopy(
-        load_BulkRNASeq_STAGE_00(glds194_test_dir, config = "0", dataSystem_name="GLDS-194")
+        load_BulkRNASeq_STAGE_00(
+            glds194_test_dir, config="0", dataSystem_name="GLDS-194"
+        )
     )
 
 
@@ -95,8 +124,9 @@ def glds194_dataSystem_STAGE01(glds194_test_dir):
     return copy.deepcopy(
         load_BulkRNASeq_STAGE_01(
             *load_BulkRNASeq_STAGE_00(
-                glds194_test_dir, config = "0", dataSystem_name="GLDS-194", stack=True
-            ), config="0"
+                glds194_test_dir, config="0", dataSystem_name="GLDS-194", stack=True
+            ),
+            config="0"
         )
     )
 
@@ -107,10 +137,12 @@ def glds194_dataSystem_STAGE02(glds194_test_dir):
         load_BulkRNASeq_STAGE_02(
             *load_BulkRNASeq_STAGE_01(
                 *load_BulkRNASeq_STAGE_00(
-                    glds194_test_dir, config = "0", dataSystem_name="GLDS-194", stack=True
+                    glds194_test_dir, config="0", dataSystem_name="GLDS-194", stack=True
                 ),
-                config = "0", stack=True
-            ), config = "0"
+                config="0",
+                stack=True
+            ),
+            config="0"
         )
     )
 
@@ -122,12 +154,18 @@ def glds194_dataSystem_STAGE0201(glds194_test_dir):
             *load_BulkRNASeq_STAGE_02(
                 *load_BulkRNASeq_STAGE_01(
                     *load_BulkRNASeq_STAGE_00(
-                        glds194_test_dir, config = "0", dataSystem_name="GLDS-194", stack=True
+                        glds194_test_dir,
+                        config="0",
+                        dataSystem_name="GLDS-194",
+                        stack=True,
                     ),
-                    config = "0", stack=True
+                    config="0",
+                    stack=True
                 ),
-                config = "0", stack=True
-            ), config = "0"
+                config="0",
+                stack=True
+            ),
+            config="0"
         )
     )
 
@@ -140,14 +178,21 @@ def glds194_dataSystem_STAGE03(glds194_test_dir):
                 *load_BulkRNASeq_STAGE_02(
                     *load_BulkRNASeq_STAGE_01(
                         *load_BulkRNASeq_STAGE_00(
-                            glds194_test_dir, config = "0", dataSystem_name="GLDS-194", stack=True
+                            glds194_test_dir,
+                            config="0",
+                            dataSystem_name="GLDS-194",
+                            stack=True,
                         ),
-                        config = "0", stack=True
+                        config="0",
+                        stack=True
                     ),
-                    config = "0", stack=True
+                    config="0",
+                    stack=True
                 ),
-                config = "0", stack=True
-            ), config = "0"
+                config="0",
+                stack=True
+            ),
+            config="0"
         )
     )
 
@@ -161,16 +206,24 @@ def glds194_dataSystem_STAGE04(glds194_test_dir):
                     *load_BulkRNASeq_STAGE_02(
                         *load_BulkRNASeq_STAGE_01(
                             *load_BulkRNASeq_STAGE_00(
-                                glds194_test_dir, config = "0", dataSystem_name="GLDS-194", stack=True
+                                glds194_test_dir,
+                                config="0",
+                                dataSystem_name="GLDS-194",
+                                stack=True,
                             ),
-                            config = "0", stack=True
+                            config="0",
+                            stack=True
                         ),
-                        config = "0", stack=True
+                        config="0",
+                        stack=True
                     ),
-                    config = "0", stack=True
+                    config="0",
+                    stack=True
                 ),
-                config = "0", stack=True
-            ), config = "0"
+                config="0",
+                stack=True
+            ),
+            config="0"
         )
     )
 
@@ -178,7 +231,7 @@ def glds194_dataSystem_STAGE04(glds194_test_dir):
 @pytest.fixture
 def glds48_dataSystem_STAGE00(glds48_test_dir):
     return copy.deepcopy(
-        load_BulkRNASeq_STAGE_00(glds48_test_dir, config = "0", dataSystem_name="GLDS-48")
+        load_BulkRNASeq_STAGE_00(glds48_test_dir, config="0", dataSystem_name="GLDS-48")
     )
 
 
@@ -187,8 +240,9 @@ def glds48_dataSystem_STAGE01(glds48_test_dir):
     return copy.deepcopy(
         load_BulkRNASeq_STAGE_01(
             *load_BulkRNASeq_STAGE_00(
-                glds48_test_dir, config = "0", dataSystem_name="GLDS-48", stack=True
-            ), config = "0"
+                glds48_test_dir, config="0", dataSystem_name="GLDS-48", stack=True
+            ),
+            config="0"
         )
     )
 
@@ -199,10 +253,12 @@ def glds48_dataSystem_STAGE02(glds48_test_dir):
         load_BulkRNASeq_STAGE_02(
             *load_BulkRNASeq_STAGE_01(
                 *load_BulkRNASeq_STAGE_00(
-                    glds48_test_dir, config = "0", dataSystem_name="GLDS-48", stack=True
+                    glds48_test_dir, config="0", dataSystem_name="GLDS-48", stack=True
                 ),
-                config = "0", stack=True
-            ), config = "0"
+                config="0",
+                stack=True
+            ),
+            config="0"
         )
     )
 
@@ -214,12 +270,18 @@ def glds48_dataSystem_STAGE0201(glds48_test_dir):
             *load_BulkRNASeq_STAGE_02(
                 *load_BulkRNASeq_STAGE_01(
                     *load_BulkRNASeq_STAGE_00(
-                        glds48_test_dir, config = "0", dataSystem_name="GLDS-48", stack=True
+                        glds48_test_dir,
+                        config="0",
+                        dataSystem_name="GLDS-48",
+                        stack=True,
                     ),
-                    config = "0", stack=True
+                    config="0",
+                    stack=True
                 ),
-                config = "0", stack=True
-            ), config = "0"
+                config="0",
+                stack=True
+            ),
+            config="0"
         )
     )
 
@@ -232,14 +294,21 @@ def glds48_dataSystem_STAGE03(glds48_test_dir):
                 *load_BulkRNASeq_STAGE_02(
                     *load_BulkRNASeq_STAGE_01(
                         *load_BulkRNASeq_STAGE_00(
-                            glds48_test_dir, config = "0", dataSystem_name="GLDS-48", stack=True
+                            glds48_test_dir,
+                            config="0",
+                            dataSystem_name="GLDS-48",
+                            stack=True,
                         ),
-                        config = "0", stack=True
+                        config="0",
+                        stack=True
                     ),
-                    config = "0", stack=True
+                    config="0",
+                    stack=True
                 ),
-                config = "0", stack=True
-            ), config = "0"
+                config="0",
+                stack=True
+            ),
+            config="0"
         )
     )
 
@@ -253,16 +322,23 @@ def glds48_dataSystem_STAGE04(glds48_test_dir):
                     *load_BulkRNASeq_STAGE_02(
                         *load_BulkRNASeq_STAGE_01(
                             *load_BulkRNASeq_STAGE_00(
-                                glds48_test_dir, config = "0", dataSystem_name="GLDS-48", stack=True
+                                glds48_test_dir,
+                                config="0",
+                                dataSystem_name="GLDS-48",
+                                stack=True,
                             ),
-                            config = "0", stack=True
+                            config="0",
+                            stack=True
                         ),
-                        config = "0", stack=True
+                        config="0",
+                        stack=True
                     ),
-                    config = "0", stack=True
+                    config="0",
+                    stack=True
                 ),
-                config = "0", stack=True
-            ), config = "0"
+                config="0",
+                stack=True
+            ),
+            config="0"
         )
     )
-
