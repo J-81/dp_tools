@@ -163,7 +163,8 @@ def main():
     args = _parse_args()
     isa_to_runsheet(args.accession, Path(args.isa_archive), str(args.config))
 
-def get_column_name(df: pd.DataFrame, target: Union[str,list]) -> str:
+
+def get_column_name(df: pd.DataFrame, target: Union[str, list]) -> str:
     try:
         match target:
             case str():
@@ -180,14 +181,13 @@ def get_column_name(df: pd.DataFrame, target: Union[str,list]) -> str:
                 raise ValueError(
                     f"Could not find required column '{target}' "
                     f"in either ISA sample or assay table. These columns were found: {list(df.columns)}"
-                    )
+                )
     except ValueError as e:
         raise ValueError(
             f"Could not find required column '{target}' "
             f"in either ISA sample or assay table. These columns were found: {list(df.columns)}"
-            ) from e
-        
-                    
+        ) from e
+
 
 # TODO: Needs heavy refactoring and log messaging
 def isa_to_runsheet(accession: str, isa_archive: Path, config: str):
@@ -268,26 +268,37 @@ def isa_to_runsheet(accession: str, isa_archive: Path, config: str):
                 target_col = get_column_name(df_merged, entry["ISA Field Name"])
 
                 # split into separate values
-                values: pd.DataFrame = df_merged[target_col].str.split(pat=entry["Multiple Values Delimiter"], expand=True)
+                values: pd.DataFrame = df_merged[target_col].str.split(
+                    pat=entry["Multiple Values Delimiter"], expand=True
+                )
 
                 # rename columns with runsheet names, checking if optional columns are included
                 runsheet_col: dict
                 for runsheet_col in entry["Runsheet Column Name"]:
-                    if runsheet_col['index'] in values.columns:
-                        values = values.rename(columns={runsheet_col['index']:runsheet_col["name"]})
-                    else: # raise exception if not marked as optional
+                    if runsheet_col["index"] in values.columns:
+                        values = values.rename(
+                            columns={runsheet_col["index"]: runsheet_col["name"]}
+                        )
+                    else:  # raise exception if not marked as optional
                         if not runsheet_col["optional"]:
-                            raise ValueError(f"Could not populate runsheet column (config: {runsheet_col}). Data may be missing in ISA or the configuration may be incorrect")
+                            raise ValueError(
+                                f"Could not populate runsheet column (config: {runsheet_col}). Data may be missing in ISA or the configuration may be incorrect"
+                            )
 
                 if entry.get("GLDS URL Mapping"):
                     urls = get_urls(accession=accession)
+
                     def map_url_to_filename(fn: str) -> str:
                         try:
                             return urls.get(fn, dict())["url"]
                         except KeyError:
-                            raise ValueError(f"{fn} does not have an associated url in {urls}")
+                            raise ValueError(
+                                f"{fn} does not have an associated url in {urls}"
+                            )
 
-                    values2 = values.applymap(map_url_to_filename) # inplace operation doesn't seem to work
+                    values2 = values.applymap(
+                        map_url_to_filename
+                    )  # inplace operation doesn't seem to work
                 else:
                     values2 = values
 
@@ -358,13 +369,17 @@ def isa_to_runsheet(accession: str, isa_archive: Path, config: str):
     ################################################################
     # to preserve the original sample name for post processing
     # make a new column
-    df_final['Original Sample Name'] = df_final.index
+    df_final["Original Sample Name"] = df_final.index
 
     # then modify the index as needed
-    df_final.index = df_final.index.str.replace(" ","_")
-    modified_samples: list[str] = list(df_final.loc[df_final.index != df_final['Original Sample Name']].index)
+    df_final.index = df_final.index.str.replace(" ", "_")
+    modified_samples: list[str] = list(
+        df_final.loc[df_final.index != df_final["Original Sample Name"]].index
+    )
     if len(modified_samples) != 0:
-        log.info(f"The following orignal sample names modified for processing: {modified_samples}")
+        log.info(
+            f"The following orignal sample names modified for processing: {modified_samples}"
+        )
 
     ################################################################
     ################################################################
@@ -375,20 +390,24 @@ def isa_to_runsheet(accession: str, isa_archive: Path, config: str):
     log.info("Validating runsheet dataframe")
     # validate dataframe contents (incomplete but catches most required columns)
     # uses dataframe to dict index format: https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.to_dict.html
-    schema = Schema({
-        str: {
-            'Original Sample Name':str,
-            'has_ERCC':bool,
-            'organism':str,
-            'paired_end':bool,
-            'read1_path':str,
-            Optional('read2_path'):str,
-            str:object # this is used to pass other columns, chiefly Factor Value ones
+    schema = Schema(
+        {
+            str: {
+                "Original Sample Name": str,
+                "has_ERCC": bool,
+                "organism": str,
+                "paired_end": bool,
+                "read1_path": str,
+                Optional("read2_path"): str,
+                str: object,  # this is used to pass other columns, chiefly Factor Value ones
+            }
         }
-    })
+    )
     schema.validate(df_final.to_dict(orient="index"))
     # ensure at least on Factor Value is extracted
-    assert len([col for col in df_final.columns if col.startswith("Factor Value[")]) != 0, f"Must extract at least one factor value column but only has the following columns: {df_final.columns}"
+    assert (
+        len([col for col in df_final.columns if col.startswith("Factor Value[")]) != 0
+    ), f"Must extract at least one factor value column but only has the following columns: {df_final.columns}"
 
     ################################################################
     ################################################################

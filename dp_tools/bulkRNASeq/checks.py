@@ -960,6 +960,8 @@ class DATASET_GENECOUNTS_0001(Check):
 # TODO: Flag message gets really messy, convert into a json like string for easier reading/parsing
 # TODO: Check for extra unexpected columns, these should give clues to names differences
 class DATASET_DIFFERENTIALGENEEXPRESSION_0001(Check):
+    handle_with_monads = True
+
     config = {
         "expected_tables": [
             "differential_expression.csv",
@@ -1015,6 +1017,11 @@ class DATASET_DIFFERENTIALGENEEXPRESSION_0001(Check):
         # TODO: DISCUSS, these baseline values, should indicate a very heavy left-hand skewed histogram of differences - JDO
         "log2fc_cross_method_percent_difference_threshold": 10,  # PERCENT
         "log2fc_cross_method_tolerance_percent": 50,  # PERCENT
+         # PERCENT difference minimum between group means to included
+        "log2fc_cross_method_sign_check_group_mean_difference_threshold": 50,
+         # PERCENT genes allowed sign inversions between methods for groups that meet
+         #   log2fc_cross_method_sign_check_group_mean_difference_threshold minimum
+        "log2fc_cross_method_sign_check_tolerance_percent": 0,
         # "middle": MIDDLE.median,
         # "yellow_standard_deviation_threshold": 2,
         # "red_standard_deviation_threshold": 4,
@@ -1329,7 +1336,6 @@ class DATASET_DIFFERENTIALGENEEXPRESSION_0001(Check):
         return err_msg
 
     def validate_func(self: Check, dataset: TemplateDataset) -> Flag:
-        dataset.metadata.contrasts
         codes = {FlagCode.GREEN}
 
         target_components = ["differentialGeneExpression"]
@@ -1340,6 +1346,8 @@ class DATASET_DIFFERENTIALGENEEXPRESSION_0001(Check):
         err_msgs: Dict = defaultdict(dict)
 
         for target_component in target_components:
+            #results = FlaggableMonad(dataset)
+            #results = results.bind(self._contrasts_check)
             # perform contrasts file subcheck
             contrasts_result = self._contrasts_check(dataset, target_component)
             if contrasts_result != "":

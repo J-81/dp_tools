@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 #### BulkRNASeq V&V Reporting
   - A validation protocol that runs on a BulkRNASeq dataset model
   - Includes generation of report files
+
+### Fixed
+  - Tilde characters are not converted to periods in contrasts: https://tower.nf/orgs/GL_Testing_Nextflow/workspaces/Nextflow_RCP_Testing/watch/1t8TfGbpDmCVNK
+    - this should emulate R make.names behaviour completely 
+
 #### BulkRNASeq Reporter File Generation
   - Data assets tagged with file categories for reporter file export including:
     - md5sum table
