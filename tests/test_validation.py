@@ -21,6 +21,10 @@ def mock_dev_exceptions(monkeypatch):
     )  # ensure unhandled developer exceptions are raised
 
 
+def pseudo_fingerprint(df):
+    return df["flag_code"].sum() + df["flag_code"].mean() + df.shape[0] * df.shape[1]
+
+
 def test_bulkRNASeq_STAGE00_validation_paired(caplog, glds194_dataSystem_STAGE00):
     """This tests validation as it would be run on dataset after demultiplexing"""
     CAPLEVEL = 20
@@ -55,7 +59,7 @@ def test_bulkRNASeq_STAGE00_validation_paired(caplog, glds194_dataSystem_STAGE00
             #   Sample check : 1 per sample
             #   Component checks :
             #       Reads : 1 per component
-            assert len(df) == 41
+            assert pseudo_fingerprint(df) == 164
             assert [0] == list(
                 df["flag_code"].unique()
             )  # only the dry run code should be returned
@@ -86,16 +90,7 @@ def test_bulkRNASeq_STAGE00_validation_paired_no_dry_run(
 
             df_verbose = vv_protocol.flags_to_df(schema="verbose")
 
-            # assert that no failing flags were raised
-            # assert df["flag_code"].max() == 20 # not needed as this tests the truncated data rather than the logic
-
-            # check if appropriate number of flags are raised
-            # Currently:
-            #   Dataset check : 2
-            #   Sample check : 1 per sample
-            #   Component checks :
-            #       Reads : 1 per component
-            assert len(df) == 41
+            assert pseudo_fingerprint(df) == 164
 
 
 def test_bulkRNASeq_STAGE00_validation_paired_with_skips(
@@ -128,16 +123,7 @@ def test_bulkRNASeq_STAGE00_validation_paired_with_skips(
 
             df_verbose = vv_protocol.flags_to_df(schema="verbose")
 
-            # assert that no failing flags were raised
-            # assert df["flag_code"].max() == 20 # not needed as this tests the truncated data rather than the logic
-
-            # check if appropriate number of flags are raised
-            # Currently:
-            #   Dataset check : 2
-            #   Sample check : 1 per sample
-            #   Component checks :
-            #       Reads : 1 per component
-            assert len(df) == 41
+            assert pseudo_fingerprint(df) == 165.02439024390245
             assert 0 in df["flag_code"].values  # ensure dry run flag codes returned
             assert 1 in df["flag_code"].values  # ensure skip flag codes returned
 
@@ -166,19 +152,10 @@ def test_bulkRNASeq_STAGE00_validation_paired_with_config(
         with MonkeyPatch.context() as m:
             vv_protocol.validate_all()
             df = vv_protocol.flags_to_df()
-
-            df_verbose = vv_protocol.flags_to_df(schema="verbose")
-
             # assert that no failing flags were raised
             # assert df["flag_code"].max() == 20 # not needed as this tests the truncated data rather than the logic
 
-            # check if appropriate number of flags are raised
-            # Currently:
-            #   Dataset check : 2
-            #   Sample check : 1 per sample
-            #   Component checks :
-            #       Reads : 1 per component
-            assert len(df) == 41
+            assert pseudo_fingerprint(df) == 1015.2682926829268
             assert 0 not in df["flag_code"].values  # ensure dry run flag codes returned
             assert 1 not in df["flag_code"].values  # ensure skip flag codes returned
 
@@ -196,16 +173,13 @@ def test_bulkRNASeq_STAGE00_validation_single(caplog, glds48_dataSystem_STAGE00)
     with MonkeyPatch.context() as m:
         vv_protocol.validate_all()
         df = vv_protocol.flags_to_df()
-
-        df_verbose = vv_protocol.flags_to_df(schema="verbose")
-
         # check if appropriate number of flags are raised
         # Currently:
         #   Dataset check : 2
         #   Sample check : 1 per sample
         #   Component checks
         #       Reads : 1 per component (1 per sample)
-        assert len(df) == 30
+        assert pseudo_fingerprint(df) == 120
 
 
 """
@@ -292,8 +266,7 @@ def test_bulkRNASeq_STAGE04_validation_paired(glds194_dataSystem_STAGE04):
     vv_protocol.validate_all()
     df = vv_protocol.flags_to_df()
 
-    assert len(df) == 98
-    assert df["flag_code"].max() < 90
+    assert pseudo_fingerprint(df) == 392
 
 
 def test_bulkRNASeq_STAGE04_validation_single(glds48_dataSystem_STAGE04):
@@ -305,5 +278,5 @@ def test_bulkRNASeq_STAGE04_validation_single(glds48_dataSystem_STAGE04):
     vv_protocol.validate_all()
     df = vv_protocol.flags_to_df()
 
-    assert len(df) == 77
-    assert df["flag_code"].max() < 90
+    # psuedo fingerprint
+    assert pseudo_fingerprint(df) == 308
