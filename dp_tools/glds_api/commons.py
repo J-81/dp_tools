@@ -23,7 +23,9 @@ def get_glds_filelisting_json(accession: str) -> tuple[dict, str]:
     """Return filelisting json accession number"""
     log.debug(f"Fetching filelisting JSON for '{accession}'")
     # extract file urls
-    glds_json = read_json(GLDS_URL_PREFIX + accession)
+    url1 = GLDS_URL_PREFIX + accession
+    log.debug(f"Using {url1} to find study internal id for {accession}")
+    glds_json = read_json(url1)
     try:
         _id = glds_json[0]["_id"]
     except (AssertionError, TypeError, KeyError, IndexError):
@@ -31,5 +33,7 @@ def get_glds_filelisting_json(accession: str) -> tuple[dict, str]:
     file_list_url = FILELISTINGS_URL_PREFIX + _id
     file_listing_json = read_json(file_list_url)
     version = glds_json[0]["version"]
-    log.info(f"Retrieved file listing json. URL: '{file_list_url}' Version: '{version}' Access Date: '{datetime.datetime.now().strftime('%Y-%m-%d %H:%M %Z')}'")
+    log.info(
+        f"Retrieved file listing json. URL: '{file_list_url}' Version: '{version}' Access Date: '{datetime.datetime.now().strftime('%Y-%m-%d %H:%M %Z')}'"
+    )
     return file_listing_json
