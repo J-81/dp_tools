@@ -152,23 +152,20 @@ class BulkRNASeqMetadataComponent(TemplateComponent):
             # format with header for each permutation
             headers = ["v".join(permute) for permute in permutations]
 
+            def _make_names_like_R(s: str) -> str:
+                return (
+                    s.replace(" & ", "...")
+                    .replace(" ", ".")
+                    .replace(",", ".")
+                    .replace("~", ".")
+                    .replace("(", "")
+                    .replace(")", "")
+                )
+
             # format with two rows for each column
-            row1s = [
-                permute[0]
-                .replace(" & ", "...")
-                .replace(" ", ".")
-                .replace(",", ".")
-                .replace("(", "")
-                .replace(")", "")
-                for permute in permutations
-            ]
+            row1s = [_make_names_like_R(permute[0]) for permute in permutations]
             row2s = [
-                permute[1]
-                .replace(" & ", "...")
-                .replace(" ", ".")
-                .replace(",", ".")
-                .replace("(", "")
-                .replace(")", "")
+                _make_names_like_R(permute[1])
                 for permute in permutations
             ]
 
