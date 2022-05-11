@@ -21,7 +21,7 @@ from dp_tools.core.entity_model import (
 
 log = logging.getLogger(__name__)
 
-from dp_tools.core.check_model import Check, Flag, FlagCode
+from dp_tools.core.check_model import Check, Flag, FlagCode, FlagEntry, Flaggable
 
 # adapted from reference: https://stackoverflow.com/questions/56048627/round-floats-in-a-nested-dictionary-recursively
 # used to round values for easier to read messages

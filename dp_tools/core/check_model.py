@@ -4,6 +4,7 @@
 import abc
 from dataclasses import dataclass, field
 import enum
+import json
 import os
 from pathlib import Path
 import re
@@ -16,6 +17,7 @@ from typing import (
     Optional,
     Set,
     Tuple,
+    TypedDict,
     Union,
 )
 import logging
@@ -83,6 +85,9 @@ class FlagCode(enum.Enum):
 @dataclass
 class Check(abc.ABC):
 
+    USE_SUBCHECK_MONADS: ClassVar[str] = field(
+        default=False
+    )  # defines whether to use subcheck monads and associated formatting approaches
     description: ClassVar[str]
     id: ClassVar[str] = field(init=False)  # set as class name
     flag_desc: ClassVar[Dict[int, str]]
@@ -159,6 +164,7 @@ class Check(abc.ABC):
         # NOTE: this intentionally takes place before the dry run condition is checked
         #       this allows checking if your config will perform as expected, including skips
         if request_skip:
+            self.USE_SUBCHECK_MONADS = False  # this reverts back to Flag with codes as FlagCodes rather than a flag_data stream
             log.info(f"  Skipping as per request!")
             return Flag(
                 codes=FlagCode.SKIPPED,
@@ -168,6 +174,7 @@ class Check(abc.ABC):
 
         # add dry run route that bails out
         if self.__class__._dry_run:
+            self.USE_SUBCHECK_MONADS = False  # this reverts back to Flag with codes as FlagCodes rather than a flag_data stream
             return Flag(
                 codes=FlagCode.DRY_RUN,
                 message_args={},
@@ -180,6 +187,7 @@ class Check(abc.ABC):
             log.critical(
                 f"Developer exception raised during a validation function for check: {self}"
             )
+            self.USE_SUBCHECK_MONADS = False  # this reverts back to Flag with codes as FlagCodes rather than a flag_data stream
             return Flag(
                 codes=FlagCode.DEV_UNHANDLED,
                 message_args={
@@ -207,16 +215,132 @@ class Check(abc.ABC):
         """
 
 
+class FlagEntry(TypedDict):
+    # programmed into validation function or mapping function
+    code: FlagCode
+    message: str
+    # attached by monad
+    args: list
+    kwargs: dict
+    check_function_name: Callable
+
+
+class Flaggable(object):
+    def __init__(self, *args, flag_data: list[FlagEntry] = None, **kwargs):
+        self.args = args
+        self.kwargs = kwargs
+        self.flag_data = flag_data if flag_data is not None else list()
+        log.debug(f"Created monad {self}")
+
+    def __repr__(self):
+        return f"Flaggable({self.args}, {self.kwargs}, {self.flag_data})"
+
+    def flag_data_to_df(self):
+        return pd.DataFrame(self.flag_data)
+
+    def bind(
+        self,
+        f: Callable,
+        skip: bool = False,
+        *args,
+        **kwargs,
+    ) -> "Flaggable":
+        log.debug(f"Binding function {f} to monad {self}")
+        # remove bind specific kwargs
+        combined_args = self.args + args
+        combined_kwargs = self.kwargs | kwargs
+        assert isinstance(skip, bool), "bind argument 'skip' MUST evaluate to a boolean"
+        if skip == True:
+            result = {
+                "code": FlagCode.SKIPPED,
+                "message": f"Skipped as the bind argument 'skip' evaluated to 'True'",
+                "args": combined_args,
+                "kwargs": combined_kwargs,
+                "check_function_name": f.__name__,
+            }
+            updated_flag_data = self.flag_data + [result]
+            return_monad = Flaggable(
+                *self.args, **self.kwargs, flag_data=updated_flag_data
+            )
+            return return_monad
+        try:
+            # filter to only keywords args that the function uses
+            # f_kwargs = list(inspect.signature(f).parameters.keys())
+            # f_payload = {k: v for k, v in combined_kwargs.items() if k in f_kwargs}
+            # result = f(*combined_args, **f_payload)
+            result = f(*combined_args, **combined_kwargs)
+            result = result | {
+                "args": combined_args,
+                "kwargs": combined_kwargs,
+                "check_function_name": f.__name__,
+            }
+            updated_flag_data = self.flag_data + [result]
+            return_monad = Flaggable(
+                *self.args, **self.kwargs, flag_data=updated_flag_data
+            )
+            log.debug(f"Returning computed function {f} resulting in {return_monad}")
+            return return_monad
+        except AssertionError as e:
+            raise ValueError(f"Bad return: {result}") from e
+        except SystemExit as e:
+            failure_status = {
+                "trace": traceback.format_exc(),
+                "exc": e,
+                "args": args,
+                "kwargs": kwargs,
+            }
+            result = {
+                "code": FlagCode.DEV_UNHANDLED,
+                "message": f"Raised an unhandled exception: {failure_status}",
+                "args": combined_args,
+                "kwargs": combined_kwargs,
+                "check_function_name": f.__name__,
+            }
+            updated_flag_data = self.flag_data + [result]
+            return_monad = Flaggable(
+                *self.args, **self.kwargs, flag_data=updated_flag_data
+            )
+            log.debug(f"Returning computed function {f} resulting in {return_monad}")
+            return return_monad
+
+    def export_flag_data_to_Flag(self, check: Check) -> "Flag":
+        """Exports flag data to generate return a Flag
+
+        :return: Flag object compatible with the check_model
+        :rtype: Flag
+        """
+
+        return Flag(
+            codes=self.flag_data, check=check, message_args={}  # unused in Flag
+        )
+
+
 @dataclass
 class Flag:
 
-    codes: set[FlagCode]
+    codes: Union[
+        set[FlagCode], list[FlagEntry]
+    ]  # allow use of flag data from Flaggable monad
     check: Check
     message_args: dict = field(default_factory=dict)
-    message: str = field(init=False)
+    message: str = field(init=False, default=None)
 
     # must ensure all flags are correct before continuing
     def __post_init__(self):
+        if self.check.USE_SUBCHECK_MONADS:
+            # extract message
+            self.message = json.dumps(
+                {
+                    e["check_function_name"]: {
+                        "code": e["code"].name,
+                        "message": e["message"],
+                    }
+                    for e in self.codes
+                }
+            )
+
+            # extract flag codes
+            self.codes = {e["code"] for e in self.codes.copy()}
 
         # code related init
         # covert single codes to list if not already a list
@@ -232,16 +356,17 @@ class Flag:
         self.codes = list(self.codes)
         self.codes.sort(reverse=True)
 
-        # set message
-        self.message = "{"
-        for code in self.codes:
-            # retrieve proto message
-            pre_format_msg = self.check.flag_desc[code]
-            # populate message with message_args
-            add_string = f"{pre_format_msg.format(**self.message_args)}"
-            self.message += f"'{code.name}':'{add_string}',"
-        # the -1 removes the last comma
-        self.message = self.message[:-1] + "}" # to close the json like message
+        # set message, if not created by flag monad
+        if self.message is None:
+            self.message = "{"
+            for code in self.codes:
+                # retrieve proto message
+                pre_format_msg = self.check.flag_desc[code]
+                # populate message with message_args
+                add_string = f"{pre_format_msg.format(**self.message_args)}"
+                self.message += f"'{code.name}':'{add_string}',"
+            # the -1 removes the last comma
+            self.message = self.message[:-1] + "}"  # to close the json like message
 
         # check types before final addition and init
         strict_type_checks(
