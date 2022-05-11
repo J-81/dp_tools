@@ -75,7 +75,9 @@ def test_DATASET_METADATA_0001_paired(
         m.setattr(dataset.metadata, "has_ercc", None)
         flag = testCheck.validate(dataset)
         assert flag.maxCode.name == "HALT1"
-        assert flag.message == "{'HALT1':'Missing expected metadata fields: ['has_ercc']'}"
+        assert (
+            flag.message == "{'HALT1':'Missing expected metadata fields: ['has_ercc']'}"
+        )
 
 
 def test_DATASET_METADATA_0001_single(
@@ -97,7 +99,9 @@ def test_DATASET_METADATA_0001_single(
         m.setattr(dataset.metadata, "has_ercc", None)
         flag = testCheck.validate(dataset)
         assert flag.maxCode.name == "HALT1"
-        assert flag.message == "{'HALT1':'Missing expected metadata fields: ['has_ercc']'}"
+        assert (
+            flag.message == "{'HALT1':'Missing expected metadata fields: ['has_ercc']'}"
+        )
 
 
 def test_DATASET_RAWREADS_0001_paired(
@@ -261,4 +265,3 @@ def test_DATASET_DIFFERENTIALGENEEXPRESSION_0001_single(
     # expected YELLOW1
     flag = testCheck.validate(dataset)
     assert flag.maxCode.name == "GREEN"
-
