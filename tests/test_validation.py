@@ -1,7 +1,11 @@
 """ Tests for validation report results, relies on test for loaders passing """
+from collections import defaultdict
+from contextlib import contextmanager
 from decimal import DivisionByZero
 from pathlib import Path
 import os
+from typing import Callable, TypedDict
+from dp_tools.core.check_model import FlagCode, ValidationProtocol
 
 from pytest import MonkeyPatch
 import pytest
@@ -11,7 +15,10 @@ from dp_tools.bulkRNASeq.loaders import (
     load_BulkRNASeq_STAGE_00,
     load_BulkRNASeq_STAGE_01,
 )
-from dp_tools.bulkRNASeq.vv_protocols import STAGE, BulkRNASeq_VVProtocol
+from dp_tools.bulkRNASeq.vv_protocols import (
+    STAGE,
+    validate_bulkRNASeq,
+)
 
 
 @pytest.fixture(autouse=True)
@@ -25,6 +32,7 @@ def pseudo_fingerprint(df):
     return df["flag_code"].sum() + df["flag_code"].mean() + df.shape[0] * df.shape[1]
 
 
+'''
 def test_bulkRNASeq_STAGE00_validation_paired(caplog, glds194_dataSystem_STAGE00):
     """This tests validation as it would be run on dataset after demultiplexing"""
     CAPLEVEL = 20
@@ -33,13 +41,6 @@ def test_bulkRNASeq_STAGE00_validation_paired(caplog, glds194_dataSystem_STAGE00
     vv_protocol = BulkRNASeq_VVProtocol(
         dataset=ds.dataset, dry_run=True, protocol_name="only raw"
     )
-
-    with caplog.at_level(CAPLEVEL):
-        vv_protocol.validate_all()
-
-    assert isinstance(vv_protocol.flags["dataset"], dict)
-    assert isinstance(vv_protocol.flags["sample"], dict)
-    assert isinstance(vv_protocol.flags["component"], dict)
 
     # second, run with full validation
     with caplog.at_level(CAPLEVEL):
@@ -90,7 +91,7 @@ def test_bulkRNASeq_STAGE00_validation_paired_no_dry_run(
 
             df_verbose = vv_protocol.flags_to_df(schema="verbose")
 
-            assert pseudo_fingerprint(df) == 164
+            assert pseudo_fingerprint(df) == 1015.2682926829268
 
 
 def test_bulkRNASeq_STAGE00_validation_paired_with_skips(
@@ -257,7 +258,7 @@ def test_bulkRNASeq_STAGE03_validation_single(glds48_dataSystem_STAGE03):
 """  # DISABLED PENDING REWORK OF ARGS + CONFIG APPROACH
 
 
-def test_bulkRNASeq_STAGE04_validation_paired(glds194_dataSystem_STAGE04):
+def test_bulkRNASeq_STAGE04_validation_paired_full_dryrun(glds194_dataSystem_STAGE04):
     ds = glds194_dataSystem_STAGE04
     vv_protocol = BulkRNASeq_VVProtocol(
         dataset=ds.dataset, protocol_name="full", dry_run=True
@@ -269,7 +270,7 @@ def test_bulkRNASeq_STAGE04_validation_paired(glds194_dataSystem_STAGE04):
     assert pseudo_fingerprint(df) == 392
 
 
-def test_bulkRNASeq_STAGE04_validation_single(glds48_dataSystem_STAGE04):
+def test_bulkRNASeq_STAGE04_validation_single_full_dryrun(glds48_dataSystem_STAGE04):
     ds = glds48_dataSystem_STAGE04
     vv_protocol = BulkRNASeq_VVProtocol(
         dataset=ds.dataset, protocol_name="full", dry_run=True
@@ -280,3 +281,60 @@ def test_bulkRNASeq_STAGE04_validation_single(glds48_dataSystem_STAGE04):
 
     # psuedo fingerprint
     assert pseudo_fingerprint(df) == 308
+
+
+
+def test_bulkRNASeq_STAGE04_validation_paired_dge_only(glds194_dataSystem_STAGE04):
+    ds = glds194_dataSystem_STAGE04
+    vv_protocol = BulkRNASeq_VVProtocol(dataset=ds.dataset, protocol_name="only dge")
+
+    vv_protocol.validate_all()
+    df = vv_protocol.flags_to_df()
+
+    assert pseudo_fingerprint(df) == 392
+
+
+def test_bulkRNASeq_STAGE04_validation_single_dge_only(glds48_dataSystem_STAGE04):
+    ds = glds48_dataSystem_STAGE04
+    vv_protocol = BulkRNASeq_VVProtocol(dataset=ds.dataset, protocol_name="only dge")
+
+    vv_protocol.validate_all()
+    df = vv_protocol.flags_to_df()
+
+    # psuedo fingerprint
+    assert pseudo_fingerprint(df) == 44
+'''
+
+# TODO: Part of an alternative framework not fully implemented
+
+import logging
+
+logging.basicConfig(level=logging.DEBUG)
+log = logging.getLogger(__name__)
+
+
+def test_updated_protocol_model_paired_end(glds194_dataSystem_STAGE04):
+    report = validate_bulkRNASeq(
+        glds194_dataSystem_STAGE04.dataset, report_args={"include_skipped": False}
+    )
+
+    assert len(report) == 130
+
+
+def test_updated_protocol_model_single_end(glds48_dataSystem_STAGE04):
+    report = validate_bulkRNASeq(
+        glds48_dataSystem_STAGE04.dataset,
+        report_args={"include_skipped": False},
+    )
+
+    assert len(report) == 56
+
+
+def test_updated_protocol_model_skipping(glds48_dataSystem_STAGE00):
+    report = validate_bulkRNASeq(
+        glds48_dataSystem_STAGE00.dataset,
+        report_args={"include_skipped": False},
+        protocol_args={"skip_components": ["Trimmed Reads"]},
+    )
+
+    assert len(report) == 28
