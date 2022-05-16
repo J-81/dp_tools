@@ -4,7 +4,6 @@
 from dataclasses import dataclass, field
 import enum
 from typing import List, Union
-from dp_tools.bulkRNASeq.checks import SAMPLE_RAWREADS_0001
 from dp_tools.components.components import (
     DatasetGeneCounts,
     DifferentialGeneExpression,
@@ -37,7 +36,7 @@ class ASSAY(enum.Enum):
 
 @dataclass(eq=False)
 class BulkRNASeqSample(TemplateSample):
-    """ Abstract class for samples """
+    """Abstract class for samples"""
 
     # composition for all samples
     base: BaseSample = field(repr=False)
@@ -80,14 +79,6 @@ class BulkRNASeqSample(TemplateSample):
     def __post_init__(self):
         pass
 
-    def validate(self):
-        flags = list()
-        strict_type_checks(self)
-        # additional checks advised
-        flags.append(SAMPLE_RAWREADS_0001.validate(self))
-
-        return flags  # may return empty list
-
 
 @dataclass(eq=False)
 class BulkRNASeqDataset(TemplateDataset):
@@ -103,9 +94,15 @@ class BulkRNASeqDataset(TemplateDataset):
         default_factory=EmptyComponent
     )
 
-    normalizedGeneCounts: Union[EmptyComponent, NormalizedGeneCounts] = field(default_factory=EmptyComponent)
-    differentialGeneExpression: Union[EmptyComponent, DifferentialGeneExpression] = field(default_factory=EmptyComponent)
-    differentialGeneExpressionERCC: Union[EmptyComponent, DifferentialGeneExpression] = field(default_factory=EmptyComponent)
+    normalizedGeneCounts: Union[EmptyComponent, NormalizedGeneCounts] = field(
+        default_factory=EmptyComponent
+    )
+    differentialGeneExpression: Union[
+        EmptyComponent, DifferentialGeneExpression
+    ] = field(default_factory=EmptyComponent)
+    differentialGeneExpressionERCC: Union[
+        EmptyComponent, DifferentialGeneExpression
+    ] = field(default_factory=EmptyComponent)
 
     def __post_init__(self):
         self.base.name = f"{self.base.name}__{self.assay_type}"
