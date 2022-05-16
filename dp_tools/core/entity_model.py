@@ -289,7 +289,7 @@ class TemplateComponent(abc.ABC, CanAttachEntity):
         strict_type_checks(self)
 
     # TODO: refactor, attached entity related portion should be owned by mixin
-    def __str__(self):
+    def __repr__(self):
         attachments_str = (
             "Attached to Entity:\n\t"
             + "\n\t".join(
@@ -318,6 +318,9 @@ Component: class:{self.__class__.__name__}
 {data_str}
 {attachments_str}
         """
+
+    def __str__(self):
+        return f"""{self.__class__.__name__}"""
 
     @property
     def all_data_assets(self):
@@ -554,6 +557,7 @@ class BaseDataset:
     name: str = field(default="orphan")
     samples: Dict[str, "BaseSample"] = field(default_factory=dict, repr=False)
     config: dict = field(default_factory=dict, repr=False)
+
 
 # for subclassing
 class TemplateDataset(abc.ABC, CanAttachComponents):
