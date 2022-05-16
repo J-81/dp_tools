@@ -2,6 +2,8 @@
 # FLAG (A validation report message)
 #########################################################################
 import abc
+from collections import defaultdict
+from contextlib import contextmanager
 from dataclasses import dataclass, field
 import enum
 import json
@@ -116,7 +118,7 @@ class Check(abc.ABC):
         ), "Check description must be a string, check that you did not add commas to a multi-line str tuple"
         assert isinstance(self._proto_description, str)
         try:
-            self.description = self.description.format(**self.config)
+            self.__class__.description = self.description.format(**self.config)
         except Exception as e:
             log.error(
                 f"Exception occured during description formatting: description_template: '{self.description}', configuration: '{self.config}'"
@@ -124,7 +126,7 @@ class Check(abc.ABC):
             raise
 
         # set check id as class name
-        self.id = self.__class__.__name__
+        self.__class__.id = self.__class__.__name__
 
         # ensure checkID is valid
         assert re.match(
@@ -134,7 +136,7 @@ class Check(abc.ABC):
         # ensure check is unique
         assert self.id not in [
             check.id for check in self.allChecks
-        ], "CheckID already used, try another ID"
+        ], f"CheckID {self.id} already used, try another ID"
 
         # add to tracked allChecks
         self.allChecks.append(self)
@@ -455,14 +457,57 @@ class VVProtocol(abc.ABC):
             dataset, self.expected_dataset_class
         ), f"dataset MUST be of type {self.expected_dataset_class} for this protocol"
         self.dataset = dataset
-        self._flags = {"dataset": dict(), "sample": dict(), "component": dict()}
+        self._flags = {
+            "dataset": defaultdict(list),
+            "sample": defaultdict(list),
+            "component": defaultdict(list),
+        }
         if dry_run:
             log.critical("DRY RUNNING: Validation protocol, no checks performed")
             Check._dry_run = True
 
-    def run_check(self, check: Check, *args, **kwargs) -> Flag:
+        self.check_cache = dict()
+
+    def validate(self, level: str, **entity) -> "VVProtocol":
+        """Bind the entities to validate.
+        *args and **kwargs are passed to all included validation checks
+
+        :return: The protocol after binding entities (for chain methods)
+        :rtype: VVProtocol
+        """
+        # TODO: add logging re: overwriting bound entities
+        assert len(entity) == 1, "Only one bound entity is allowed"
+        self.entity = entity
+        self.level = level
+        return self
+
+    def include(self, check: Check) -> "VVProtocol":
+        """Bind a check to internally run and append to flags
+
+        :param check: A check that returns a flag when run
+        :type check: Check
+        :return: The protocol after running the check and appending the returned flag to flags
+        :rtype: VVProtocol
+        """
+
+        # initiate check
+        check_to_run: Check = check()
+        [entity] = (entity for entity in self.entity.values())
+        self.flags[self.level][entity] = (
+            self.flags[self.level].get(entity)
+            if self.flags[self.level].get(entity)
+            else list()
+        )
+        self.flags[self.level][entity].append(
+            check_to_run.validate(
+                request_skip=(check_to_run.id in self.skip_these_checks), **self.entity
+            )
+        )
+        return self
+
+    def run_check(self, check: type[Check], *args, **kwargs) -> Flag:
         """Runs check and performs validation if skip is not requested"""
-        return check.validate(
+        return check().validate(
             request_skip=(check.id in self.skip_these_checks), *args, **kwargs
         )
 
@@ -481,17 +526,36 @@ class VVProtocol(abc.ABC):
         return self._STAGES
 
     def validate_all(self):
-        self._flags["dataset"].update(self.validate_dataset())
-        self._flags["sample"].update(self.validate_samples())
+        self.validation_procedure()
         self._flags["component"].update(self.validate_components())
 
     @abc.abstractmethod
-    def validate_dataset(self) -> Dict[TemplateDataset, List[Flag]]:
+    def validation_procedure(self):
         ...
 
-    @abc.abstractmethod
-    def validate_samples(self) -> Dict[TemplateSample, List[Flag]]:
-        ...
+    def safe_init_check(self, check: type[Check]):
+        if cached_check := self.check_cache.get(check.__name__):
+            return cached_check
+        else:
+            self.check_cache[check.__name__] = check()
+            return self.check_cache[check.__name__]
+
+    def batch_check(
+        self,
+        level: str,
+        payloads: list[dict],
+        run: list[type[Check]],
+        payload_as_key: bool = True,
+    ):
+        log.info(f"Starting batch check at '{level}' level.")
+        for check in run:
+            init_check = self.safe_init_check(check)
+            for payload in payloads:
+                log.info(f"Running {check.__name__} with payload: {payload}")
+                flag = init_check.validate(**payload)
+                if payload_as_key:
+                    [payload_value] = (v for v in payload.values())
+                    self._flags[level][payload_value].append(flag)
 
     @abc.abstractmethod
     def validate_components(self) -> Dict[TemplateComponent, List[Flag]]:
@@ -621,3 +685,299 @@ class VVProtocol(abc.ABC):
             case _:
                 raise ValueError(f"Unable to extract entity index from : {entity}")
         return entity_index
+
+
+########################################################################
+########################################################################
+########################################################################
+########################################################################
+
+
+class ValidationProtocol:
+    class Component:
+        def __init__(
+            self,
+            name: str,
+            parent: "ValidationProtocol.Component",
+            description: str = "",
+        ):
+            log.info(f"Creating new entity in validation protocol: {name}")
+            self.flags: list = list()
+            self.parent = parent
+            self.description = description
+            self.name = name
+            # only root entity should have no parent
+            if self.parent:
+                self.parent.children.append(self)
+            self.children: list["ValidationProtocol.Component"] = list()
+
+        def __repr__(self):
+            if self.name == "ROOT":
+                return f"Component(name={self.name}, parent=!!NONE THIS IS THE ROOT COMPONENT!!)"
+            return f"Component(name={self.name}, parent={self.parent.name})"
+
+        @property
+        def ancestor_line(self):
+            if self.parent is not None:
+                return self.parent.ancestor_line + [self.name]
+            else:
+                return [self.name]
+
+    class FlagEntry(TypedDict):
+        code: FlagCode
+        message: str
+        outliers: Optional[dict[str, dict[str, dict[str, str]]]]
+
+    class __AllComponents(list):
+        """Used to run all components when no whitelist of component is provided"""
+
+        def __contains__(self, key):
+            return True
+
+    def __init__(self, skip_components: list = None):
+        if skip_components is None:
+            skip_components = []
+        self.skip_components = skip_components
+        self.skipping_component = False  # tracker for skipping component state
+        # init
+        # self._stage = defaultdict(list)
+        self._payloads = None
+        # TODO: typehint dicts here
+        self.outliers: dict[str, dict[str, dict[str, dict[str, str]]]] = defaultdict(
+            lambda: defaultdict(lambda: defaultdict(dict))
+        )
+
+        def nested_defaultdict():
+            return defaultdict(nested_defaultdict)
+
+        self.results = defaultdict(nested_defaultdict)
+        self._root_component = ValidationProtocol.Component(name="ROOT", parent=None)
+        self.cur_component = self._root_component
+        self.skipping = False
+
+    @contextmanager
+    def component_start(self, name: str, description: str, skip: bool = False):
+        try:
+            # set on protocol init
+            if name in self.skip_components:
+                self.skipping = True
+                self.skipping_component = True
+            # set by some condition during runtime
+            if skip:
+                self.skipping = True
+            # set current stage as parent
+            new_component = ValidationProtocol.Component(
+                name=name, parent=self.cur_component, description=description
+            )
+            self.cur_component = new_component
+            yield
+        finally:
+            self.cur_component = self.cur_component.parent
+            self.skipping = False
+            self.skipping_component = False
+
+    @contextmanager
+    def payload(self, payloads: list[dict], skip: bool = False):
+        try:
+            if skip:
+                self.skipping = True
+            self._payloads = payloads
+            yield self.run
+        finally:
+            self._payloads = None
+            # reset skipping state iff component level skipping isn't set
+            if not self.skipping_component:
+                self.skipping = False
+
+    def run(
+        self,
+        fcn: Callable[..., FlagEntry],
+        payloads: dict = None,
+        skip: bool = False,
+        config: dict = None,
+        description: str = None,
+    ):
+        # set by context managers
+        if self.skipping:
+            skip = True
+
+        fcn_name = fcn.__name__
+        # use fcn_name as description unless one explicitly provided
+        if description is None:
+            description = fcn_name
+
+        # override payload with one supplied directly to run
+        if payloads:
+            self._payloads = payloads
+
+        # coerce config variable if not provided to an empty dict
+        if config is None:
+            config = dict()
+
+        for payload in self._payloads:
+            payload_and_config = payload | config
+            # Log skip if requested
+            if skip:
+                packed_result = {
+                    "code": FlagCode.SKIPPED,
+                    "message": "Skipped by protocol",
+                    "function": fcn_name,
+                    "description": description,
+                    "kwargs": payload_and_config,
+                    "config": config,
+                }
+            # otherwise run and capture result
+            else:
+                try:
+                    result = fcn(**payload_and_config)
+
+                    # peel off outlier data and keep track
+                    # using current component name as the top level key
+                    if fcn_outliers := result.pop("outliers", None):
+                        self.outliers[self.cur_component.name] = (
+                            self.outliers[self.cur_component.name] | fcn_outliers
+                        )
+
+                    # note: we want to make sure to override description if the result gives one;
+                    # however it is optional and the fallback is the function name
+                    packed_result = (
+                        {"description": description}
+                        | result
+                        | {
+                            "kwargs": payload_and_config,
+                            "config": config,
+                            "function": fcn_name,
+                        }
+                    )
+                # on exception, capture exception
+                except SystemExit as e:
+                    packed_result = {
+                        "code": FlagCode.DEV_UNHANDLED,
+                        "message": e,
+                        "function": fcn_name,
+                        "description": description,
+                        "kwargs": payload_and_config,
+                        "config": config,
+                    }
+            self.cur_component.flags.append(packed_result)
+        return self
+
+    ##############################################
+    ### METHODS FOR EXPORTING FLAG DATA
+    ##############################################
+
+    @staticmethod
+    def get_report_data(component):
+        yield {tuple(component.ancestor_line): component.flags}
+        for child in component.children:
+            yield from ValidationProtocol.get_report_data(child)
+
+    def report(
+        self,
+        nested: bool = True,
+        include_flags: bool = True,
+        include_skipped: bool = True,
+    ) -> dict:
+        """Returns a report of all components and their associated flags
+
+        :param nested: If True, the resultant dictionary is nested analogous to component tree
+        :param include_flags: If True, the resultant dictionary includes flags
+        :param include_skipped: If True, the resultant dictionary includes skipped flags
+        :return: Dictionary of all components by name and their flags
+        :rtype: dict
+        """
+        self.results = dict(self.results)
+        data = list(self.get_report_data(self._root_component))
+        df_data: list[dict] = list()
+        for component in data:
+            for index, flags in component.items():
+                for flag in flags:
+                    entry = {
+                        "index": index,
+                    } | flag
+                    df_data.append(entry)
+
+        df = pd.DataFrame(df_data).set_index("index")
+
+        # filtering as requested in args
+        if not include_skipped:
+            df = df.loc[df["code"] != FlagCode.SKIPPED]
+
+        def default_to_regular(d):
+            if isinstance(d, defaultdict):
+                d = {k: default_to_regular(v) for k, v in d.items()}
+            return d
+
+        return {
+            "flag_table": df,
+            "outliers": pd.DataFrame.from_dict(
+                default_to_regular(self.outliers), orient="index"
+            ).T,
+        }
+
+
+# TODO: Part of an alternative framework not fully implemented
+"""
+@dataclass
+class SingleFlag:
+    # expected as check function return
+    code: FlagCode
+    message: str
+    # attached by protocol
+    check_function: Callable
+    description: str
+
+class Entity:
+    def __init__(self, data: object, parent: "Entity"):
+        log.info(f"Creating new entity in validation protocol: {data}")
+        self.data = data
+        self.flags: List[SingleFlag] = list()
+        self.parent = parent
+        # only root entity should have no parent
+        if self.parent:
+            self.parent.children.append(self)
+        self.children: list["Entity"] = list()
+
+
+class Protocol(abc.ABC):
+    def __init__(self):
+        self.cursor = None
+        self.skipping = False
+
+    # Accepts single entity as a kwarg to ensure pass down to checks as kwargs
+    def start_component(self, **data):
+        log.info(f"Starting validation, setting root entity as {data}")
+        entity = Entity(data=data, parent=self.cursor)
+        # set root entity if this is the first component
+        if self.cursor is None:
+            self.root = entity
+        self.cursor = entity
+
+        return self
+
+    def run(
+        self,
+        func_check: Callable,
+        iff_parent_passing: bool = False,
+    ):
+        if iff_parent_passing and not all(self.cursor.parent.flags):
+            log.warn(f"Parent flags were not all passing, skipping the next block")
+            self.cursor.flags.append("SKIPPED!")
+            return self
+
+        log.info(f"Running {func_check} with data: {self.cursor.data}")
+        code, message = func_check(**self.cursor.data)
+
+        flag = SingleFlag(code=code, message=message, check_function=func_check)
+        self.cursor.flags.append(flag)
+
+        return self
+
+    def end_component(self):
+        log.info(
+            f"Ending {self.cursor} validation, moving back to {self.cursor.parent}"
+        )
+        self.cursor = self.cursor.parent
+
+        return self
+"""
