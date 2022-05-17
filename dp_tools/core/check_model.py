@@ -23,6 +23,7 @@ from typing import (
     Union,
 )
 import logging
+from typing_extensions import NotRequired
 from dp_tools.core.entity_model import (
     TemplateComponent,
     TemplateDataset,
@@ -84,6 +85,7 @@ class FlagCode(enum.Enum):
         return self.value < other.value
 
 
+'''
 @dataclass
 class Check(abc.ABC):
 
@@ -685,12 +687,17 @@ class VVProtocol(abc.ABC):
             case _:
                 raise ValueError(f"Unable to extract entity index from : {entity}")
         return entity_index
+'''
 
-
 ########################################################################
 ########################################################################
 ########################################################################
 ########################################################################
+class FlagEntry(TypedDict):
+    code: FlagCode
+    message: str
+    # TODO: make typehint
+    outliers: NotRequired[dict[str, dict[str, dict[str, str]]]]
 
 
 class ValidationProtocol:
@@ -699,6 +706,7 @@ class ValidationProtocol:
             self,
             name: str,
             parent: "ValidationProtocol.Component",
+            skip: bool = False,
             description: str = "",
         ):
             log.info(f"Creating new entity in validation protocol: {name}")
@@ -710,6 +718,7 @@ class ValidationProtocol:
             if self.parent:
                 self.parent.children.append(self)
             self.children: list["ValidationProtocol.Component"] = list()
+            self.skip = skip
 
         def __repr__(self):
             if self.name == "ROOT":
@@ -723,25 +732,42 @@ class ValidationProtocol:
             else:
                 return [self.name]
 
-    class FlagEntry(TypedDict):
-        code: FlagCode
-        message: str
-        outliers: Optional[dict[str, dict[str, dict[str, str]]]]
+        def ancestry_is_in(self, other_list):
+            """Returns True if the component or any ancestor of the component is
+            in the 'other_list'
+            """
+            return any([(name in other_list) for name in self.ancestor_line])
 
-    class __AllComponents(list):
-        """Used to run all components when no whitelist of component is provided"""
+    class QueuedCheck(TypedDict):
+        check_fcn: Callable
+        description: str
+        payload: dict
+        config: dict
+        component: "ValidationProtocol.Component"
+        to_run: bool
 
-        def __contains__(self, key):
+    class _ALL_COMPONENTS(list):
+        """Dummy list that works as a default whitelist of all components"""
+
+        def __init__(self):
+            ...
+
+        def __contains__(self, _):
             return True
 
-    def __init__(self, skip_components: list = None):
+    def __init__(self, skip_components: list = None, run_components: list = None):
+        if run_components is not None:
+            self.run_components = run_components
+        else:
+            self.run_components = self._ALL_COMPONENTS()
+
         if skip_components is None:
-            skip_components = []
+            skip_components = list()
+
         self.skip_components = skip_components
-        self.skipping_component = False  # tracker for skipping component state
         # init
         # self._stage = defaultdict(list)
-        self._payloads = None
+        self._payloads: list = list()
         # TODO: typehint dicts here
         self.outliers: dict[str, dict[str, dict[str, dict[str, str]]]] = defaultdict(
             lambda: defaultdict(lambda: defaultdict(dict))
@@ -750,46 +776,57 @@ class ValidationProtocol:
         def nested_defaultdict():
             return defaultdict(nested_defaultdict)
 
-        self.results = defaultdict(nested_defaultdict)
-        self._root_component = ValidationProtocol.Component(name="ROOT", parent=None)
+        self.results: dict = defaultdict(nested_defaultdict)
+        # typehint exception: only the root component breaks the MUST have a parent rule
+        self._root_component = ValidationProtocol.Component(name="ROOT", parent=None)  # type: ignore
         self.cur_component = self._root_component
-        self.skipping = False
+
+        # will hold all pending checks
+        self._check_queue: list[ValidationProtocol.QueuedCheck] = list()
 
     @contextmanager
     def component_start(self, name: str, description: str, skip: bool = False):
         try:
             # set on protocol init
-            if name in self.skip_components:
-                self.skipping = True
-                self.skipping_component = True
-            # set by some condition during runtime
-            if skip:
-                self.skipping = True
             # set current stage as parent
             new_component = ValidationProtocol.Component(
                 name=name, parent=self.cur_component, description=description
             )
             self.cur_component = new_component
+
+            # determine if skipping needs to be set for the new component
+            if any(
+                [
+                    new_component.ancestry_is_in(self.skip_components),
+                    not new_component.ancestry_is_in(self.run_components),
+                    skip,
+                ]
+            ):
+                new_component.skip = True
             yield
         finally:
             self.cur_component = self.cur_component.parent
-            self.skipping = False
-            self.skipping_component = False
+
+    @staticmethod
+    def _eval_payload_callables(payload: dict) -> dict:
+        evaluated_payload = dict()
+        for k, v in payload.items():
+            if callable(v):
+                evaluated_payload[k] = v()
+            else:
+                evaluated_payload[k] = v
+        return evaluated_payload
 
     @contextmanager
-    def payload(self, payloads: list[dict], skip: bool = False):
+    def payload(self, payloads: list[dict]):
         try:
-            if skip:
-                self.skipping = True
             self._payloads = payloads
-            yield self.run
+            yield self.add
         finally:
-            self._payloads = None
-            # reset skipping state iff component level skipping isn't set
-            if not self.skipping_component:
-                self.skipping = False
+            # clear payloads on exit
+            self._payloads = list()
 
-    def run(
+    def add(
         self,
         fcn: Callable[..., FlagEntry],
         payloads: dict = None,
@@ -797,70 +834,89 @@ class ValidationProtocol:
         config: dict = None,
         description: str = None,
     ):
-        # set by context managers
-        if self.skipping:
-            skip = True
-
-        fcn_name = fcn.__name__
-        # use fcn_name as description unless one explicitly provided
-        if description is None:
-            description = fcn_name
-
         # override payload with one supplied directly to run
         if payloads:
-            self._payloads = payloads
+            self._payloads = [payloads]
 
         # coerce config variable if not provided to an empty dict
         if config is None:
             config = dict()
 
         for payload in self._payloads:
-            payload_and_config = payload | config
-            # Log skip if requested
-            if skip:
+            self._check_queue.append(
+                {
+                    "check_fcn": fcn,
+                    "description": description
+                    if description is not None
+                    else fcn.__name__,
+                    "payload": payload,
+                    "config": config,
+                    "component": self.cur_component,
+                    # don't run if either this add call specifies skip
+                    # or if the component is being skipped
+                    "to_run": not any([skip, self.cur_component.skip]),
+                }
+            )
+        return self
+
+    def run(self):
+        """Runs all queue checks"""
+        for queued in self._check_queue:
+            fcn = queued["check_fcn"]
+            fcn_name = fcn.__name__
+
+            if not queued["to_run"]:
+                # case: skipping compute
                 packed_result = {
                     "code": FlagCode.SKIPPED,
                     "message": "Skipped by protocol",
                     "function": fcn_name,
-                    "description": description,
-                    "kwargs": payload_and_config,
-                    "config": config,
+                    "description": queued["description"],
+                    # NOTE: This is intentionally the unevaluated payload
+                    #     This assumes skipped checks may contain inputs that fail on evaluation
+                    #     One example being data models that aren't fully loaded for skipped checks
+                    "kwargs": queued["payload"] | queued["config"],
+                    "config": queued["config"],
                 }
-            # otherwise run and capture result
             else:
+                # case: to_compute is true
+                # try computing, works
+                payload = self._eval_payload_callables(queued["payload"])
+                payload_and_config = payload | queued["config"]
                 try:
                     result = fcn(**payload_and_config)
 
                     # peel off outlier data and keep track
                     # using current component name as the top level key
                     if fcn_outliers := result.pop("outliers", None):
-                        self.outliers[self.cur_component.name] = (
-                            self.outliers[self.cur_component.name] | fcn_outliers
+                        self.outliers[queued["component"].name] = (
+                            self.outliers[queued["component"].name] | fcn_outliers
                         )
 
                     # note: we want to make sure to override description if the result gives one;
                     # however it is optional and the fallback is the function name
                     packed_result = (
-                        {"description": description}
+                        {"description": queued["description"]}
                         | result
                         | {
                             "kwargs": payload_and_config,
-                            "config": config,
+                            "config": queued["config"],
                             "function": fcn_name,
                         }
                     )
+                # except: computing failed
                 # on exception, capture exception
                 except SystemExit as e:
                     packed_result = {
                         "code": FlagCode.DEV_UNHANDLED,
                         "message": e,
                         "function": fcn_name,
-                        "description": description,
+                        "description": queued["description"],
                         "kwargs": payload_and_config,
-                        "config": config,
+                        "config": queued["config"],
                     }
-            self.cur_component.flags.append(packed_result)
-        return self
+            # add result (including skip flag) to component
+            queued["component"].flags.append(packed_result)
 
     ##############################################
     ### METHODS FOR EXPORTING FLAG DATA
