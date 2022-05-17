@@ -23,7 +23,6 @@ from typing import (
     Union,
 )
 import logging
-#from typing_extensions import NotRequired
 from dp_tools.core.entity_model import (
     TemplateComponent,
     TemplateDataset,
@@ -892,9 +891,7 @@ class ValidationProtocol:
             count_str = f"[{sum_all_children(component)}"
             count_str2 = f"[{len(check_by_component[component])}"
             lead_str = f"{INDENT_STR}↳'{component.name}'"
-            buffer = (
-                f"{lead_str : <55}DIRECT:{count_str2 : >4}] ALL:{count_str : >5}]"
-            )
+            buffer = f"{lead_str : <55}DIRECT:{count_str2 : >4}] ALL:{count_str : >5}]"
             for child in component.children:
                 buffer += "\n" + render_self_and_children(child)
             return buffer
