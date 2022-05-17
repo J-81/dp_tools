@@ -3,7 +3,7 @@
 ############################################################################################
 from dataclasses import dataclass, field
 import enum
-from typing import List, Union
+from typing import Union
 from dp_tools.components.components import (
     DatasetGeneCounts,
     DifferentialGeneExpression,
@@ -12,17 +12,14 @@ from dp_tools.components.components import (
     NormalizedGeneCounts,
     RSeQCAnalysis,
 )
-from dp_tools.core.check_model import Flag
 
 from dp_tools.core.entity_model import (
     BaseDataset,
     BaseSample,
-    CanAttachComponents,
     EmptyComponent,
     TemplateDataset,
     TemplateSample,
 )
-from dp_tools.core.model_commons import strict_type_checks
 from dp_tools.components import (
     BulkRNASeqMetadataComponent,
     RawReadsComponent,
@@ -106,7 +103,3 @@ class BulkRNASeqDataset(TemplateDataset):
 
     def __post_init__(self):
         self.base.name = f"{self.base.name}__{self.assay_type}"
-
-    def validate(self) -> List[Flag]:
-        strict_type_checks(self, exceptions=["samples"])
-        return list()  # may return empty list
