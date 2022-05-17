@@ -1,29 +1,23 @@
 from collections import defaultdict
 import copy
-import enum
 import gzip
 import logging
 import math
 from pathlib import Path
-from statistics import mean, median, stdev
 import subprocess
-from typing import Callable, DefaultDict, Dict, List, Set, Tuple, Union
-import numpy as np
+from typing import Dict, Union
 
 import pandas as pd
-from dp_tools.components.components import GenomeAlignments, RawReadsComponent
+from dp_tools.components.components import RawReadsComponent
 from dp_tools.core.entity_model import (
     BaseComponent,
-    DataDir,
-    DataFile,
     ModuleLevelMQC,
     TemplateDataset,
-    TemplateSample,
 )
 
 log = logging.getLogger(__name__)
 
-from dp_tools.core.check_model import Check, Flag, FlagCode, FlagEntry, Flaggable
+from dp_tools.core.check_model import FlagCode, FlagEntry
 
 # adapted from reference: https://stackoverflow.com/questions/56048627/round-floats-in-a-nested-dictionary-recursively
 # used to round values for easier to read messages
@@ -41,58 +35,6 @@ def pformat(original_dictionary, function):
             new_dict[k] = function(v) if isinstance(v, float) else pformat(v, function)
         return new_dict
     return dictionary
-
-
-class MIDDLE(enum.Enum):
-    mean: Tuple[Callable] = (mean,)
-    median: Tuple[Callable] = (median,)
-
-    def __call__(self, *args, **kwargs):
-        return self.value[0](*args, **kwargs)
-
-
-def identify_outliers(
-    valueDict: Dict[str, float], standard_deviation_threshold: float, middle: Callable
-):
-    # determine middle value
-    middle_value: float = middle(valueDict.values())
-    std_deviation: float = stdev(valueDict.values())
-
-    # init tracker
-    # holds the key name and the standard deviations from the middle
-    outliers: Dict[str, float] = dict()
-
-    # exit early if std_deviation is zero (i.e. no outliers)
-    if std_deviation == 0:
-        return outliers
-
-    # check if a value is an outlier
-    for key, value in valueDict.items():
-        # calculate standard deviations
-        num_std_deviations_vector = (value - middle_value) / std_deviation
-        # if an outlier, add it to a dict of outliers (include a +/- standard deviations)
-        if abs(num_std_deviations_vector) > standard_deviation_threshold:
-            outliers[key] = num_std_deviations_vector
-
-    return outliers
-
-
-# TODO: typedict for thresholds
-def identify_values_past_thresholds(thresholds: dict, value: float) -> List[FlagCode]:
-    """Return empty list if no codes are raised"""
-    VALID_THRESHOLD_TYPES = {"lower", "upper"}
-    new_codes = list()
-    for threshold in thresholds:
-        assert (
-            threshold.get("type") in VALID_THRESHOLD_TYPES
-        ), f"Invalid threshold type configured: valid options {VALID_THRESHOLD_TYPES} got {threshold.get('type')}"
-        if threshold.get("type") == "lower":
-            if value < threshold["value"]:
-                new_codes.append(threshold["code"])
-        elif threshold.get("type") == "upper":
-            if value > threshold["value"]:
-                new_codes.append(threshold["code"])
-    return new_codes
 
 
 def convert_nan_to_zero(input: Dict[str, Union[float, int]]) -> Dict:
@@ -131,6 +73,7 @@ def onlyAllowedValues(df: pd.DataFrame, allowed_values: list) -> bool:
     return ((df.isin(allowed_values)) | (df.isnull())).all(axis=None)
 
 
+'''
 class DATASET_RAWREADS_0001(Check):
     config = {
         "metrics": [
@@ -2077,6 +2020,7 @@ class DATASET_DIFFERENTIALGENEEXPRESSION_ANNOTATED_TABLE_0001(Check):
                 err_msg += f"At least one value in columns {target_cols} fails allowedValues constraint (allowed values: {constraints.get('allowedValues')})."
 
         return err_msg
+'''
 
 
 def check_forward_and_reverse_reads_counts_match(
@@ -2117,9 +2061,17 @@ def check_file_exists(file: Path) -> FlagEntry:
 
 
 def check_fastqgz_file_contents(file: Path, count_lines_to_check: int) -> FlagEntry:
-    # check fastq.gz file looks correct
-    if count_lines_to_check == -1:
-        count_lines_to_check = float("inf")
+    """Check fastqgz by:
+    1. Decompressing as a stream of lines.
+    2. Affirming expected headers (every 4th line) look correct.
+
+    :param file: Input fastqGZ file path
+    :type file: Path
+    :param count_lines_to_check: Maximum number of lines to check. Setting this to a negative value will remove the limit
+    :type count_lines_to_check: int
+    :return: A required fields-only flag entry dictionary
+    :rtype: FlagEntry
+    """
 
     lines_with_issues: list[int] = list()
 
@@ -2247,23 +2199,27 @@ def check_for_outliers(
     )
 
     # track for outliers
-    outliers: dict[str, dict[str, dict[str, str]]] = defaultdict(lambda: defaultdict(dict))
+    outliers: dict[str, dict[str, dict[str, str]]] = defaultdict(
+        lambda: defaultdict(dict)
+    )
     for mqc_key in mqc_keys:
         for threshold in thresholds:
-            if threshold['middle_fcn'] == "mean":
-                middle = df[mqc_key].mean() 
-            elif threshold['middle_fcn'] == "median":
+            if threshold["middle_fcn"] == "mean":
+                middle = df[mqc_key].mean()
+            elif threshold["middle_fcn"] == "median":
                 middle = df[mqc_key].median()
             else:
-                raise ValueError(f"Cannot compute middle from supplied middle_fcn name: {threshold['middle_fcn']}. Must supply either 'median' or 'mean'")
-            
+                raise ValueError(
+                    f"Cannot compute middle from supplied middle_fcn name: {threshold['middle_fcn']}. Must supply either 'median' or 'mean'"
+                )
+
             # bail if standard deviation == 0
             # e.g. if all values are identical (and thus has no outliers)
             if df[mqc_key].std() == 0:
                 continue
 
             # compute difference
-            df_diffs = df[mqc_key]-middle
+            df_diffs = df[mqc_key] - middle
 
             # compute as number of standard deviations
             df_diffs_in_std = df_diffs / df[mqc_key].std()
@@ -2271,15 +2227,17 @@ def check_for_outliers(
             # add to outlier tracker if over the threshold
             for key, value in df_diffs_in_std.iteritems():
                 # if an outlier
-                if abs(value) > threshold['stdev_threshold']:
+                if abs(value) > threshold["stdev_threshold"]:
                     # track it
                     outliers[key][mqc_module][mqc_key] = value
                     # elevate code if current code is lower severity
-                    if code < threshold['code']:
-                        code = threshold['code']
+                    if code < threshold["code"]:
+                        code = threshold["code"]
     # check logic
     if code == FlagCode.GREEN:
         message = f"No outliers found for {mqc_keys} in {mqc_plot} part of {mqc_module} multiQC module"
     else:
-        message = f"Outliers found in {mqc_module} multiQC module as follows: {outliers}"
+        message = (
+            f"Outliers found in {mqc_module} multiQC module as follows: {outliers}"
+        )
     return {"code": code, "message": message, "outliers": outliers}
