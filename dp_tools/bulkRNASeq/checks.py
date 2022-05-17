@@ -6,18 +6,20 @@ import math
 from pathlib import Path
 import subprocess
 from typing import Dict, Union
+from dp_tools.bulkRNASeq.entity import BulkRNASeqDataset
 
 import pandas as pd
 from dp_tools.components.components import RawReadsComponent
 from dp_tools.core.entity_model import (
     BaseComponent,
     ModuleLevelMQC,
+    TemplateComponent,
     TemplateDataset,
 )
 
 log = logging.getLogger(__name__)
 
-from dp_tools.core.check_model import FlagCode, FlagEntry
+from dp_tools.core.check_model import FlagCode, FlagEntry, FlagEntryWithOutliers
 
 # adapted from reference: https://stackoverflow.com/questions/56048627/round-floats-in-a-nested-dictionary-recursively
 # used to round values for easier to read messages
@@ -2080,7 +2082,7 @@ def check_fastqgz_file_contents(file: Path, count_lines_to_check: int) -> FlagEn
     # catch this as HALT3
     try:
         with gzip.open(file, "rb") as f:
-            for i, line in enumerate(f):
+            for i, byte_line in enumerate(f):
                 # checks if lines counted equals the limit input
                 if i + 1 == count_lines_to_check:
                     log.debug(
@@ -2088,7 +2090,7 @@ def check_fastqgz_file_contents(file: Path, count_lines_to_check: int) -> FlagEn
                     )
                     break
 
-                line = line.decode()
+                line = byte_line.decode()
                 # every fourth line should be an identifier
                 expected_identifier_line = i % 4 == 0
                 # check if line is actually an identifier line
@@ -2124,18 +2126,20 @@ def check_bam_file_integrity(file: Path, samtools_bin: Path) -> FlagEntry:
     output = subprocess.run(
         [str(samtools_bin), "quickcheck", "-v", str(file)], capture_output=True
     )
-    output = output.stdout.decode()
-    if output == "":
+    stdout_string = output.stdout.decode()
+    if stdout_string == "":
         code = FlagCode.GREEN
         message = f"Samtools quickcheck raised no issues"
     else:
         code = FlagCode.HALT1
-        message = f"Samtools quickcheck failed on this file with output: {output}"
+        message = (
+            f"Samtools quickcheck failed on this file with output: {stdout_string}"
+        )
     return {"code": code, "message": message}
 
 
 def check_thresholds(
-    component: BaseComponent, mqc_key: str, stat_string: str, thresholds: list[dict]
+    component: TemplateComponent, mqc_key: str, stat_string: str, thresholds: list[dict]
 ) -> FlagEntry:
     # data specific preprocess
     value = stat_string_to_value(stat_string, component.mqcData[mqc_key])
@@ -2157,7 +2161,7 @@ def check_thresholds(
 
 
 def check_metadata_attributes_exist(
-    dataset: TemplateDataset, expected_attrs: list[str]
+    dataset: BulkRNASeqDataset, expected_attrs: list[str]
 ) -> FlagEntry:
     # data specific preprocess
     # set up tracker for expected attributes values
@@ -2185,16 +2189,16 @@ def check_metadata_attributes_exist(
 
 def check_for_outliers(
     dataset: TemplateDataset,
-    sample_component: BaseComponent,
+    sample_component: str,
     mqc_module: str,
     mqc_plot: str,
     mqc_keys: list[str],
     thresholds: list[dict],
-) -> FlagEntry:
+) -> FlagEntryWithOutliers:
     # assume code is GREEN until outliers detected
     code = FlagCode.GREEN
     # dataframe extraction
-    df = dataset.getMQCDataFrame(
+    df: pd.DataFrame = dataset.getMQCDataFrame(
         sample_component=sample_component, mqc_module=mqc_module, mqc_plot=mqc_plot
     )
 

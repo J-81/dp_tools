@@ -139,7 +139,7 @@ class CanAttachComponents:
         return components
 
     @property
-    def _str_all_components(self) -> Dict[str, object]:
+    def _str_all_components(self) -> str:
         """Return a dictionary of components, including any empty slots"""
         s = (
             "Components:\n\t"
@@ -202,8 +202,8 @@ class AttachEntity(TypedDict):
 
 # mixin for attaching samples or datasets or datasystems
 class CanAttachEntity:
-    entities: Dict[str, AttachEntity] = None
-    entityType: str = None
+    entities: Dict[str, AttachEntity] = None  # type: ignore
+    entityType: str = None  # type: ignore
 
     def _attach_entity(
         self, entity: Union["TemplateDataset", "TemplateSample"], entity_attr: str
@@ -348,10 +348,10 @@ Component: class:{self.__class__.__name__}
         return all_targets
 
     @property
-    def mqcData(self) -> ModuleLevelMQC:
+    def mqcData(self) -> dict[str, ModuleLevelMQC]:
         if getattr(self, "_mqcData", None) == None:
             # extract mqcData
-            self._mqcData = ModuleLevelMQC()
+            self._mqcData: dict[str, ModuleLevelMQC] = dict()
             for mqc_target in self._mqc_targets:
                 log.debug(f"Extracting multiqc data for {mqc_target}")
                 self.__extract_mqcData(mqc_target)

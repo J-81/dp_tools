@@ -23,7 +23,7 @@ from typing import (
     Union,
 )
 import logging
-from typing_extensions import NotRequired
+#from typing_extensions import NotRequired
 from dp_tools.core.entity_model import (
     TemplateComponent,
     TemplateDataset,
@@ -696,8 +696,10 @@ class VVProtocol(abc.ABC):
 class FlagEntry(TypedDict):
     code: FlagCode
     message: str
+
+class FlagEntryWithOutliers(FlagEntry):
     # TODO: make typehint
-    outliers: NotRequired[dict[str, dict[str, dict[str, str]]]]
+    outliers: dict[str, dict[str, dict[str, str]]]
 
 
 class ValidationProtocol:
