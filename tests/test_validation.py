@@ -315,26 +315,83 @@ log = logging.getLogger(__name__)
 
 def test_updated_protocol_model_paired_end(glds194_dataSystem_STAGE04):
     report = validate_bulkRNASeq(
-        glds194_dataSystem_STAGE04.dataset, report_args={"include_skipped": False}
+        glds194_dataSystem_STAGE04.dataset,
+        report_args={"include_skipped": False},
+        protocol_args={
+            "run_components": [
+                "Raw Reads By Sample",
+                "Trimmed Reads By Sample",
+                "STAR Alignments By Sample",
+                "Metadata",
+                "Raw Reads",
+                "Trim Reads",
+            ]
+        },
     )
 
-    assert len(report) == 130
+    assert report["flag_table"].shape == (447, 6)
+    assert report["outliers"].shape == (13, 2)
 
 
 def test_updated_protocol_model_single_end(glds48_dataSystem_STAGE04):
     report = validate_bulkRNASeq(
         glds48_dataSystem_STAGE04.dataset,
-        report_args={"include_skipped": False},
+        report_args={"include_skipped": True},
+        protocol_args={
+            "run_components": [
+                "Raw Reads By Sample",
+                "Trimmed Reads By Sample",
+                "STAR Alignments By Sample",
+                "Metadata",
+                "Raw Reads",
+                "Trim Reads",
+            ]
+        },
     )
 
-    assert len(report) == 56
+    assert report["flag_table"].shape == (325, 6)
+    # now check without skipped entries (should only be the fastq read parity check)
+    assert report["flag_table"].loc[
+        report["flag_table"].code.apply(lambda v: v.name != "SKIPPED")
+    ].shape == (297, 6)
+    assert report["outliers"].shape == (14, 2)
 
 
-def test_updated_protocol_model_skipping(glds48_dataSystem_STAGE00):
+def test_updated_protocol_model_skipping(glds48_dataSystem_STAGE00, caplog):
     report = validate_bulkRNASeq(
         glds48_dataSystem_STAGE00.dataset,
         report_args={"include_skipped": False},
-        protocol_args={"skip_components": ["Trimmed Reads"]},
+        protocol_args={
+            "run_components": [
+                "Raw Reads By Sample",
+                # "Trimmed Reads By Sample",
+                # "STAR Alignments By Sample",
+                "Metadata",
+                "Raw Reads",
+                # "Trim Reads",
+            ]
+        },
     )
 
-    assert len(report) == 28
+    assert report["flag_table"].shape == (72, 6)
+    assert report["outliers"].shape == (14, 1)
+
+    # NOW INCLUDING SKIPPED FLAG TABLE ENTRIES
+    # SHOULD MATCH, running all components and not including skips
+    report = validate_bulkRNASeq(
+        glds48_dataSystem_STAGE00.dataset,
+        report_args={"include_skipped": True},
+        protocol_args={
+            "run_components": [
+                "Raw Reads By Sample",
+                # "Trimmed Reads By Sample",
+                # "STAR Alignments By Sample",
+                "Metadata",
+                "Raw Reads",
+                # "Trim Reads",
+            ]
+        },
+    )
+
+    assert report["flag_table"].shape == (325, 6)
+    assert report["outliers"].shape == (14, 1)
