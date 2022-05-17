@@ -52,8 +52,6 @@ def test_bulkRNASeq_dataset(caplog):
         dataset.attach_sample(good_sample)
         assert caplog.records[-1].message == "Overwriting pre-existing sample: Sample2"
 
-    dataset.validate()
-
 
 def test_bulkRNASeq_sample(caplog):
     caplog.set_level(0)
