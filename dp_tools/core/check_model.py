@@ -697,6 +697,7 @@ class FlagEntry(TypedDict):
     code: FlagCode
     message: str
 
+
 class FlagEntryWithOutliers(FlagEntry):
     # TODO: make typehint
     outliers: dict[str, dict[str, dict[str, str]]]
@@ -786,6 +787,10 @@ class ValidationProtocol:
         # will hold all pending checks
         self._check_queue: list[ValidationProtocol.QueuedCheck] = list()
 
+    ##############################################
+    ### METHODS FOR PLANNING VALIDATION CHECKS
+    ##############################################
+
     @contextmanager
     def component_start(self, name: str, description: str, skip: bool = False):
         try:
@@ -861,6 +866,45 @@ class ValidationProtocol:
             )
         return self
 
+    ##################################################################
+    ### METHODS FOR DESCRIBING PLANNED VALIDATION CHECKS
+    ##################################################################
+
+    def queued_checks(self):
+        INDENT_CHAR = " "
+
+        # create by component dictionary
+        check_by_component: dict[ValidationProtocol.Component, list[str]] = defaultdict(
+            list
+        )
+        for check in self._check_queue:
+            check_by_component[check["component"]].append(check["check_fcn"])
+
+        def sum_all_children(component: ValidationProtocol.Component) -> int:
+            sum = len(check_by_component[component])
+            for child in component.children:
+                sum += sum_all_children(child)
+            return sum
+
+        # print tree of components from top down
+        def render_self_and_children(component: ValidationProtocol.Component) -> str:
+            INDENT_STR = INDENT_CHAR * (len(component.ancestor_line) - 1)
+            count_str = f"[{sum_all_children(component)}"
+            count_str2 = f"[{len(check_by_component[component])}"
+            lead_str = f"{INDENT_STR}↳'{component.name}'"
+            buffer = (
+                f"{lead_str : <55}DIRECT:{count_str2 : >4}] ALL:{count_str : >5}]"
+            )
+            for child in component.children:
+                buffer += "\n" + render_self_and_children(child)
+            return buffer
+
+        return render_self_and_children(self._root_component)
+
+    ##################################################################
+    ### METHODS FOR RUNNING VALIDATION CHECKS
+    ##################################################################
+
     def run(self):
         """Runs all queue checks"""
         for queued in self._check_queue:
@@ -930,19 +974,23 @@ class ValidationProtocol:
         for child in component.children:
             yield from ValidationProtocol.get_report_data(child)
 
+    class Report(TypedDict):
+        flag_table: pd.DataFrame
+        outliers: pd.DataFrame
+
     def report(
         self,
         nested: bool = True,
         include_flags: bool = True,
         include_skipped: bool = True,
-    ) -> dict:
+    ) -> "ValidationProtocol.Report":
         """Returns a report of all components and their associated flags
 
         :param nested: If True, the resultant dictionary is nested analogous to component tree
         :param include_flags: If True, the resultant dictionary includes flags
         :param include_skipped: If True, the resultant dictionary includes skipped flags
-        :return: Dictionary of all components by name and their flags
-        :rtype: dict
+        :return: Report of validation check results
+        :rtype: Validation.Report
         """
         self.results = dict(self.results)
         data = list(self.get_report_data(self._root_component))

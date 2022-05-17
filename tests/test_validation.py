@@ -395,3 +395,23 @@ def test_updated_protocol_model_skipping(glds48_dataSystem_STAGE00, caplog):
 
     assert report["flag_table"].shape == (325, 6)
     assert report["outliers"].shape == (14, 1)
+
+
+def test_updated_protcol_model(glds194_dataSystem_STAGE04):
+    vp = validate_bulkRNASeq(
+        glds194_dataSystem_STAGE04.dataset,
+        defer_run=True,
+        protocol_args={
+            "run_components": [
+                "Raw Reads By Sample",
+                "Trimmed Reads By Sample",
+                "STAR Alignments By Sample",
+                "Metadata",
+                "Raw Reads",
+                "Trim Reads",
+            ]
+        },
+    )
+
+    print(vp.queued_checks())
+    #1/0 Manually Validated by inspecting print statement
