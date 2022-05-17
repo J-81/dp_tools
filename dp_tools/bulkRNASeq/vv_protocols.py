@@ -48,8 +48,8 @@ class STAGE(enum.Enum):
 
 
 def validate_bulkRNASeq(
-    dataset: BulkRNASeqDataset, report_args: dict = None, protocol_args: dict = None
-):
+    dataset: BulkRNASeqDataset, report_args: dict = None, protocol_args: dict = None, defer_run: bool = False
+) -> Union[ValidationProtocol, ValidationProtocol.Report]:
     if report_args is None:
         report_args = dict()
     if protocol_args is None:
@@ -61,6 +61,72 @@ def validate_bulkRNASeq(
         name=dataset.name,
         description="Validate processing from trim reads through differential gene expression output",
     ):
+
+
+        with vp.component_start(name="Metadata", description="Metadata file validation"):
+            with vp.payload(payloads=[
+                {"dataset":dataset}
+            ]) as ADD:
+                ADD(check_metadata_attributes_exist, config={"expected_attrs":["paired_end","has_ercc"]})
+
+        with vp.component_start(name="Raw Reads", description="Raw Reads Outliers Detection"):
+            with vp.payload(payloads=[
+                {"dataset":dataset, 
+                "sample_component":"rawReads",
+                "mqc_module":"FastQC"}
+            ] if not dataset.metadata.paired_end else [
+                {"dataset":dataset, 
+                "sample_component":"rawForwardReads",
+                "mqc_module":"FastQC"},
+                {"dataset":dataset, 
+                "sample_component":"rawReverseReads",
+                "mqc_module":"FastQC"},
+            ]) as ADD:
+                ADD(check_for_outliers,
+                    config={
+                        "mqc_plot":"general_stats",
+                        "mqc_keys":[
+                            "percent_gc",
+                            "avg_sequence_length",
+                            "total_sequences",
+                            "percent_duplicates",
+                        ],
+                        "thresholds":[
+                            {"code": FlagCode.YELLOW1, "stdev_threshold":0.2, "middle_fcn":'median'},
+                            {"code": FlagCode.RED1, "stdev_threshold":0.6, "middle_fcn":'median'},
+                        ]
+                    }
+                )
+
+        with vp.component_start(name="Trim Reads", description="Trimmed Reads Outliers Detection"):
+            with vp.payload(payloads=[
+                {"dataset":dataset, 
+                "sample_component":"trimReads",
+                "mqc_module":"FastQC"}
+            ] if not dataset.metadata.paired_end else [
+                {"dataset":dataset, 
+                "sample_component":"trimForwardReads",
+                "mqc_module":"FastQC"},
+                {"dataset":dataset, 
+                "sample_component":"trimReverseReads",
+                "mqc_module":"FastQC"},
+            ]) as ADD:
+                ADD(check_for_outliers,
+                    config={
+                        "mqc_plot":"general_stats",
+                        "mqc_keys":[
+                            "percent_gc",
+                            "avg_sequence_length",
+                            "total_sequences",
+                            "percent_duplicates",
+                        ],
+                        "thresholds":[
+                            {"code": FlagCode.YELLOW1, "stdev_threshold":0.2, "middle_fcn":'median'},
+                            {"code": FlagCode.RED1, "stdev_threshold":0.6, "middle_fcn":'median'},
+                        ]
+                    }
+                )
+
         # fmt: off
         for sample in dataset.samples.values():
             with vp.component_start(name=sample.name, description="Samples level checks"):
@@ -203,69 +269,9 @@ def validate_bulkRNASeq(
                             description="Check that mapping rates are reasonable, specifically that a considerable amount of reads multimap to the target genome"
                         )
 
-        with vp.component_start(name="Metadata", description="Metadata file validation"):
-            with vp.payload(payloads=[
-                {"dataset":dataset}
-            ]) as ADD:
-                ADD(check_metadata_attributes_exist, config={"expected_attrs":["paired_end","has_ercc"]})
-
-        with vp.component_start(name="Raw Reads", description="Raw Reads Outliers Detection"):
-            with vp.payload(payloads=[
-                {"dataset":dataset, 
-                "sample_component":"rawReads",
-                "mqc_module":"FastQC"}
-            ] if not dataset.metadata.paired_end else [
-                {"dataset":dataset, 
-                "sample_component":"rawForwardReads",
-                "mqc_module":"FastQC"},
-                {"dataset":dataset, 
-                "sample_component":"rawReverseReads",
-                "mqc_module":"FastQC"},
-            ]) as ADD:
-                ADD(check_for_outliers,
-                    config={
-                        "mqc_plot":"general_stats",
-                        "mqc_keys":[
-                            "percent_gc",
-                            "avg_sequence_length",
-                            "total_sequences",
-                            "percent_duplicates",
-                        ],
-                        "thresholds":[
-                            {"code": FlagCode.YELLOW1, "stdev_threshold":0.2, "middle_fcn":'median'},
-                            {"code": FlagCode.RED1, "stdev_threshold":0.6, "middle_fcn":'median'},
-                        ]
-                    }
-                )
-
-        with vp.component_start(name="Trim Reads", description="Trimmed Reads Outliers Detection"):
-            with vp.payload(payloads=[
-                {"dataset":dataset, 
-                "sample_component":"trimReads",
-                "mqc_module":"FastQC"}
-            ] if not dataset.metadata.paired_end else [
-                {"dataset":dataset, 
-                "sample_component":"trimForwardReads",
-                "mqc_module":"FastQC"},
-                {"dataset":dataset, 
-                "sample_component":"trimReverseReads",
-                "mqc_module":"FastQC"},
-            ]) as ADD:
-                ADD(check_for_outliers,
-                    config={
-                        "mqc_plot":"general_stats",
-                        "mqc_keys":[
-                            "percent_gc",
-                            "avg_sequence_length",
-                            "total_sequences",
-                            "percent_duplicates",
-                        ],
-                        "thresholds":[
-                            {"code": FlagCode.YELLOW1, "stdev_threshold":0.2, "middle_fcn":'median'},
-                            {"code": FlagCode.RED1, "stdev_threshold":0.6, "middle_fcn":'median'},
-                        ]
-                    }
-                )
+    # return protocol object without running or generating a report
+    if defer_run:
+        return vp
 
     vp.run()
 
