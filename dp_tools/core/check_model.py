@@ -2,7 +2,7 @@
 # FLAG (A validation report message)
 #########################################################################
 import abc
-from collections import defaultdict
+from collections import Counter, defaultdict
 from contextlib import contextmanager
 from dataclasses import dataclass, field
 import enum
@@ -869,15 +869,15 @@ class ValidationProtocol:
     ### METHODS FOR DESCRIBING PLANNED VALIDATION CHECKS
     ##################################################################
 
-    def queued_checks(self):
+    def queued_checks(self, include_individual_checks=True):
         INDENT_CHAR = " "
 
         # create by component dictionary
-        check_by_component: dict[ValidationProtocol.Component, list[str]] = defaultdict(
-            list
-        )
+        check_by_component: dict[
+            ValidationProtocol.Component, list[ValidationProtocol.QueuedCheck]
+        ] = defaultdict(list)
         for check in self._check_queue:
-            check_by_component[check["component"]].append(check["check_fcn"])
+            check_by_component[check["component"]].append(check)
 
         def sum_all_children(component: ValidationProtocol.Component) -> int:
             sum = len(check_by_component[component])
@@ -892,6 +892,16 @@ class ValidationProtocol:
             count_str2 = f"[{len(check_by_component[component])}"
             lead_str = f"{INDENT_STR}↳'{component.name}'"
             buffer = f"{lead_str : <55}DIRECT:{count_str2 : >4}] ALL:{count_str : >5}]"
+
+            if include_individual_checks:
+                check_lines =  Counter([
+                        f"{INDENT_STR} > {check['description']}"
+                        for check in check_by_component[component] if check['to_run']
+                    ])
+                check_line_print = [f"{line} x {line_count}" for line, line_count in check_lines.items()]
+                if check_lines:
+                    buffer += "\n" + "\n".join(check_line_print)
+
             for child in component.children:
                 buffer += "\n" + render_self_and_children(child)
             return buffer
