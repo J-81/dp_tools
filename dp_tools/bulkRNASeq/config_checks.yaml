@@ -1,0 +1,2 @@
+Metadata-check_metadata_attributes_exist:
+  expected_attrs: [paired_end, has_ercc]

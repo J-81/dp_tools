@@ -3,6 +3,7 @@ import enum
 import os
 from pathlib import Path
 from typing import Dict, List, Set, Tuple, Union
+import yaml
 import logging
 
 log = logging.getLogger(__name__)
@@ -48,8 +49,11 @@ class STAGE(enum.Enum):
 
 
 def validate_bulkRNASeq(
-    dataset: BulkRNASeqDataset, report_args: dict = None, protocol_args: dict = None, defer_run: bool = False
+    dataset: BulkRNASeqDataset, config_path: Path, report_args: dict = None, protocol_args: dict = None, defer_run: bool = False
 ) -> Union[ValidationProtocol, ValidationProtocol.Report]:
+    with open(config_path, "r") as f:
+        config = yaml.safe_load(f)
+
     if report_args is None:
         report_args = dict()
     if protocol_args is None:
@@ -67,7 +71,7 @@ def validate_bulkRNASeq(
             with vp.payload(payloads=[
                 {"dataset":dataset}
             ]) as ADD:
-                ADD(check_metadata_attributes_exist, config={"expected_attrs":["paired_end","has_ercc"]})
+                ADD(check_metadata_attributes_exist, config=config["Metadata-check_metadata_attributes_exist"])
 
         with vp.component_start(name="Raw Reads", description="Raw Reads Outliers Detection"):
             with vp.payload(payloads=[
