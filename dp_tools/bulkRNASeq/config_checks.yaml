@@ -47,4 +47,16 @@ STAR Alignments By Sample-check_thresholds-MultiMapped:
     - code: RED1
       type: lower
       value: 15
-    
+
+RSeQC-check_for_outliers:
+  mqc_module: RSeQC
+  mqc_plot: Gene Body Coverage
+  mqc_keys:
+    - _ALL
+  thresholds:
+    - code: YELLOW1
+      stdev_threshold: 2
+      middle_fcn: median
+    - code: RED1
+      stdev_threshold: 4
+      middle_fcn: median
