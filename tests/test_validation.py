@@ -49,7 +49,9 @@ logging.basicConfig(level=logging.DEBUG)
 log = logging.getLogger(__name__)
 
 
-def test_updated_protocol_model_paired_end(glds194_dataSystem_STAGE04, check_config):
+def test_updated_protocol_model_paired_end_part_1(
+    glds194_dataSystem_STAGE04, check_config
+):
     report = validate_bulkRNASeq(
         glds194_dataSystem_STAGE04.dataset,
         config_path=check_config,
@@ -71,24 +73,61 @@ def test_updated_protocol_model_paired_end(glds194_dataSystem_STAGE04, check_con
     assert pseudo_fingerprint(report["flag_table"]) == 12493.901565995526
 
 
+def test_updated_protocol_model_paired_end_custom(
+    glds194_dataSystem_STAGE04, glds48_dataSystem_STAGE04, check_config
+):
+    custom_run_components = {
+        "run_components": [
+            "RSeQC By Sample",
+        ]
+    }
+
+    report = validate_bulkRNASeq(
+        glds194_dataSystem_STAGE04.dataset,
+        config_path=check_config,
+        report_args={"include_skipped": False},
+        protocol_args=custom_run_components,
+    )
+
+    print(1)
+
+    report = validate_bulkRNASeq(
+        glds48_dataSystem_STAGE04.dataset,
+        config_path=check_config,
+        report_args={"include_skipped": False},
+        protocol_args=custom_run_components,
+    )
+
+    print(1)
+
+
+def test_updated_protocol_model_paired_end_part_2(
+    glds194_dataSystem_STAGE04, check_config
+):
+    report = validate_bulkRNASeq(
+        glds194_dataSystem_STAGE04.dataset,
+        config_path=check_config,
+        report_args={"include_skipped": False},
+        protocol_args={
+            "run_components": [
+                "RSeQC By Sample",
+            ]
+        },
+    )
+
+    assert report["flag_table"].shape == (26, 6)
+    # assert report["outliers"].shape == (4, 2)
+    # assert pseudo_fingerprint(report["flag_table"]) == 12493.901565995526
+
+
 def test_updated_protocol_model_single_end(glds48_dataSystem_STAGE04, check_config):
     report = validate_bulkRNASeq(
         glds48_dataSystem_STAGE04.dataset,
         config_path=check_config,
         report_args={"include_skipped": True},
-        protocol_args={
-            "run_components": [
-                "Raw Reads By Sample",
-                "Trimmed Reads By Sample",
-                "STAR Alignments By Sample",
-                "Metadata",
-                "Raw Reads",
-                "Trim Reads",
-            ]
-        },
     )
 
-    assert report["flag_table"].shape == (325, 6)
+    assert report["flag_table"].shape == (357, 6)
     # now check without skipped entries (should only be the fastq read parity check)
     assert report["flag_table"].loc[
         report["flag_table"].code.apply(lambda v: v.name != "SKIPPED")
@@ -146,17 +185,8 @@ def test_updated_protcol_model(glds194_dataSystem_STAGE04, check_config):
         glds194_dataSystem_STAGE04.dataset,
         config_path=check_config,
         defer_run=True,
-        protocol_args={
-            "run_components": [
-                "Raw Reads By Sample",
-                "Trimmed Reads By Sample",
-                "STAR Alignments By Sample",
-                "Metadata",
-                "Raw Reads",
-                "Trim Reads",
-            ]
-        },
     )
 
+    print(vp.queued_checks(include_individual_checks=False))
     print(vp.queued_checks())
-    # 1/0 Manually Validated by inspecting print statement
+    1 / 0  # Manually Validated by inspecting print statement
