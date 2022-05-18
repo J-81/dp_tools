@@ -114,6 +114,15 @@ def validate_bulkRNASeq(
                 )
 
         with vp.component_start(
+            name="STAR Alignments",
+            description="Dataset wide checks including outliers detection",
+            ):
+            with vp.payload(payloads=[
+                {"dataset":dataset, "sample_component": "genomeAlignments"}
+            ]) as ADD:
+                ADD(check_for_outliers, config=config["STAR Alignments-check_for_outliers"])
+
+        with vp.component_start(
             name="RSeQC",
             description="RSeQC submodule outliers checking and other submodule specific dataset wide checks",
         ):

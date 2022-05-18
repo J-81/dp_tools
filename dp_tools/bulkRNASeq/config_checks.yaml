@@ -48,6 +48,31 @@ STAR Alignments By Sample-check_thresholds-MultiMapped:
       type: lower
       value: 15
 
+STAR Alignments-check_for_outliers:
+  mqc_module: STAR
+  mqc_plot: general_stats
+  mqc_keys:
+    - uniquely_mapped_percent
+    - avg_mapped_read_length
+    - mismatch_rate
+    - deletion_rate
+    - deletion_length
+    - insertion_rate
+    - insertion_length
+    - multimapped_percent
+    - multimapped_toomany_percent
+    - unmapped_mismatches_percent
+    - unmapped_tooshort_percent
+    - unmapped_other_percent
+  thresholds:
+    - code: YELLOW1
+      stdev_threshold: 2
+      middle_fcn: median
+      
+    - code: RED1
+      stdev_threshold: 4
+      middle_fcn: median
+
 RSeQC-check_for_outliers-geneBody_coverage:
   mqc_module: RSeQC
   mqc_plot: Gene Body Coverage
