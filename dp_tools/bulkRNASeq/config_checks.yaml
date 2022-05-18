@@ -48,7 +48,7 @@ STAR Alignments By Sample-check_thresholds-MultiMapped:
       type: lower
       value: 15
 
-RSeQC-check_for_outliers:
+RSeQC-check_for_outliers-geneBody_coverage:
   mqc_module: RSeQC
   mqc_plot: Gene Body Coverage
   mqc_keys:
