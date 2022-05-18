@@ -19,6 +19,7 @@ from dp_tools.bulkRNASeq.checks import (
     check_metadata_attributes_exist,
     check_for_outliers,
     check_genebody_coverage_output,
+    check_strandedness_assessable_from_infer_experiment,
 )
 from dp_tools.core.entity_model import TemplateComponent
 from dp_tools.components import (
@@ -67,7 +68,7 @@ def validate_bulkRNASeq(
         protocol_args = dict()
     # init validation protocol
     vp = ValidationProtocol(**protocol_args)
-
+    # fmt: off
     with vp.component_start(
         name=dataset.name,
         description="Validate processing from trim reads through differential gene expression output",
@@ -110,6 +111,7 @@ def validate_bulkRNASeq(
                     check_for_outliers,
                     config=config["Trim Reads-check_for_outliers"],
                 )
+
         with vp.component_start(
             name="RSeQC",
             description="RSeQC submodule outliers checking and other submodule specific dataset wide checks",
@@ -117,7 +119,15 @@ def validate_bulkRNASeq(
             with vp.payload(
                 payloads=[{"dataset": dataset, "sample_component": "rSeQCAnalysis"}]
             ) as ADD:
-                ADD(check_for_outliers, config=config["RSeQC-check_for_outliers"])
+                ADD(check_for_outliers, config=config["RSeQC-check_for_outliers-geneBody_coverage"])
+                ADD(check_for_outliers, config=config["RSeQC-check_for_outliers-infer_experiment"])
+                ADD(check_for_outliers, config=config["RSeQC-check_for_outliers-inner_distance"], skip=(not dataset.metadata.paired_end))
+                ADD(check_for_outliers, config=config["RSeQC-check_for_outliers-read_distribution"])
+
+            with vp.payload(payloads=[
+                    {"dataset": dataset}
+                ]) as ADD:
+                ADD(check_strandedness_assessable_from_infer_experiment, config=config["RSeQC-check_strandedness_assessable_from_infer_experiment"])
 
         sample: BulkRNASeqSample
         for sample in dataset.samples.values():

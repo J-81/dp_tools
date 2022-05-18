@@ -60,3 +60,56 @@ RSeQC-check_for_outliers:
     - code: RED1
       stdev_threshold: 4
       middle_fcn: median
+
+RSeQC-check_for_outliers-infer_experiment:
+  mqc_module: RSeQC
+  mqc_plot: Infer experiment
+  mqc_keys:
+    - _ALL
+  thresholds:
+    - code: YELLOW1
+      stdev_threshold: 2
+      middle_fcn: median
+    - code: RED1
+      stdev_threshold: 4
+      middle_fcn: median
+
+RSeQC-check_for_outliers-inner_distance:
+  mqc_module: RSeQC
+  mqc_plot: Inner Distance
+  mqc_keys:
+    - _ALL
+  thresholds:
+    - code: YELLOW1
+      stdev_threshold: 2
+      middle_fcn: median
+    - code: RED1
+      stdev_threshold: 4
+      middle_fcn: median
+
+RSeQC-check_for_outliers-read_distribution:
+  mqc_module: RSeQC
+  mqc_plot: Read Distribution
+  mqc_keys:
+    - _ALL
+  thresholds:
+    - code: YELLOW1
+      stdev_threshold: 2
+      middle_fcn: median
+    - code: RED1
+      stdev_threshold: 4
+      middle_fcn: median
+
+RSeQC-check_strandedness_assessable_from_infer_experiment:
+  # refer to the dominant strandedness median percent
+  stranded_assessment_range:
+    max: 100
+    min: 75
+  unstranded_assessment_range:
+    min: 40
+    max: 60
+  valid_dominant_strandedness_assessments:
+    - Sense (% Tags)
+    - Antisense (% Tags)
+    # note: Undetermined is an category
+    # however, it is not a valid assessment for processing purposes

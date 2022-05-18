@@ -2283,3 +2283,97 @@ def check_genebody_coverage_output(input_dir: Path):
         code = FlagCode.HALT1
         message = f"Missing output from geneBody coverage: {missing_files}. Expected: {expected_file_str}"
     return {"code": code, "message": message}
+
+
+def check_strandedness_assessable_from_infer_experiment(
+    dataset: BulkRNASeqDataset,
+    stranded_assessment_range: dict[str, float],
+    unstranded_assessment_range: dict[str, float],
+    valid_dominant_strandedness_assessments: list[str],
+) -> FlagEntry:
+    # data specific preprocess
+    def get_median_strandedness(
+        dataset: TemplateDataset,
+    ) -> tuple[str, float]:
+        df = dataset.getMQCDataFrame(
+            sample_component="rSeQCAnalysis",
+            mqc_module="RSeQC",
+            mqc_plot="Infer experiment",
+        ).fillna(
+            0
+        )  # Nan is a zero for this MultiQC table
+
+        median_strandedness = df.median().to_dict()
+
+        return median_strandedness
+
+    median_strandedness = get_median_strandedness(dataset)
+
+    # check if dominant assessment is valid
+    strand_assessment: str = max(
+        median_strandedness, key=lambda k: median_strandedness[k]
+    )
+
+    # flag based on thresholds
+    assessment_value: float = median_strandedness[strand_assessment]
+
+    is_stranded: bool = (
+        stranded_assessment_range["max"]
+        > assessment_value
+        > stranded_assessment_range["min"]
+    )
+    is_unstranded: bool = (
+        unstranded_assessment_range["max"]
+        > assessment_value
+        > unstranded_assessment_range["min"]
+    )
+
+    def determine_samples_outside_range(
+        dataset: TemplateDataset, min: float, max: float
+    ) -> list[str]:
+        df = dataset.getMQCDataFrame(
+            sample_component="rSeQCAnalysis",
+            mqc_module="RSeQC",
+            mqc_plot="Infer experiment",
+        ).fillna(
+            0
+        )  # Nan is a zero for this MultiQC table
+
+        return df.index[df[strand_assessment].between(min, max) == False].to_list()
+
+    # Catalog and flag any samples outside of range
+    # flags based on samples that are out of the assessment range
+    samples_outside_range: list[str]
+    if is_stranded:
+        samples_outside_range = determine_samples_outside_range(
+            dataset,
+            stranded_assessment_range["min"],
+            stranded_assessment_range["max"],
+        )
+    elif is_unstranded:
+        samples_outside_range = determine_samples_outside_range(
+            dataset,
+            unstranded_assessment_range["min"],
+            unstranded_assessment_range["max"],
+        )
+    else:  # this means that the strandedness is ambiguous
+        samples_outside_range = list()
+
+    # check logic
+    if strand_assessment not in valid_dominant_strandedness_assessments:
+        code = FlagCode.HALT1
+        message = f"Dominant strandedness [{strand_assessment} (median:{assessment_value:.2f})] is invalid for processing. Valid assessments: {valid_dominant_strandedness_assessments}"
+    elif not samples_outside_range and any([is_stranded, is_unstranded]):
+        code = FlagCode.GREEN
+        message = f"Dominant strandedness [{strand_assessment} (median:{assessment_value:.2f})] assessed with no individual samples outside the assessment range"
+    elif samples_outside_range and any([is_stranded, is_unstranded]):
+        code = FlagCode.RED1
+        message = f"Dominant strandedness [{strand_assessment} (median:{assessment_value:.2f})] assessed with samples outside the assessment range: {samples_outside_range}"
+    else:
+        code = FlagCode.HALT1
+        message = (
+            f"Dominant strandedness [{strand_assessment} (median:{assessment_value:.2f})] is ambiguous due to being inside range "
+            f"({stranded_assessment_range['min']}-{unstranded_assessment_range['max']})"
+        )
+
+    return {"code": code, "message": message}
