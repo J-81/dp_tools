@@ -68,7 +68,7 @@ STAR Alignments-check_for_outliers:
     - code: YELLOW1
       stdev_threshold: 2
       middle_fcn: median
-      
+
     - code: RED1
       stdev_threshold: 4
       middle_fcn: median
@@ -138,3 +138,25 @@ RSeQC-check_strandedness_assessable_from_infer_experiment:
     - Antisense (% Tags)
     # note: Undetermined is an category
     # however, it is not a valid assessment for processing purposes
+
+RSEM Counts-check_for_outliers:
+  mqc_module: Rsem
+  mqc_plot: general_stats
+  mqc_keys:
+  - Unalignable
+  - Alignable
+  - Filtered
+  - Total
+  - alignable_percent
+  - Unique
+  - Multi
+  - Uncertain
+
+  thresholds:
+    - code: YELLOW1
+      stdev_threshold: 2
+      middle_fcn: median
+
+    - code: RED1
+      stdev_threshold: 4
+      middle_fcn: median

@@ -139,6 +139,16 @@ def validate_bulkRNASeq(
                 ]) as ADD:
                 ADD(check_strandedness_assessable_from_infer_experiment, config=config["RSeQC-check_strandedness_assessable_from_infer_experiment"])
 
+
+        with vp.component_start(
+            name="RSEM Counts",
+            description="Dataset wide checks including outliers detection",
+            ):
+            with vp.payload(payloads=[
+                {"dataset":dataset, "sample_component": "geneCounts"}
+            ]) as ADD:
+                ADD(check_for_outliers, config=config["RSEM Counts-check_for_outliers"])
+
         sample: BulkRNASeqSample
         for sample in dataset.samples.values():
             with vp.component_start(
