@@ -2260,3 +2260,26 @@ def check_for_outliers(
         )
     return {"code": code, "message": message, "outliers": default_to_regular(outliers)}
 
+
+def check_genebody_coverage_output(input_dir: Path):
+    EXPECTED_EXTENSIONS = [
+        ".geneBodyCoverage.r",
+        ".geneBodyCoverage.txt",
+        ".geneBodyCoverage.curves.pdf",
+    ]
+
+    sample_name = input_dir.name
+    expected_files = [input_dir / f"{sample_name}{ext}" for ext in EXPECTED_EXTENSIONS]
+    missing_files = list()
+    for expected_file in expected_files:
+        if not expected_file.is_file():
+            missing_files.append(str(expected_file))
+
+    expected_file_str = [str(f) for f in expected_files]
+    if not missing_files:
+        code = FlagCode.GREEN
+        message = f"All output from geneBody coverage found: {expected_file_str}"
+    else:
+        code = FlagCode.HALT1
+        message = f"Missing output from geneBody coverage: {missing_files}. Expected: {expected_file_str}"
+    return {"code": code, "message": message}
