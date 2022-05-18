@@ -42,6 +42,7 @@ from dp_tools.bulkRNASeq.locaters import Locator
 from dp_tools.components import RawReadsComponent, BulkRNASeqMetadataComponent
 from dp_tools.core.configuration import load_full_config
 
+
 @functools.cache
 def load_config(config: Union[str, Path]) -> dict:
     if isinstance(config, str):
@@ -641,10 +642,10 @@ def load_BulkRNASeq_STAGE_0201(
         )
         # add pair end specific datafile
         if metadata.paired_end:
-            rSeQCAnalysis.innerDistanceMultiQCDirZIP = DataDir(
+            rSeQCAnalysis.innerDistanceMultiQCDirZIP = DataFile(
                 check_exists=validation_enabled,
                 **loc.find_data_asset_path(
-                    config_key="inner distance MultiQC directory",
+                    config_key="inner distance MultiQC directory ZIP",
                     sample=sample_name,
                 ),
             )
