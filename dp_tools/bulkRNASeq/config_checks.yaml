@@ -1,2 +1,18 @@
 Metadata-check_metadata_attributes_exist:
   expected_attrs: [paired_end, has_ercc]
+
+Raw Reads-check_for_outliers:
+  mqc_module: FastQC
+  mqc_plot: general_stats
+  mqc_keys:
+    - percent_gc
+    - avg_sequence_length
+    - total_sequences
+    - percent_duplicates
+  thresholds:
+    - code: YELLOW1
+      stdev_threshold: 2
+      middle_fcn: median
+    - code: RED1
+      stdev_threshold: 4
+      middle_fcn: median

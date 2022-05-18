@@ -2235,8 +2235,8 @@ def check_for_outliers(
                     # track it
                     outliers[key][mqc_module][mqc_key] = value
                     # elevate code if current code is lower severity
-                    if code < threshold["code"]:
-                        code = threshold["code"]
+                    if code < FlagCode[threshold["code"]]:
+                        code = FlagCode[threshold["code"]]
     # check logic
     if code == FlagCode.GREEN:
         message = f"No outliers found for {mqc_keys} in {mqc_plot} part of {mqc_module} multiQC module"
