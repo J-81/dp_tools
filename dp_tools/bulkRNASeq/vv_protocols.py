@@ -18,6 +18,7 @@ from dp_tools.bulkRNASeq.checks import (
     check_thresholds,
     check_metadata_attributes_exist,
     check_for_outliers,
+    check_genebody_coverage_output,
 )
 from dp_tools.core.entity_model import TemplateComponent
 from dp_tools.components import (
@@ -109,7 +110,16 @@ def validate_bulkRNASeq(
                     check_for_outliers,
                     config=config["Trim Reads-check_for_outliers"],
                 )
+        with vp.component_start(
+            name="RSeQC",
+            description="RSeQC submodule outliers checking and other submodule specific dataset wide checks",
+        ):
+            with vp.payload(
+                payloads=[{"dataset": dataset, "sample_component": "rSeQCAnalysis"}]
+            ) as ADD:
+                ADD(check_for_outliers, config=config["RSeQC-check_for_outliers"])
 
+        sample: BulkRNASeqSample
         for sample in dataset.samples.values():
             with vp.component_start(
                 name=sample.name, description="Samples level checks"
@@ -352,6 +362,30 @@ def validate_bulkRNASeq(
                             description="Check that mapping rates are reasonable, specifically that a considerable amount of reads multimap to the target genome",
                         )
 
+                with vp.component_start(
+                    name="RSeQC By Sample",
+                    description="RNASeq QA outputs",
+                ):
+                    with vp.component_start(
+                        name="geneBody_coverage",
+                        description="Assess integrity of transcripts and library prep signatures",
+                    ):
+                        with vp.payload(
+                            payloads=[
+                                {
+                                    "file": lambda: sample.rSeQCAnalysis.geneBodyCoverageMultiQCDirZIP.path
+                                },
+                            ]
+                        ) as ADD:
+                            ADD(check_file_exists)
+                        with vp.payload(
+                            payloads=[
+                                {
+                                    "input_dir": lambda: sample.rSeQCAnalysis.geneBodyCoverageOut.path
+                                },
+                            ]
+                        ) as ADD:
+                            ADD(check_genebody_coverage_output)
     # return protocol object without running or generating a report
     if defer_run:
         return vp
