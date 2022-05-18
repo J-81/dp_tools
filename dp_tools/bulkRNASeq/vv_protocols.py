@@ -98,50 +98,16 @@ def validate_bulkRNASeq(
             name="Trim Reads", description="Trimmed Reads Outliers Detection"
         ):
             with vp.payload(
-                payloads=[
-                    {
-                        "dataset": dataset,
-                        "sample_component": "trimReads",
-                        "mqc_module": "FastQC",
-                    }
-                ]
+                payloads=[{"dataset": dataset, "sample_component": "trimReads"}]
                 if not dataset.metadata.paired_end
                 else [
-                    {
-                        "dataset": dataset,
-                        "sample_component": "trimForwardReads",
-                        "mqc_module": "FastQC",
-                    },
-                    {
-                        "dataset": dataset,
-                        "sample_component": "trimReverseReads",
-                        "mqc_module": "FastQC",
-                    },
+                    {"dataset": dataset, "sample_component": "trimForwardReads"},
+                    {"dataset": dataset, "sample_component": "trimReverseReads"},
                 ]
             ) as ADD:
                 ADD(
                     check_for_outliers,
-                    config={
-                        "mqc_plot": "general_stats",
-                        "mqc_keys": [
-                            "percent_gc",
-                            "avg_sequence_length",
-                            "total_sequences",
-                            "percent_duplicates",
-                        ],
-                        "thresholds": [
-                            {
-                                "code": FlagCode.YELLOW1,
-                                "stdev_threshold": 0.2,
-                                "middle_fcn": "median",
-                            },
-                            {
-                                "code": FlagCode.RED1,
-                                "stdev_threshold": 0.6,
-                                "middle_fcn": "median",
-                            },
-                        ],
-                    },
+                    config=config["Trim Reads-check_for_outliers"],
                 )
 
         for sample in dataset.samples.values():
@@ -164,7 +130,9 @@ def validate_bulkRNASeq(
                         ADD(check_file_exists, description="Check reads files exist")
                         ADD(
                             check_fastqgz_file_contents,
-                            config={"count_lines_to_check": 200_000_000},
+                            config=config[
+                                "Raw Reads By Sample-check_fastqgz_file_contents"
+                            ],
                         )
 
                     with vp.payload(
@@ -237,7 +205,9 @@ def validate_bulkRNASeq(
                         ADD(check_file_exists, description="Check reads files exist")
                         ADD(
                             check_fastqgz_file_contents,
-                            config={"count_lines_to_check": 200_000_000},
+                            config=config[
+                                "Trim Reads By Sample-check_fastqgz_file_contents"
+                            ],
                         )
 
                     with vp.payload(
@@ -364,47 +334,21 @@ def validate_bulkRNASeq(
                         payloads=[
                             {
                                 "component": lambda: sample.genomeAlignments,
-                                "mqc_key": "STAR",
                             },
                         ]
                     ) as ADD:
-                        # fmt: on
                         ADD(
                             check_thresholds,
-                            config={
-                                "stat_string": "uniquely_mapped_percent + multimapped_percent",
-                                "thresholds": [
-                                    {
-                                        "code": FlagCode.YELLOW1,
-                                        "type": "lower",
-                                        "value": 70,
-                                    },
-                                    {
-                                        "code": FlagCode.RED1,
-                                        "type": "lower",
-                                        "value": 50,
-                                    },
-                                ],
-                            },
+                            config=config[
+                                "STAR Alignments By Sample-check_thresholds-Mapped"
+                            ],
                             description="Check that mapping rates are reasonable, specifically most reads map to the target genome",
                         )
                         ADD(
                             check_thresholds,
-                            config={
-                                "stat_string": "multimapped_toomany_percent + multimapped_percent",
-                                "thresholds": [
-                                    {
-                                        "code": FlagCode.YELLOW1,
-                                        "type": "lower",
-                                        "value": 30,
-                                    },
-                                    {
-                                        "code": FlagCode.RED1,
-                                        "type": "lower",
-                                        "value": 15,
-                                    },
-                                ],
-                            },
+                            config=config[
+                                "STAR Alignments By Sample-check_thresholds-MultiMapped"
+                            ],
                             description="Check that mapping rates are reasonable, specifically that a considerable amount of reads multimap to the target genome",
                         )
 

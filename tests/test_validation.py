@@ -67,8 +67,8 @@ def test_updated_protocol_model_paired_end(glds194_dataSystem_STAGE04, check_con
     )
 
     assert report["flag_table"].shape == (447, 6)
-    assert report["outliers"].shape == (13, 2)
-    assert pseudo_fingerprint(report["flag_table"]) == 12574.080536912752
+    assert report["outliers"].shape == (4, 2)
+    assert pseudo_fingerprint(report["flag_table"]) == 12493.901565995526
 
 
 def test_updated_protocol_model_single_end(glds48_dataSystem_STAGE04, check_config):
@@ -93,8 +93,8 @@ def test_updated_protocol_model_single_end(glds48_dataSystem_STAGE04, check_conf
     assert report["flag_table"].loc[
         report["flag_table"].code.apply(lambda v: v.name != "SKIPPED")
     ].shape == (297, 6)
-    assert report["outliers"].shape == (14, 2)
-    assert pseudo_fingerprint(report["flag_table"]) == 8869.224615384615
+    assert report["outliers"].shape == (3, 2)
+    assert pseudo_fingerprint(report["flag_table"]) == 8829.101538461538
 
 
 def test_updated_protocol_model_skipping(glds48_dataSystem_STAGE00, check_config):
@@ -137,11 +137,11 @@ def test_updated_protocol_model_skipping(glds48_dataSystem_STAGE00, check_config
     )
 
     assert report["flag_table"].shape == (325, 6)
-    assert report["outliers"].shape == (14, 1)
-    assert pseudo_fingerprint(report["flag_table"]) == 3679.3046153846153
+    assert report["outliers"].shape == (1, 1)
+    assert pseudo_fingerprint(report["flag_table"]) == 3659.243076923077
 
 
-def test_updated_protcol_model(glds194_dataSystem_STAGE04):
+def test_updated_protcol_model(glds194_dataSystem_STAGE04, check_config):
     vp = validate_bulkRNASeq(
         glds194_dataSystem_STAGE04.dataset,
         config_path=check_config,

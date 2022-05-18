@@ -2151,7 +2151,11 @@ def check_thresholds(
         match threshold["type"]:
             case "lower":
                 if value < threshold["value"]:
-                    code = threshold["code"] if code < threshold["code"] else code
+                    code = (
+                        FlagCode[threshold["code"]]
+                        if code < FlagCode[threshold["code"]]
+                        else code
+                    )
 
     if code == FlagCode.GREEN:
         message = f"Value: ({value}) did not breech any configured thresholds"
