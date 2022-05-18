@@ -2206,6 +2206,11 @@ def check_for_outliers(
         sample_component=sample_component, mqc_module=mqc_module, mqc_plot=mqc_plot
     )
 
+    def default_to_regular(d):
+        if isinstance(d, defaultdict):
+            d = {k: default_to_regular(v) for k, v in d.items()}
+        return d
+
     # track for outliers
     outliers: dict[str, dict[str, dict[str, str]]] = defaultdict(
         lambda: defaultdict(dict)
@@ -2253,4 +2258,5 @@ def check_for_outliers(
         message = (
             f"Outliers found in {mqc_module} multiQC module as follows: {outliers}"
         )
-    return {"code": code, "message": message, "outliers": outliers}
+    return {"code": code, "message": message, "outliers": default_to_regular(outliers)}
+
