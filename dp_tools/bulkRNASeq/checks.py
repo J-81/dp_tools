@@ -2261,6 +2261,21 @@ def check_for_outliers(
     return {"code": code, "message": message, "outliers": default_to_regular(outliers)}
 
 
+def _check_expected_files_exist(
+    input_dir: Path, expected_extensions: list[str], parent_dir_is_filename: bool = True
+):
+    if parent_dir_is_filename:
+        fname = input_dir.name
+    expected_files = [input_dir / f"{fname}{ext}" for ext in expected_extensions]
+    missing_files = list()
+    for expected_file in expected_files:
+        if not expected_file.is_file():
+            missing_files.append(str(expected_file))
+
+    expected_file_str = [str(f) for f in expected_files]
+    return missing_files, expected_file_str
+
+
 def check_genebody_coverage_output(input_dir: Path):
     EXPECTED_EXTENSIONS = [
         ".geneBodyCoverage.r",
@@ -2268,20 +2283,37 @@ def check_genebody_coverage_output(input_dir: Path):
         ".geneBodyCoverage.curves.pdf",
     ]
 
-    sample_name = input_dir.name
-    expected_files = [input_dir / f"{sample_name}{ext}" for ext in EXPECTED_EXTENSIONS]
-    missing_files = list()
-    for expected_file in expected_files:
-        if not expected_file.is_file():
-            missing_files.append(str(expected_file))
+    missing_files, expected_file_str = _check_expected_files_exist(
+        input_dir, expected_extensions=EXPECTED_EXTENSIONS
+    )
 
-    expected_file_str = [str(f) for f in expected_files]
     if not missing_files:
         code = FlagCode.GREEN
         message = f"All output from geneBody coverage found: {expected_file_str}"
     else:
         code = FlagCode.HALT1
         message = f"Missing output from geneBody coverage: {missing_files}. Expected: {expected_file_str}"
+    return {"code": code, "message": message}
+
+
+def check_inner_distance_output(input_dir: Path):
+    EXPECTED_EXTENSIONS = [
+        ".inner_distance_plot.r",
+        ".inner_distance_freq.txt",
+        ".inner_distance.txt",
+        ".inner_distance_plot.pdf",
+    ]
+
+    missing_files, expected_file_str = _check_expected_files_exist(
+        input_dir, expected_extensions=EXPECTED_EXTENSIONS
+    )
+
+    if not missing_files:
+        code = FlagCode.GREEN
+        message = f"All output from inner distance found: {expected_file_str}"
+    else:
+        code = FlagCode.HALT1
+        message = f"Missing output from inner distance: {missing_files}. Expected: {expected_file_str}"
     return {"code": code, "message": message}
 
 

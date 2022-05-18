@@ -19,6 +19,7 @@ from dp_tools.bulkRNASeq.checks import (
     check_metadata_attributes_exist,
     check_for_outliers,
     check_genebody_coverage_output,
+    check_inner_distance_output,
     check_strandedness_assessable_from_infer_experiment,
 )
 from dp_tools.core.entity_model import TemplateComponent
@@ -119,10 +120,10 @@ def validate_bulkRNASeq(
             with vp.payload(
                 payloads=[{"dataset": dataset, "sample_component": "rSeQCAnalysis"}]
             ) as ADD:
-                ADD(check_for_outliers, config=config["RSeQC-check_for_outliers-geneBody_coverage"])
-                ADD(check_for_outliers, config=config["RSeQC-check_for_outliers-infer_experiment"])
-                ADD(check_for_outliers, config=config["RSeQC-check_for_outliers-inner_distance"], skip=(not dataset.metadata.paired_end))
-                ADD(check_for_outliers, config=config["RSeQC-check_for_outliers-read_distribution"])
+                ADD(check_for_outliers, description="Check for outliers in geneBody Coverage",config=config["RSeQC-check_for_outliers-geneBody_coverage"])
+                ADD(check_for_outliers, description="Check for outliers in infer experiment",config=config["RSeQC-check_for_outliers-infer_experiment"])
+                ADD(check_for_outliers, description="Check for outliers in inner distance",config=config["RSeQC-check_for_outliers-inner_distance"], skip=(not dataset.metadata.paired_end))
+                ADD(check_for_outliers, description="Check for outliers in read distribution",config=config["RSeQC-check_for_outliers-read_distribution"])
 
             with vp.payload(payloads=[
                     {"dataset": dataset}
@@ -382,20 +383,59 @@ def validate_bulkRNASeq(
                     ):
                         with vp.payload(
                             payloads=[
-                                {
-                                    "file": lambda: sample.rSeQCAnalysis.geneBodyCoverageMultiQCDirZIP.path
-                                },
+                                {"file": lambda: sample.rSeQCAnalysis.geneBodyCoverageMultiQCDirZIP.path},
                             ]
                         ) as ADD:
                             ADD(check_file_exists)
                         with vp.payload(
                             payloads=[
-                                {
-                                    "input_dir": lambda: sample.rSeQCAnalysis.geneBodyCoverageOut.path
-                                },
+                                {"input_dir": lambda: sample.rSeQCAnalysis.geneBodyCoverageOut.path},
                             ]
                         ) as ADD:
                             ADD(check_genebody_coverage_output)
+
+                    with vp.component_start(
+                        name="infer_experiment",
+                        description="Assess strandedness of transcripts based on gene annotations",
+                    ):
+                        with vp.payload(
+                            payloads=[
+                                {"file": lambda: sample.rSeQCAnalysis.inferExperimentMultiQCDirZIP.path},
+                                {"file": lambda: sample.rSeQCAnalysis.inferExperimentOut.path},
+                            ]
+                        ) as ADD:
+                            ADD(check_file_exists)
+
+                    with vp.component_start(
+                        name="inner_distance",
+                        description="Reports on distance between mate reads based on gene annotations",
+                        skip=(not dataset.metadata.paired_end)
+                    ):
+                        with vp.payload(
+                            payloads=[
+                                {"file": lambda: sample.rSeQCAnalysis.innerDistanceMultiQCDirZIP.path},
+                            ]
+                        ) as ADD:
+                            ADD(check_file_exists)
+                        with vp.payload(
+                            payloads=[
+                                {"input_dir": lambda: sample.rSeQCAnalysis.innerDistanceOut.path},
+                            ]
+                        ) as ADD:
+                            ADD(check_inner_distance_output)
+
+
+                    with vp.component_start(
+                        name="read_distribution",
+                        description="Assess average element makeup of transcript",
+                    ):
+                        with vp.payload(
+                            payloads=[
+                                {"file": lambda: sample.rSeQCAnalysis.readDistributionMultiQCDirZIP.path},
+                                {"file": lambda: sample.rSeQCAnalysis.readDistributionOut.path},
+                            ]
+                        ) as ADD:
+                            ADD(check_file_exists)
     # return protocol object without running or generating a report
     if defer_run:
         return vp
