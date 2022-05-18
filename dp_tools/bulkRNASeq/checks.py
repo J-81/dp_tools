@@ -2210,6 +2210,11 @@ def check_for_outliers(
     outliers: dict[str, dict[str, dict[str, str]]] = defaultdict(
         lambda: defaultdict(dict)
     )
+
+    # override if mqc_keys is a special value
+    if mqc_keys == ["_ALL"]:
+        mqc_keys = df.columns
+
     for mqc_key in mqc_keys:
         for threshold in thresholds:
             if threshold["middle_fcn"] == "mean":
