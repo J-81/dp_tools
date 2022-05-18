@@ -115,8 +115,8 @@ def test_updated_protocol_model_skipping(glds48_dataSystem_STAGE00, check_config
     )
 
     assert report["flag_table"].shape == (72, 6)
-    assert report["outliers"].shape == (14, 1)
-    assert pseudo_fingerprint(report["flag_table"]) == 1923.4305555555557
+    assert report["outliers"].shape == (1, 1)
+    assert pseudo_fingerprint(report["flag_table"]) == 1903.1527777777778
 
     # NOW INCLUDING SKIPPED FLAG TABLE ENTRIES
     # SHOULD MATCH, running all components and not including skips
