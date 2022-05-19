@@ -10,10 +10,10 @@ Raw Reads-check_for_outliers: &fastQC_outliers
     - total_sequences
     - percent_duplicates
   thresholds:
-    - code: YELLOW1
+    - code: YELLOW
       stdev_threshold: 2
       middle_fcn: median
-    - code: RED1
+    - code: RED
       stdev_threshold: 4
       middle_fcn: median
 
@@ -28,11 +28,11 @@ STAR Alignments By Sample-check_thresholds-Mapped:
   mqc_key: STAR
   stat_string: uniquely_mapped_percent + multimapped_percent
   thresholds:
-    - code: YELLOW1
+    - code: YELLOW
       type: lower
       value: 70
     
-    - code: RED1
+    - code: RED
       type: lower
       value: 50
     
@@ -40,11 +40,11 @@ STAR Alignments By Sample-check_thresholds-MultiMapped:
   mqc_key: STAR
   stat_string: multimapped_toomany_percent + multimapped_percent
   thresholds:
-    - code: YELLOW1
+    - code: YELLOW
       type: lower
       value: 30
     
-    - code: RED1
+    - code: RED
       type: lower
       value: 15
 
@@ -65,11 +65,11 @@ STAR Alignments-check_for_outliers:
     - unmapped_tooshort_percent
     - unmapped_other_percent
   thresholds:
-    - code: YELLOW1
+    - code: YELLOW
       stdev_threshold: 2
       middle_fcn: median
 
-    - code: RED1
+    - code: RED
       stdev_threshold: 4
       middle_fcn: median
 
@@ -79,10 +79,10 @@ RSeQC-check_for_outliers-geneBody_coverage:
   mqc_keys:
     - _ALL
   thresholds:
-    - code: YELLOW1
+    - code: YELLOW
       stdev_threshold: 2
       middle_fcn: median
-    - code: RED1
+    - code: RED
       stdev_threshold: 4
       middle_fcn: median
 
@@ -92,10 +92,10 @@ RSeQC-check_for_outliers-infer_experiment:
   mqc_keys:
     - _ALL
   thresholds:
-    - code: YELLOW1
+    - code: YELLOW
       stdev_threshold: 2
       middle_fcn: median
-    - code: RED1
+    - code: RED
       stdev_threshold: 4
       middle_fcn: median
 
@@ -105,10 +105,10 @@ RSeQC-check_for_outliers-inner_distance:
   mqc_keys:
     - _ALL
   thresholds:
-    - code: YELLOW1
+    - code: YELLOW
       stdev_threshold: 2
       middle_fcn: median
-    - code: RED1
+    - code: RED
       stdev_threshold: 4
       middle_fcn: median
 
@@ -118,10 +118,10 @@ RSeQC-check_for_outliers-read_distribution:
   mqc_keys:
     - _ALL
   thresholds:
-    - code: YELLOW1
+    - code: YELLOW
       stdev_threshold: 2
       middle_fcn: median
-    - code: RED1
+    - code: RED
       stdev_threshold: 4
       middle_fcn: median
 
@@ -153,10 +153,10 @@ RSEM Counts-check_for_outliers:
   - Uncertain
 
   thresholds:
-    - code: YELLOW1
+    - code: YELLOW
       stdev_threshold: 2
       middle_fcn: median
 
-    - code: RED1
+    - code: RED
       stdev_threshold: 4
       middle_fcn: median

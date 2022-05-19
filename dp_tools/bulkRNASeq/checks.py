@@ -90,7 +90,7 @@ def check_forward_and_reverse_reads_counts_match(
             f"{int(count_rev_reads)} sequences "
         )
     else:
-        code = FlagCode.HALT1
+        code = FlagCode.HALT
         message = (
             f"Forward and reverse read counts do not "
             f"match: forward_Count:{int(count_fwd_reads)}, "
@@ -106,7 +106,7 @@ def check_file_exists(file: Path) -> FlagEntry:
         code = FlagCode.GREEN
         message = f"File exists: {file.name} "
     else:
-        code = FlagCode.HALT1
+        code = FlagCode.HALT
         message = f"Missing file: {file.name} expected at {str(file)} "
 
     return {"code": code, "message": message}
@@ -152,7 +152,7 @@ def check_fastqgz_file_contents(file: Path, count_lines_to_check: int) -> FlagEn
                     pass
 
         if not len(lines_with_issues) == 0:
-            code = FlagCode.HALT1
+            code = FlagCode.HALT
             message = (
                 f"Following decompressed fastqGZ lines have issues: {lines_with_issues}"
             )
@@ -181,7 +181,7 @@ def check_bam_file_integrity(file: Path, samtools_bin: Path) -> FlagEntry:
         code = FlagCode.GREEN
         message = f"Samtools quickcheck raised no issues"
     else:
-        code = FlagCode.HALT1
+        code = FlagCode.HALT
         message = (
             f"Samtools quickcheck failed on this file with output: {stdout_string}"
         )
@@ -236,7 +236,7 @@ def check_metadata_attributes_exist(
         code = FlagCode.GREEN
         message = f"All expected metadata values found: {tracked_metadata}"
     else:
-        code = FlagCode.HALT1
+        code = FlagCode.HALT
         message = f"Missing dataset metadata (source from Runsheet): {missing_metadata_fields}"
     return {"code": code, "message": message}
 
@@ -341,7 +341,7 @@ def check_genebody_coverage_output(input_dir: Path):
         code = FlagCode.GREEN
         message = f"All output from geneBody coverage found: {expected_file_str}"
     else:
-        code = FlagCode.HALT1
+        code = FlagCode.HALT
         message = f"Missing output from geneBody coverage: {missing_files}. Expected: {expected_file_str}"
     return {"code": code, "message": message}
 
@@ -362,7 +362,7 @@ def check_inner_distance_output(input_dir: Path):
         code = FlagCode.GREEN
         message = f"All output from inner distance found: {expected_file_str}"
     else:
-        code = FlagCode.HALT1
+        code = FlagCode.HALT
         message = f"Missing output from inner distance: {missing_files}. Expected: {expected_file_str}"
     return {"code": code, "message": message}
 
@@ -443,16 +443,16 @@ def check_strandedness_assessable_from_infer_experiment(
 
     # check logic
     if strand_assessment not in valid_dominant_strandedness_assessments:
-        code = FlagCode.HALT1
+        code = FlagCode.HALT
         message = f"Dominant strandedness [{strand_assessment} (median:{assessment_value:.2f})] is invalid for processing. Valid assessments: {valid_dominant_strandedness_assessments}"
     elif not samples_outside_range and any([is_stranded, is_unstranded]):
         code = FlagCode.GREEN
         message = f"Dominant strandedness [{strand_assessment} (median:{assessment_value:.2f})] assessed with no individual samples outside the assessment range"
     elif samples_outside_range and any([is_stranded, is_unstranded]):
-        code = FlagCode.RED1
+        code = FlagCode.RED
         message = f"Dominant strandedness [{strand_assessment} (median:{assessment_value:.2f})] assessed with samples outside the assessment range: {samples_outside_range}"
     else:
-        code = FlagCode.HALT1
+        code = FlagCode.HALT
         message = (
             f"Dominant strandedness [{strand_assessment} (median:{assessment_value:.2f})] is ambiguous due to being inside range "
             f"({stranded_assessment_range['min']}-{unstranded_assessment_range['max']})"

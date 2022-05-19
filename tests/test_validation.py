@@ -70,7 +70,7 @@ def test_updated_protocol_model_paired_end_part_1(
 
     assert report["flag_table"].shape == (447, 6)
     assert report["outliers"].shape == (4, 2)
-    assert pseudo_fingerprint(report["flag_table"]) == 12493.901565995526
+    assert pseudo_fingerprint(report["flag_table"]) == 12463.834451901566
 
 
 def test_updated_protocol_model_paired_end_custom(
@@ -78,7 +78,7 @@ def test_updated_protocol_model_paired_end_custom(
 ):
     custom_run_components = {
         "run_components": [
-            "RSeQC By Sample",
+            "RSEM Counts",
         ]
     }
 
@@ -127,7 +127,7 @@ def test_updated_protocol_model_single_end(glds48_dataSystem_STAGE04, check_conf
         report_args={"include_skipped": True},
     )
 
-    assert report["flag_table"].shape == (357, 6)
+    assert report["flag_table"].shape == (444, 6)
     # now check without skipped entries (should only be the fastq read parity check)
     assert report["flag_table"].loc[
         report["flag_table"].code.apply(lambda v: v.name != "SKIPPED")

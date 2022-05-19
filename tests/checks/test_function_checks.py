@@ -34,5 +34,5 @@ def test_check_bam_file_integrity(glds48_dataSystem_STAGE04):
             samtools_bin=Path(os.environ.get("SAMTOOLS_BIN")),
         )
 
-        assert res["code"] == FlagCode.HALT1
+        assert res["code"] == FlagCode.HALT
         assert res["message"]
