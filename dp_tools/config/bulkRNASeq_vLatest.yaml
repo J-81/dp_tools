@@ -454,7 +454,7 @@ data assets:
       - "{sample}"
       - "{sample}_Aligned.sortedByCoord.out.bam"
 
-    resource categories:  *AlignedSequenceData_AlignedData
+    resource categories:  *neverPublished
 
   aligned SortedByCoord ResortedBam:
     processed location: 
