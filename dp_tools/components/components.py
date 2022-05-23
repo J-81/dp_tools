@@ -380,3 +380,13 @@ class DifferentialGeneExpression(TemplateComponent):
     annotatedTableCSV: Union[DataFile, None] = field(default=None)
     visualizationTableCSV: Union[DataFile, None] = field(default=None)
     visualizationPCATableCSV: Union[DataFile, None] = field(default=None)
+
+@dataclass(eq=False)
+class ERCCAnalysis(TemplateComponent):
+    """Component containing all ERCC analysis notebook related data assets.
+
+    """
+
+    base: BaseComponent = field(repr=False)
+    notebookHTML: Union[DataFile, None] = field(default=None)
+    """The html export of the ERCC jupyter notebook"""

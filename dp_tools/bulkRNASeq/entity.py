@@ -11,6 +11,7 @@ from dp_tools.components.components import (
     GenomeAlignments,
     NormalizedGeneCounts,
     RSeQCAnalysis,
+    ERCCAnalysis,
 )
 
 from dp_tools.core.entity_model import (
@@ -100,6 +101,10 @@ class BulkRNASeqDataset(TemplateDataset):
     differentialGeneExpressionERCC: Union[
         EmptyComponent, DifferentialGeneExpression
     ] = field(default_factory=EmptyComponent)
+
+    erccAnalysis: Union[EmptyComponent, ERCCAnalysis] = field(
+        default_factory=EmptyComponent
+    )
 
     def __post_init__(self):
         self.base.name = f"{self.base.name}__{self.assay_type}"
