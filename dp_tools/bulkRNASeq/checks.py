@@ -160,7 +160,7 @@ def check_fastqgz_file_contents(file: Path, count_lines_to_check: int) -> FlagEn
             code = FlagCode.GREEN
             message = f"First {count_lines_to_check} lines checked found no issues."
     except (EOFError, gzip.BadGzipFile):
-        code = FlagCode.HALT2
+        code = FlagCode.HALT
         message = (
             f"Error during decompression, likely a compression or truncation issue."
         )
