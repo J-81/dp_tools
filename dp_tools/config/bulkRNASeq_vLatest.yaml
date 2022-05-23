@@ -271,7 +271,7 @@ data assets:
       - *FastQC_Reports
       - "{sample}_R1_raw_fastqc.zip"
 
-    resource categories: *MergedSequenceData_Fastq
+    resource categories: *neverPublished
 
   raw reverse reads fastQC ZIP:
     processed location:
@@ -279,7 +279,7 @@ data assets:
       - *FastQC_Reports
       - "{sample}_R2_raw_fastqc.zip"
 
-    resource categories: *MergedSequenceData_Fastq
+    resource categories: *neverPublished
 
   raw reads fastQC ZIP:
     processed location:
@@ -287,7 +287,7 @@ data assets:
       - *FastQC_Reports
       - "{sample}_raw_fastqc.zip"
 
-    resource categories: *MergedSequenceData_Fastq
+    resource categories: *neverPublished
 
   trimmed fastQC MultiQC directory:
     processed location: 
