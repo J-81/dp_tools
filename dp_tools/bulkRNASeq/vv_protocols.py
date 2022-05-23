@@ -21,6 +21,7 @@ from dp_tools.bulkRNASeq.checks import (
     check_genebody_coverage_output,
     check_inner_distance_output,
     check_strandedness_assessable_from_infer_experiment,
+    check_rsem_counts_and_unnormalized_tables_parity,
 )
 from dp_tools.core.entity_model import TemplateComponent
 from dp_tools.components import (
@@ -148,6 +149,17 @@ def validate_bulkRNASeq(
                 {"dataset":dataset, "sample_component": "geneCounts"}
             ]) as ADD:
                 ADD(check_for_outliers, config=config["RSEM Counts-check_for_outliers"])
+
+        with vp.component_start(
+            name="Unnormalized Gene Counts",
+            description="Validate normalization related output",
+            ):
+            with vp.payload(payloads=[
+                {"rsem_table_path": lambda: dataset.geneCounts.unnormalizedCounts.path, 
+                "deseq2_table_path": lambda: dataset.normalizedGeneCounts.unnormalizedCountsCSV.path}
+            ]
+            ) as ADD:
+                ADD(check_rsem_counts_and_unnormalized_tables_parity)
 
         sample: BulkRNASeqSample
         for sample in dataset.samples.values():
