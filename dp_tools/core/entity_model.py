@@ -250,7 +250,7 @@ GeneralStatsDictForComponent = OrderedDict[  # samples level
     OrderedDict["str", float],  # key:value level, e.g. 'percent_gc': 52.0
 ]
 
-DataAsset = Union[DataDir, DataFile, Path]
+DataAsset = Union[DataDir, DataFile]
 
 # model dict types
 TopLevelMQC = Dict[str, "ModuleLevelMQC"]
