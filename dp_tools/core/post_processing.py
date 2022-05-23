@@ -363,7 +363,7 @@ def update_curation_tables(
     config: Union[tuple[str, str], Path],
     output_file: str = None,
     investigation_table: bool = False,
-):
+) -> pd.DataFrame:
     """Updates existing curation investigation and assay tables with processed data.
     This function extends the existing assay table with processing data assets.
     The naming and order of the new columns is configured in the data assets config section.
@@ -417,3 +417,5 @@ def update_curation_tables(
         header=unmangle_columns(df_assay_extended.columns),
         sep="\t",
     )
+
+    return df_assay_extended
