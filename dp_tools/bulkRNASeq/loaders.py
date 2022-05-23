@@ -16,6 +16,7 @@ import pandas as pd
 from dp_tools.components.components import (
     DatasetGeneCounts,
     DifferentialGeneExpression,
+    ERCCAnalysis,
     GeneCounts,
     GenomeAlignments,
     NormalizedGeneCounts,
@@ -890,6 +891,20 @@ def load_BulkRNASeq_STAGE_04(
                     config_key="ERCC normalized DESeq2 normalized counts table",
                 ),
             ),
+        )
+        dataset.attach_component(
+            ERCCAnalysis(
+                base=BaseComponent(description="ERCC Notebook analysis related files"),
+                # WARNING: This is the only data asset expected to be generated outside the workflow at this time
+                # as such it is assumed the file will exist; however, neither the locator nor the data asset itself will validate this
+                notebookHTML=DataFile(
+                    check_exists=False,
+                    **loc.find_data_asset_path(
+                        config_key="ERCC analysis HTML", search=False
+                    ),
+                ),
+            ),
+            attr="erccAnalysis",
         )
 
     # update samples
