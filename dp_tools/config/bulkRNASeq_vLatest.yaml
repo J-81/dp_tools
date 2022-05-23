@@ -460,7 +460,7 @@ data assets:
     processed location: 
       - *alignDataDir
       - "{sample}"
-      - "{sample}_Aligned.sortedByCoord_sorted.out.bam.bai"
+      - "{sample}_Aligned.sortedByCoord_sorted.out.bam"
 
     resource categories: *AlignedSequenceData_AlignedData
 
@@ -507,7 +507,7 @@ data assets:
       - "{sample}"
       - "{sample}_SJ.out.tab"
 
-    resource categories: *neverPublished
+    resource categories: *AlignedSequenceData_AlignedData
 
   genebody coverage MultiQC directory:
     processed location: 
