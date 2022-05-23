@@ -459,3 +459,34 @@ def check_strandedness_assessable_from_infer_experiment(
         )
 
     return {"code": code, "message": message}
+
+
+def check_rsem_counts_and_unnormalized_tables_parity(
+    rsem_table_path: Path, deseq2_table_path: Path
+) -> FlagEntry:
+    # data specific preprocess
+    df_rsem = pd.read_csv(rsem_table_path)
+    df_deseq2 = pd.read_csv(deseq2_table_path)
+
+    # return halt flag if column labels not conserved
+    if not set(df_deseq2.columns) == set(df_rsem.columns):
+        unique_to_deseq2 = set(df_deseq2.columns) - set(df_rsem.columns)
+        unique_to_rsem = set(df_rsem.columns) - set(df_deseq2.columns)
+        return {
+            "code": FlagCode.HALT,
+            "message": f"Columns do not match: unique to rsem: {unique_to_rsem}. unique to deseq2: {unique_to_deseq2}.",
+        }
+
+    # rearrange columns to the same order
+    df_deseq2 = df_deseq2[df_rsem.columns]
+
+    # check logic
+    if df_deseq2.equals(df_rsem):
+        code = FlagCode.GREEN
+        message = f"Tables of unnormalized counts match."
+    else:
+        code = FlagCode.HALT
+        message = (
+            f"Tables of unnormalized counts have same columns but values do not match."
+        )
+    return {"code": code, "message": message}

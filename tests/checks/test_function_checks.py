@@ -3,8 +3,20 @@ from pathlib import Path
 from dp_tools.bulkRNASeq.checks import (
     check_bam_file_integrity,
     check_forward_and_reverse_reads_counts_match,
+    check_rsem_counts_and_unnormalized_tables_parity,
 )
 from dp_tools.core.check_model import FlagCode
+
+
+def test_check_rsem_counts_and_unnormalized_tables_parity(glds48_dataSystem_STAGE04):
+    dataset = glds48_dataSystem_STAGE04.dataset
+    res = check_rsem_counts_and_unnormalized_tables_parity(
+        rsem_table_path=dataset.geneCounts.unnormalizedCounts.path,
+        deseq2_table_path=dataset.normalizedGeneCounts.unnormalizedCountsCSV.path,
+    )
+
+    assert res["code"]
+    assert res["message"]
 
 
 def test_check_forward_and_reverse_reads_counts_match(glds194_dataSystem_STAGE00):
