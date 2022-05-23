@@ -121,3 +121,27 @@ def test_bulkRNASeq_full_noComponents(caplog):
         dataSystem.dataset
     assert dataSystem.datasets["Test_dataset_1__BulkRNASeq"] == dataset
     assert dataSystem.all_datasets == set([dataset, dataset2])
+
+
+def test_bulkRNASeq_mqc_api(glds194_dataSystem_STAGE00):
+    # check plot name retrieval
+    ds = glds194_dataSystem_STAGE00.dataset
+    plots = ds.getMQCPlots("rawForwardReads", "FastQC")
+    assert set(plots) == set(
+        [
+            "Overrepresented sequences",
+            "Per Sequence GC Content",
+            "Per Base N Content",
+            "general_stats",
+            "Adapter Content:Subplot::illumina_universal_adapter",
+            "Sequence Counts",
+            "Mean Quality Scores",
+            "Per Sequence Quality Scores",
+            "Sequence Duplication Levels",
+        ]
+    )
+
+    # check plot dataframe extraction
+    assert ds.getMQCDataFrame(
+        "rawForwardReads", "FastQC", "Overrepresented sequences"
+    ).shape == (13, 2)

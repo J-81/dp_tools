@@ -636,9 +636,45 @@ Is Part of DataSystem:
     '{self.dataSystem.name}'
         """
 
+    # TODO: refactor shared parts of getMQCPlots and getMQCDataFrame
+    def getMQCPlots(self, sample_component: str, mqc_module: str) -> list[str]:
+        # check if sample requested component exists for all samples
+        has_component = {
+            sample.name: getattr(sample, sample_component, False)
+            for sample in self.samples.values()
+        }
+        assert all(
+            has_component.values()
+        ), f"At least one sample does not have the requested component ({sample_component})!: {has_component}"
+
+        # check if all samples have the requested mqc module
+        has_module = {
+            sample.name: getattr(sample, sample_component).mqcData.get(mqc_module)
+            for sample in self.samples.values()
+        }
+        assert all(
+            has_module.values()
+        ), f"At least one sample does not have the requested multiQC module ({mqc_module})!: {has_module}"
+
+        # return list of plots
+        plots_per_sample: List[Set] = [
+            set(
+                getattr(sample, sample_component)
+                .mqcData.get(mqc_module)["Plots"]
+                .keys()
+            )
+            for sample in self.samples.values()
+        ]
+        # find the intersection of sample wise sets of plots
+        plots_in_all_samples = (
+            set.intersection(*plots_per_sample) if plots_per_sample else set()
+        )  # guard against empty list
+        plots_in_all_samples.add("general_stats")
+        return list(plots_in_all_samples)
+
     def getMQCDataFrame(
         self, sample_component: str, mqc_module: str, mqc_plot: str = None
-    ) -> Union[pd.DataFrame, List[str]]:
+    ) -> pd.DataFrame:
         """Generates a single dataframe composed of all samples for the requested component, mqc module, and plot.
         If a mqc_plot is not specificed, a list of available plots is listed.
 
@@ -668,22 +704,6 @@ Is Part of DataSystem:
         assert all(
             has_module.values()
         ), f"At least one sample does not have the requested multiQC module ({mqc_module})!: {has_module}"
-
-        # return list of plots if requested
-        if mqc_plot == None:
-            plots_per_sample: List[Set] = [
-                set(
-                    getattr(sample, sample_component)
-                    .mqcData.get(mqc_module)["Plots"]
-                    .keys()
-                )
-                for sample in self.samples.values()
-            ]
-            # find the intersection of sample wise sets of plots
-            plots_in_all_samples = (
-                set.intersection(*plots_per_sample) if plots_per_sample else set()
-            )  # guard against empty list
-            return plots_in_all_samples.add("general_stats")
 
         # return table of general stats instead
         if mqc_plot == "general_stats":
