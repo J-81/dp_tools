@@ -376,7 +376,7 @@ def check_strandedness_assessable_from_infer_experiment(
     # data specific preprocess
     def get_median_strandedness(
         dataset: TemplateDataset,
-    ) -> tuple[str, float]:
+    ) -> dict[str, float]:
         df = dataset.getMQCDataFrame(
             sample_component="rSeQCAnalysis",
             mqc_module="RSeQC",
