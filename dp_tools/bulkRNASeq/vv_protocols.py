@@ -70,7 +70,7 @@ def validate_bulkRNASeq(
         protocol_args = dict()
     # init validation protocol
     vp = ValidationProtocol(**protocol_args)
-    # fmt: off
+    # fmt: on
     with vp.component_start(
         name=dataset.name,
         description="Validate processing from trim reads through differential gene expression output",
@@ -79,8 +79,8 @@ def validate_bulkRNASeq(
         with vp.component_start(
             name="Metadata", description="Metadata file validation"
         ):
-            with vp.payload(payloads=[{"dataset": dataset}]) as ADD:
-                ADD(
+            with vp.payload(payloads=[{"dataset": dataset}]):
+                vp.add(
                     check_metadata_attributes_exist,
                     config=config["Metadata-check_metadata_attributes_exist"],
                 )
@@ -95,8 +95,10 @@ def validate_bulkRNASeq(
                     {"dataset": dataset, "sample_component": "rawForwardReads"},
                     {"dataset": dataset, "sample_component": "rawReverseReads"},
                 ]
-            ) as ADD:
-                ADD(check_for_outliers, config=config["Raw Reads-check_for_outliers"])
+            ):
+                vp.add(
+                    check_for_outliers, config=config["Raw Reads-check_for_outliers"]
+                )
 
         with vp.component_start(
             name="Trim Reads", description="Trimmed Reads Outliers Detection"
@@ -108,8 +110,8 @@ def validate_bulkRNASeq(
                     {"dataset": dataset, "sample_component": "trimForwardReads"},
                     {"dataset": dataset, "sample_component": "trimReverseReads"},
                 ]
-            ) as ADD:
-                ADD(
+            ):
+                vp.add(
                     check_for_outliers,
                     config=config["Trim Reads-check_for_outliers"],
                 )
@@ -117,11 +119,14 @@ def validate_bulkRNASeq(
         with vp.component_start(
             name="STAR Alignments",
             description="Dataset wide checks including outliers detection",
+        ):
+            with vp.payload(
+                payloads=[{"dataset": dataset, "sample_component": "genomeAlignments"}]
             ):
-            with vp.payload(payloads=[
-                {"dataset":dataset, "sample_component": "genomeAlignments"}
-            ]) as ADD:
-                ADD(check_for_outliers, config=config["STAR Alignments-check_for_outliers"])
+                vp.add(
+                    check_for_outliers,
+                    config=config["STAR Alignments-check_for_outliers"],
+                )
 
         with vp.component_start(
             name="RSeQC",
@@ -129,37 +134,75 @@ def validate_bulkRNASeq(
         ):
             with vp.payload(
                 payloads=[{"dataset": dataset, "sample_component": "rSeQCAnalysis"}]
-            ) as ADD:
-                ADD(check_for_outliers, description="Check for outliers in geneBody Coverage",config=config["RSeQC-check_for_outliers-geneBody_coverage"])
-                ADD(check_for_outliers, description="Check for outliers in infer experiment",config=config["RSeQC-check_for_outliers-infer_experiment"])
-                ADD(check_for_outliers, description="Check for outliers in inner distance",config=config["RSeQC-check_for_outliers-inner_distance"], skip=(not dataset.metadata.paired_end))
-                ADD(check_for_outliers, description="Check for outliers in read distribution",config=config["RSeQC-check_for_outliers-read_distribution"])
+            ):
+                vp.add(
+                    check_for_outliers,
+                    description="Check for outliers in geneBody Coverage",
+                    config=config["RSeQC-check_for_outliers-geneBody_coverage"],
+                )
+                vp.add(
+                    check_for_outliers,
+                    description="Check for outliers in infer experiment",
+                    config=config["RSeQC-check_for_outliers-infer_experiment"],
+                )
+                vp.add(
+                    check_for_outliers,
+                    description="Check for outliers in inner distance",
+                    config=config["RSeQC-check_for_outliers-inner_distance"],
+                    skip=(not dataset.metadata.paired_end),
+                )
+                vp.add(
+                    check_for_outliers,
+                    description="Check for outliers in read distribution",
+                    config=config["RSeQC-check_for_outliers-read_distribution"],
+                )
 
-            with vp.payload(payloads=[
-                    {"dataset": dataset}
-                ]) as ADD:
-                ADD(check_strandedness_assessable_from_infer_experiment, config=config["RSeQC-check_strandedness_assessable_from_infer_experiment"])
-
+            with vp.payload(payloads=[{"dataset": dataset}]):
+                vp.add(
+                    check_strandedness_assessable_from_infer_experiment,
+                    config=config[
+                        "RSeQC-check_strandedness_assessable_from_infer_experiment"
+                    ],
+                )
 
         with vp.component_start(
             name="RSEM Counts",
             description="Dataset wide checks including outliers detection",
+        ):
+            with vp.payload(
+                payloads=[{"dataset": dataset, "sample_component": "geneCounts"}]
             ):
-            with vp.payload(payloads=[
-                {"dataset":dataset, "sample_component": "geneCounts"}
-            ]) as ADD:
-                ADD(check_for_outliers, config=config["RSEM Counts-check_for_outliers"])
+                vp.add(
+                    check_for_outliers, config=config["RSEM Counts-check_for_outliers"]
+                )
 
         with vp.component_start(
             name="Unnormalized Gene Counts",
             description="Validate normalization related output",
+        ):
+            with vp.payload(
+                payloads=[
+                    {
+                        "rsem_table_path": lambda: dataset.geneCounts.unnormalizedCounts.path,
+                        "deseq2_table_path": lambda: dataset.normalizedGeneCounts.unnormalizedCountsCSV.path,
+                    }
+                ]
             ):
-            with vp.payload(payloads=[
-                {"rsem_table_path": lambda: dataset.geneCounts.unnormalizedCounts.path, 
-                "deseq2_table_path": lambda: dataset.normalizedGeneCounts.unnormalizedCountsCSV.path}
-            ]
-            ) as ADD:
-                ADD(check_rsem_counts_and_unnormalized_tables_parity)
+                vp.add(check_rsem_counts_and_unnormalized_tables_parity)
+
+        with vp.component_start(
+            name="Unnormalized Gene Counts",
+            description="Validate normalization related output",
+        ):
+            with vp.payload(
+                payloads=[
+                    {
+                        "rsem_table_path": lambda: dataset.geneCounts.unnormalizedCounts.path,
+                        "deseq2_table_path": lambda: dataset.normalizedGeneCounts.unnormalizedCountsCSV.path,
+                    }
+                ]
+            ):
+                vp.add(check_rsem_counts_and_unnormalized_tables_parity)
 
         sample: BulkRNASeqSample
         for sample in dataset.samples.values():
@@ -178,9 +221,9 @@ def validate_bulkRNASeq(
                             if dataset.metadata.paired_end
                             else [{"file": lambda: sample.rawReads.fastqGZ.path}]
                         )
-                    ) as ADD:
-                        ADD(check_file_exists, description="Check reads files exist")
-                        ADD(
+                    ):
+                        vp.add(check_file_exists, description="Check reads files exist")
+                        vp.add(
                             check_fastqgz_file_contents,
                             config=config[
                                 "Raw Reads By Sample-check_fastqgz_file_contents"
@@ -194,8 +237,8 @@ def validate_bulkRNASeq(
                                 "rev_reads": lambda: sample.rawReverseReads,
                             },
                         ],
-                    ) as ADD:
-                        ADD(
+                    ):
+                        vp.add(
                             check_forward_and_reverse_reads_counts_match,
                             skip=(not dataset.metadata.paired_end),
                         )
@@ -238,8 +281,8 @@ def validate_bulkRNASeq(
                                     },
                                 ]
                             )
-                        ) as ADD:
-                            ADD(check_file_exists)
+                        ):
+                            vp.add(check_file_exists)
 
                 with vp.component_start(
                     name="Trimmed Reads By Sample", description="Trimmed reads"
@@ -253,9 +296,9 @@ def validate_bulkRNASeq(
                             if dataset.metadata.paired_end
                             else [{"file": lambda: sample.trimReads.fastqGZ.path}]
                         )
-                    ) as ADD:
-                        ADD(check_file_exists, description="Check reads files exist")
-                        ADD(
+                    ):
+                        vp.add(check_file_exists, description="Check reads files exist")
+                        vp.add(
                             check_fastqgz_file_contents,
                             config=config[
                                 "Trim Reads By Sample-check_fastqgz_file_contents"
@@ -269,8 +312,8 @@ def validate_bulkRNASeq(
                                 "rev_reads": sample.trimReverseReads,
                             },
                         ],
-                    ) as ADD:
-                        ADD(
+                    ):
+                        vp.add(
                             check_forward_and_reverse_reads_counts_match,
                             skip=(not dataset.metadata.paired_end),
                         )
@@ -313,8 +356,8 @@ def validate_bulkRNASeq(
                                     },
                                 ]
                             )
-                        ) as ADD:
-                            ADD(check_file_exists)
+                        ):
+                            vp.add(check_file_exists)
 
                     with vp.component_start(
                         name="Trimming Reports",
@@ -337,8 +380,8 @@ def validate_bulkRNASeq(
                                     },
                                 ]
                             )
-                        ) as ADD:
-                            ADD(
+                        ):
+                            vp.add(
                                 check_file_exists,
                                 description="Check that Trim Galore reports exist",
                             )
@@ -360,8 +403,8 @@ def validate_bulkRNASeq(
                             {"file": lambda: sample.genomeAlignments.logFull.path},
                             {"file": lambda: sample.genomeAlignments.sjTab.path},
                         ]
-                    ) as ADD:
-                        ADD(
+                    ):
+                        vp.add(
                             check_file_exists,
                             description="Check that all expected output from STAR is generated",
                         )
@@ -375,9 +418,9 @@ def validate_bulkRNASeq(
                                 "file": lambda: sample.genomeAlignments.alignedSortedByCoordBam.path
                             },
                         ]
-                    ) as ADD:
-                        # ADD(check_bam_file_integrity, config={"samtools_bin":#TODO: fill with private config file})
-                        ADD(
+                    ):
+                        # vp.add(check_bam_file_integrity, config={"samtools_bin":#TODO: fill with private config file})
+                        vp.add(
                             check_bam_file_integrity,
                             config={"samtools_bin": os.environ["SAMTOOLS_BIN"]},
                         )
@@ -388,15 +431,15 @@ def validate_bulkRNASeq(
                                 "component": lambda: sample.genomeAlignments,
                             },
                         ]
-                    ) as ADD:
-                        ADD(
+                    ):
+                        vp.add(
                             check_thresholds,
                             config=config[
                                 "STAR Alignments By Sample-check_thresholds-Mapped"
                             ],
                             description="Check that mapping rates are reasonable, specifically most reads map to the target genome",
                         )
-                        ADD(
+                        vp.add(
                             check_thresholds,
                             config=config[
                                 "STAR Alignments By Sample-check_thresholds-MultiMapped"
@@ -414,16 +457,20 @@ def validate_bulkRNASeq(
                     ):
                         with vp.payload(
                             payloads=[
-                                {"file": lambda: sample.rSeQCAnalysis.geneBodyCoverageMultiQCDirZIP.path},
+                                {
+                                    "file": lambda: sample.rSeQCAnalysis.geneBodyCoverageMultiQCDirZIP.path
+                                },
                             ]
-                        ) as ADD:
-                            ADD(check_file_exists)
+                        ):
+                            vp.add(check_file_exists)
                         with vp.payload(
                             payloads=[
-                                {"input_dir": lambda: sample.rSeQCAnalysis.geneBodyCoverageOut.path},
+                                {
+                                    "input_dir": lambda: sample.rSeQCAnalysis.geneBodyCoverageOut.path
+                                },
                             ]
-                        ) as ADD:
-                            ADD(check_genebody_coverage_output)
+                        ):
+                            vp.add(check_genebody_coverage_output)
 
                     with vp.component_start(
                         name="infer_experiment",
@@ -431,30 +478,37 @@ def validate_bulkRNASeq(
                     ):
                         with vp.payload(
                             payloads=[
-                                {"file": lambda: sample.rSeQCAnalysis.inferExperimentMultiQCDirZIP.path},
-                                {"file": lambda: sample.rSeQCAnalysis.inferExperimentOut.path},
+                                {
+                                    "file": lambda: sample.rSeQCAnalysis.inferExperimentMultiQCDirZIP.path
+                                },
+                                {
+                                    "file": lambda: sample.rSeQCAnalysis.inferExperimentOut.path
+                                },
                             ]
-                        ) as ADD:
-                            ADD(check_file_exists)
+                        ):
+                            vp.add(check_file_exists)
 
                     with vp.component_start(
                         name="inner_distance",
                         description="Reports on distance between mate reads based on gene annotations",
-                        skip=(not dataset.metadata.paired_end)
+                        skip=(not dataset.metadata.paired_end),
                     ):
                         with vp.payload(
                             payloads=[
-                                {"file": lambda: sample.rSeQCAnalysis.innerDistanceMultiQCDirZIP.path},
+                                {
+                                    "file": lambda: sample.rSeQCAnalysis.innerDistanceMultiQCDirZIP.path
+                                },
                             ]
-                        ) as ADD:
-                            ADD(check_file_exists)
+                        ):
+                            vp.add(check_file_exists)
                         with vp.payload(
                             payloads=[
-                                {"input_dir": lambda: sample.rSeQCAnalysis.innerDistanceOut.path},
+                                {
+                                    "input_dir": lambda: sample.rSeQCAnalysis.innerDistanceOut.path
+                                },
                             ]
-                        ) as ADD:
-                            ADD(check_inner_distance_output)
-
+                        ):
+                            vp.add(check_inner_distance_output)
 
                     with vp.component_start(
                         name="read_distribution",
@@ -462,11 +516,15 @@ def validate_bulkRNASeq(
                     ):
                         with vp.payload(
                             payloads=[
-                                {"file": lambda: sample.rSeQCAnalysis.readDistributionMultiQCDirZIP.path},
-                                {"file": lambda: sample.rSeQCAnalysis.readDistributionOut.path},
+                                {
+                                    "file": lambda: sample.rSeQCAnalysis.readDistributionMultiQCDirZIP.path
+                                },
+                                {
+                                    "file": lambda: sample.rSeQCAnalysis.readDistributionOut.path
+                                },
                             ]
-                        ) as ADD:
-                            ADD(check_file_exists)
+                        ):
+                            vp.add(check_file_exists)
     # return protocol object without running or generating a report
     if defer_run:
         return vp

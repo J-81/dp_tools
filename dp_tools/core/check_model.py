@@ -375,21 +375,18 @@ class ValidationProtocol:
                 evaluated_payload[k] = v
         return evaluated_payload
 
-    @contextmanager  # type: ignore
-    def payload(self, payloads: list[dict]) -> Callable:  # type: ignore
-        """Provides a context to queue multiple checks with a list of arguments.
+    @contextmanager
+    def payload(self, payloads: list[dict]):
+        """Provides a context to queue multiple checks with a common list of arguments.
         E.g. can be used to supply multiple files to a single 'check_file_exists' function.
 
         Args:
             payloads (list[dict]): A list of keyword arguments to pass to every check in the context
 
-        Returns:
-            Callable: The protocol's add function.
-                Solely for convenience to allow 'add()' vs 'ValidationProtocol.add()'
         """
         try:
             self._payloads = payloads
-            yield self.add
+            yield
         finally:
             # clear payloads on exit
             self._payloads = list()
