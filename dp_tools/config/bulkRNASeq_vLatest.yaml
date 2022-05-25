@@ -636,17 +636,17 @@ data assets:
       include subdirectory in table: true
       table order: 11
 
-  number non-zero count genes table:
+  star number non-zero count genes table:
     processed location: 
-      - *countsDataDir
-      - "NumNonZeroGenes.csv"
+      - *alignDataDir
+      - "STAR_NumNonZeroGenes.csv"
 
     resource categories: *neverPublished
 
-  unnormalized counts table:
+  star unnormalized counts table:
     processed location: 
-      - *countsDataDir
-      - "RSEM_Unnormalized_Counts.csv" # RENAMED from 'Unnormalized_Counts.csv'
+      - *alignDataDir
+      - "STAR_Unnormalized_Counts.csv"
 
     resource categories: &RawCountsTables
       subcategory: Raw Counts Tables
@@ -654,6 +654,20 @@ data assets:
       publish to repo: true
       include subdirectory in table: false
       table order: 12
+
+  rsem number non-zero count genes table:
+    processed location: 
+      - *countsDataDir
+      - "RSEM_NumNonZeroGenes.csv"
+
+    resource categories: *neverPublished
+
+  rsem unnormalized counts table:
+    processed location: 
+      - *countsDataDir
+      - "RSEM_Unnormalized_Counts.csv" # RENAMED from 'Unnormalized_Counts.csv'
+
+    resource categories: *RawCountsTables
 
   sample gene counts table:
     processed location: 
@@ -714,13 +728,6 @@ data assets:
       publish to repo: true
       include subdirectory in table: false
       table order: 14
-
-  STAR unnormalized counts table:
-    processed location: 
-      - *alignDataDir
-      - "STAR_Unnormalized_Counts.csv" # RENAMED: from "Unnormalized_Counts.csv" for clarity
-      
-    resource categories: *RawCountsTables
 
   DESeq2 unnormalized counts table:
     processed location: 

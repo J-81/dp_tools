@@ -708,20 +708,38 @@ def load_BulkRNASeq_STAGE_03(
     )
 
     # update dataset
-    dataset.geneCounts = DatasetGeneCounts(
+    dataset.rsemGeneCounts = DatasetGeneCounts(
         base=BaseComponent(
             description="Gene counts at a dataset level from RSEM and DESeq2"
         ),
         numNonZero=DataFile(
             check_exists=validation_enabled,
             **loc.find_data_asset_path(
-                config_key="number non-zero count genes table",
+                config_key="rsem number non-zero count genes table",
             ),
         ),
         unnormalizedCounts=DataFile(
             check_exists=validation_enabled,
             **loc.find_data_asset_path(
-                config_key="unnormalized counts table",
+                config_key="rsem unnormalized counts table",
+            ),
+        ),
+    )
+
+    dataset.starGeneCounts = DatasetGeneCounts(
+        base=BaseComponent(
+            description="Gene counts at a dataset level from RSEM and DESeq2"
+        ),
+        numNonZero=DataFile(
+            check_exists=validation_enabled,
+            **loc.find_data_asset_path(
+                config_key="star number non-zero count genes table",
+            ),
+        ),
+        unnormalizedCounts=DataFile(
+            check_exists=validation_enabled,
+            **loc.find_data_asset_path(
+                config_key="star unnormalized counts table",
             ),
         ),
     )
@@ -884,12 +902,10 @@ def load_BulkRNASeq_STAGE_04(
             ),
             attr="differentialGeneExpressionERCC",
         )
-        dataset.normalizedGeneCounts.erccNormalizedCountsCSV = (
-            DataFile(
-                check_exists=validation_enabled,
-                **loc.find_data_asset_path(
-                    config_key="ERCC normalized DESeq2 normalized counts table",
-                ),
+        dataset.normalizedGeneCounts.erccNormalizedCountsCSV = DataFile(
+            check_exists=validation_enabled,
+            **loc.find_data_asset_path(
+                config_key="ERCC normalized DESeq2 normalized counts table",
             ),
         )
         dataset.attach_component(

@@ -11,7 +11,7 @@ from dp_tools.core.check_model import FlagCode
 def test_check_rsem_counts_and_unnormalized_tables_parity(glds48_dataSystem_STAGE04):
     dataset = glds48_dataSystem_STAGE04.dataset
     res = check_rsem_counts_and_unnormalized_tables_parity(
-        rsem_table_path=dataset.geneCounts.unnormalizedCounts.path,
+        rsem_table_path=dataset.rsemGeneCounts.unnormalizedCounts.path,
         deseq2_table_path=dataset.normalizedGeneCounts.unnormalizedCountsCSV.path,
     )
 
