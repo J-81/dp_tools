@@ -82,6 +82,14 @@ def load_config(config: Union[str, Path]) -> dict:
                 # existing RAW DATA assay table
                 "table order": int,
             },
+
+            # used to denote human description of the data asset
+            # e.g. this is 'raw' data, or this is 'experimental' data
+            # Can be leveraged by downstream applications
+            # An example here includes dividing the asset 
+            # into different tables
+            'tags': [str],
+
             # controls validation of expected data asset path,
             # disabling this means the path will not be checked for existence
             # some example use cases:

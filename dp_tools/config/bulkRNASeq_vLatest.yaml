@@ -180,12 +180,18 @@ data assets:
       - "Metadata"
       - "{dataset}_bulkRNASeq_v1_runsheet.csv"
 
+    tags:
+      - raw
+
     resource categories: *neverPublished
 
   ISA Archive:
     processed location: 
       - "Metadata"
       - "{dataset}_metadata_*-ISA.zip"
+
+    tags:
+      - raw
 
     resource categories: *neverPublished
 
@@ -195,6 +201,9 @@ data assets:
       - *FastQC_Reports
       - "raw_multiqc_report"
 
+    tags:
+      - raw
+
     resource categories: *neverPublished
 
   raw MultiQC directory ZIP:
@@ -202,6 +211,9 @@ data assets:
       - *rawDataDir
       - *FastQC_Reports
       - "raw_multiqc_report.zip"
+    
+    tags:
+      - raw
 
     resource categories: &MergedSequenceData_MultiQCReports
       subcategory: Merged sequence data
@@ -216,6 +228,9 @@ data assets:
       - "Fastq"
       - "{sample}_R1_raw.fastq.gz"
 
+    tags:
+      - raw
+
     resource categories: &MergedSequenceData_Fastq
       subcategory: Merged sequence data
       subdirectory: Fastq
@@ -229,6 +244,9 @@ data assets:
       - "Fastq"
       - "{sample}_R2_raw.fastq.gz"
 
+    tags:
+      - raw
+      
     resource categories: *MergedSequenceData_Fastq
 
   raw reads fastq GZ:
@@ -237,6 +255,9 @@ data assets:
       - "Fastq"
       - "{sample}_raw.fastq.gz"
 
+    tags:
+      - raw
+      
     resource categories: *MergedSequenceData_Fastq
 
   raw forward reads fastQC HTML:
@@ -245,6 +266,9 @@ data assets:
       - *FastQC_Reports
       - "{sample}_R1_raw_fastqc.html"
 
+    tags:
+      - raw
+      
     resource categories: *neverPublished
 
   # J.Oribello: We should revisit this, fastQC includes some unique (not parsed
@@ -255,6 +279,9 @@ data assets:
       - *FastQC_Reports
       - "{sample}_R2_raw_fastqc.html"
 
+    tags:
+      - raw
+      
     resource categories: *neverPublished
 
   raw reads fastQC HTML:
@@ -263,6 +290,9 @@ data assets:
       - *FastQC_Reports
       - "{sample}_raw_fastqc.html"
 
+    tags:
+      - raw
+      
     resource categories: *neverPublished
 
   raw forward reads fastQC ZIP: 
@@ -271,6 +301,9 @@ data assets:
       - *FastQC_Reports
       - "{sample}_R1_raw_fastqc.zip"
 
+    tags:
+      - raw
+      
     resource categories: *neverPublished
 
   raw reverse reads fastQC ZIP:
@@ -279,6 +312,9 @@ data assets:
       - *FastQC_Reports
       - "{sample}_R2_raw_fastqc.zip"
 
+    tags:
+      - raw
+      
     resource categories: *neverPublished
 
   raw reads fastQC ZIP:
@@ -287,6 +323,9 @@ data assets:
       - *FastQC_Reports
       - "{sample}_raw_fastqc.zip"
 
+    tags:
+      - raw
+      
     resource categories: *neverPublished
 
   trimmed fastQC MultiQC directory:
@@ -295,6 +334,9 @@ data assets:
       - *FastQC_Reports
       - "trimmed_multiqc_report"
 
+    tags:
+      - processed
+      
     resource categories: *neverPublished
 
   trimmed fastQC MultiQC directory ZIP:
@@ -303,6 +345,9 @@ data assets:
       - *FastQC_Reports
       - "trimmed_multiqc_report.zip"
 
+    tags:
+      - processed
+      
     resource categories: &TrimmedSequenceData_MultiQCReports
       subcategory: Trimmed sequence data
       subdirectory: MultiQC reports
@@ -316,6 +361,9 @@ data assets:
       - "Fastq"
       - "{sample}_R1_trimmed.fastq.gz"
 
+    tags:
+      - processed
+      
     resource categories:
       subcategory: Trimmed sequence data
       subdirectory: Fastq
@@ -330,6 +378,9 @@ data assets:
       - "Fastq"
       - "{sample}_R2_trimmed.fastq.gz"
 
+    tags:
+      - processed
+      
   trimmed reads fastq GZ:
     <<: *trimmedFastqGZ
     processed location:
@@ -337,12 +388,18 @@ data assets:
       - "Fastq"
       - "{sample}_trimmed.fastq.gz"
 
+    tags:
+      - processed
+      
   trimmed forward reads fastQC HTML: &trimmedForwardReadsFastQCHTML
     processed location:
       - *trimDataDir
       - *FastQC_Reports
       - "{sample}_R1_trimmed_fastqc.html"
 
+    tags:
+      - processed
+      
     resource categories: *neverPublished
 
   trimmed reverse reads fastQC HTML: 
@@ -352,6 +409,9 @@ data assets:
       - *FastQC_Reports
       - "{sample}_R2_trimmed_fastqc.html"
 
+    tags:
+      - processed
+      
   trimmed reads fastQC HTML: 
     <<: *trimmedForwardReadsFastQCHTML
     processed location:
@@ -359,12 +419,18 @@ data assets:
       - *FastQC_Reports
       - "{sample}_trimmed_fastqc.html"
 
+    tags:
+      - processed
+      
   trimmed forward reads fastQC ZIP: &trimmedForwardReadsFastQCZIP
     processed location:
       - *trimDataDir
       - *FastQC_Reports
       - "{sample}_R1_trimmed_fastqc.zip"
 
+    tags:
+      - processed
+      
     resource categories: *neverPublished
 
   trimmed reverse reads fastQC ZIP: 
@@ -374,6 +440,9 @@ data assets:
       - *FastQC_Reports
       - "{sample}_R2_trimmed_fastqc.zip"
 
+    tags:
+      - processed
+      
   trimmed reads fastQC ZIP: 
     <<: *trimmedForwardReadsFastQCZIP
     processed location:
@@ -381,12 +450,18 @@ data assets:
       - *FastQC_Reports
       - "{sample}_trimmed_fastqc.zip"
 
+    tags:
+      - processed
+      
   trimming MultiQC directory:
     processed location: 
       - *trimDataDir
       - &trimmingReportsDir "Trimming_Reports"
       - "trimming_multiqc_report"
 
+    tags:
+      - processed
+      
     resource categories: *neverPublished
 
   forward reads trimming report: &trimmedForwardReadsFastQCTrimmingReport
@@ -395,6 +470,9 @@ data assets:
       - *trimmingReportsDir
       - "{sample}_R1_raw.fastq.gz_trimming_report.txt"
 
+    tags:
+      - processed
+      
     resource categories: 
       subcategory: Trimmed sequence data
       subdirectory: Trimming reports
@@ -409,6 +487,9 @@ data assets:
       - *trimmingReportsDir
       - "{sample}_R2_raw.fastq.gz_trimming_report.txt"
 
+    tags:
+      - processed
+      
   reads trimming report: 
     <<: *trimmedForwardReadsFastQCTrimmingReport
     processed location:
@@ -416,6 +497,9 @@ data assets:
       - *trimmingReportsDir
       - "{sample}_raw.fastq.gz_trimming_report.txt"
 
+    tags:
+      - processed
+      
   aligned MultiQC directory:
     processed location: 
       - *alignDataDir
@@ -423,11 +507,17 @@ data assets:
 
     resource categories: *neverPublished
 
+    tags:
+      - processed
+      
   aligned MultiQC directory ZIP:
     processed location: 
       - *alignDataDir
       - "align_multiqc_report.zip"
 
+    tags:
+      - processed
+      
     resource categories: &AlignedSequenceData_MultiQCReports
       subcategory: Aligned Sequence Data # RENAME: from 'Aligned sequence data'. For consistency with Title casing across the board
       subdirectory: MultiQC Reports # RENAME: from 'MultiQC Reports'. For consistency with Title casing across the board
@@ -441,6 +531,9 @@ data assets:
       - "{sample}"
       - "{sample}_Aligned.toTranscriptome.out.bam"
 
+    tags:
+      - processed
+      
     resource categories: &AlignedSequenceData_AlignedData
       subcategory: Aligned sequence data
       subdirectory: Aligned Data
@@ -454,6 +547,9 @@ data assets:
       - "{sample}"
       - "{sample}_Aligned.sortedByCoord.out.bam"
 
+    tags:
+      - processed
+      
     resource categories:  *neverPublished
 
   aligned SortedByCoord ResortedBam:
@@ -462,6 +558,9 @@ data assets:
       - "{sample}"
       - "{sample}_Aligned.sortedByCoord_sorted.out.bam"
 
+    tags:
+      - processed
+      
     resource categories: *AlignedSequenceData_AlignedData
 
   aligned SortedByCoord ResortedBamIndex:
@@ -470,6 +569,9 @@ data assets:
       - "{sample}"
       - "{sample}_Aligned.sortedByCoord_sorted.out.bam.bai"
 
+    tags:
+      - processed
+      
     resource categories: *AlignedSequenceData_AlignedData
 
   aligned log Final:
@@ -478,6 +580,9 @@ data assets:
       - "{sample}"
       - "{sample}_Log.final.out"
 
+    tags:
+      - processed
+      
     resource categories: &AlignedSequenceData_AlignmentLogs
       subcategory: Aligned sequence data
       subdirectory: Alignment logs
@@ -491,6 +596,9 @@ data assets:
       - "{sample}"
       - "{sample}_Log.progress.out"
 
+    tags:
+      - processed
+      
     resource categories: *neverPublished
 
   aligned log Full:
@@ -499,6 +607,9 @@ data assets:
       - "{sample}"
       - "{sample}_Log.out"
 
+    tags:
+      - processed
+      
     resource categories: *neverPublished
 
   aligned sjTab:
@@ -507,6 +618,9 @@ data assets:
       - "{sample}"
       - "{sample}_SJ.out.tab"
 
+    tags:
+      - processed
+      
     resource categories: *AlignedSequenceData_AlignedData
 
   genebody coverage MultiQC directory:
@@ -515,6 +629,9 @@ data assets:
       - "02_geneBody_coverage"
       - "geneBody_cov_multiqc_report"
 
+    tags:
+      - processed
+      
     resource categories: *neverPublished
 
   genebody coverage MultiQC directory ZIP:
@@ -523,6 +640,9 @@ data assets:
       - "02_geneBody_coverage"
       - "geneBody_cov_multiqc_report.zip"
 
+    tags:
+      - processed
+      
     resource categories: &RSeQC_MultiQCReports
       subcategory: RSeQC
       subdirectory: MultiQC reports
@@ -536,6 +656,9 @@ data assets:
       - "03_infer_experiment"
       - "infer_exp_multiqc_report"
 
+    tags:
+      - processed
+      
     resource categories: *neverPublished
 
   infer experiment MultiQC directory ZIP:
@@ -544,6 +667,9 @@ data assets:
       - "03_infer_experiment"
       - "infer_exp_multiqc_report.zip"
 
+    tags:
+      - processed
+      
     resource categories: *RSeQC_MultiQCReports
 
   inner distance MultiQC directory:
@@ -552,6 +678,9 @@ data assets:
       - "04_inner_distance"
       - "inner_dist_multiqc_report"
 
+    tags:
+      - processed
+      
     resource categories: *neverPublished
 
   inner distance MultiQC directory ZIP:
@@ -560,6 +689,9 @@ data assets:
       - "04_inner_distance"
       - "inner_dist_multiqc_report.zip"
 
+    tags:
+      - processed
+      
     resource categories: *RSeQC_MultiQCReports
 
   read distribution MultiQC directory:
@@ -568,6 +700,9 @@ data assets:
       - "05_read_distribution"
       - "read_dist_multiqc_report"
 
+    tags:
+      - processed
+      
     resource categories: *neverPublished
 
   read distribution MultiQC directory ZIP:
@@ -576,6 +711,9 @@ data assets:
       - "05_read_distribution"
       - "read_dist_multiqc_report.zip"
 
+    tags:
+      - processed
+      
     resource categories: *RSeQC_MultiQCReports
 
   genebody coverage out:
@@ -584,6 +722,9 @@ data assets:
       - "02_geneBody_coverage"
       - "{sample}"
 
+    tags:
+      - processed
+      
     # TODO: DISCUSS Consider this for directories that are handled the same but should validate contents
     # is directory: true
     # contents:
@@ -599,6 +740,9 @@ data assets:
       - "03_infer_experiment"
       - "{sample}_infer_expt.out"
 
+    tags:
+      - processed
+      
     resource categories: *neverPublished
 
   inner distance out:
@@ -607,6 +751,9 @@ data assets:
       - "04_inner_distance"
       - "{sample}"
 
+    tags:
+      - processed
+      
     resource categories: *neverPublished
 
   read distribution out:
@@ -615,6 +762,9 @@ data assets:
       - "05_read_distribution"
       - "{sample}_read_dist.out"
 
+    tags:
+      - processed
+      
     resource categories: *neverPublished
 
   RSEM counts MultiQC directory:
@@ -622,6 +772,9 @@ data assets:
       - *countsDataDir
       - "RSEM_count_multiqc_report" # RENAMED from count_multiqc_report  as of 4/14/2022
 
+    tags:
+      - processed
+      
     resource categories: *neverPublished
 
   RSEM counts MultiQC directory ZIP:
@@ -629,6 +782,9 @@ data assets:
       - *countsDataDir
       - "RSEM_count_multiqc_report.zip"
 
+    tags:
+      - processed
+      
     resource categories: &RawCountsData_MultiQCReports
       subcategory: Raw counts data
       subdirectory: MultiQC reports
@@ -641,6 +797,9 @@ data assets:
       - *alignDataDir
       - "STAR_NumNonZeroGenes.csv"
 
+    tags:
+      - processed
+      
     resource categories: *neverPublished
 
   star unnormalized counts table:
@@ -648,6 +807,9 @@ data assets:
       - *alignDataDir
       - "STAR_Unnormalized_Counts.csv"
 
+    tags:
+      - processed
+      
     resource categories: &RawCountsTables
       subcategory: Raw Counts Tables
       subdirectory: ""
@@ -660,6 +822,9 @@ data assets:
       - *countsDataDir
       - "RSEM_NumNonZeroGenes.csv"
 
+    tags:
+      - processed
+      
     resource categories: *neverPublished
 
   rsem unnormalized counts table:
@@ -667,6 +832,9 @@ data assets:
       - *countsDataDir
       - "RSEM_Unnormalized_Counts.csv" # RENAMED from 'Unnormalized_Counts.csv'
 
+    tags:
+      - processed
+      
     resource categories: *RawCountsTables
 
   sample gene counts table:
@@ -675,6 +843,9 @@ data assets:
       # Removed - "{sample}", DISCUSS: Since this directory contains multiple files per sample, should this be nested in sample-wise dirs consistent with STAR and RSeQC. J.O.
       - "{sample}.genes.results"
 
+    tags:
+      - processed
+      
     resource categories: &RawCountsData_CountData
       subcategory: Raw counts data
       subdirectory: Count Data
@@ -687,7 +858,10 @@ data assets:
       - *countsDataDir
       # Removed - "{sample}", DISCUSS: Since this directory contains multiple files per sample, should this be nested in sample-wise dirs consistent with STAR and RSeQC. J.O.
       - "{sample}.isoforms.results"
-      
+
+    tags:
+      - processed
+            
     resource categories: *RawCountsData_CountData
 
   sample counts stats directory:
@@ -696,13 +870,19 @@ data assets:
       # Removed - "{sample}", DISCUSS: Since this directory contains multiple files per sample, should this be nested in sample-wise dirs consistent with STAR and RSeQC. J.O.
       - "{sample}.stat"
 
+    tags:
+      - processed
+      
     resource categories: *neverPublished
 
   DESeq2 normalized counts table:
     processed location: 
       - *normCountsDataDir
       - "Normalized_Counts.csv"
-      
+
+    tags:
+      - processed
+            
     resource categories: &normalizedCountsData
       subcategory: Normalized counts data
       subdirectory: ""
@@ -714,14 +894,20 @@ data assets:
     processed location: 
       - *normCountsDataDir
       - "ERCC_Normalized_Counts.csv"
-      
+
+    tags:
+      - processed
+            
     resource categories: *normalizedCountsData
 
   sample table:
     processed location: 
       - *normCountsDataDir
       - "SampleTable.csv"
-      
+
+    tags:
+      - processed
+            
     resource categories: &DGEAnalysisData
       subcategory: Differential expression analysis data
       subdirectory: ""
@@ -733,14 +919,20 @@ data assets:
     processed location: 
       - *normCountsDataDir
       - "RSEM_Unnormalized_Counts.csv" # RENAMED: from "Unnormalized_Counts.csv" for clarity
-      
+
+    tags:
+      - processed
+            
     resource categories: *neverPublished # DISCUSS: temporary name clash resolution for publishables
 
   DESeq2 contrasts table:
     processed location: 
       - *DGEDataDir
       - "contrasts.csv"
-      
+
+    tags:
+      - processed
+            
     resource categories: *DGEAnalysisData
 
   ERCC normalized DESeq2 contrasts table:
@@ -748,14 +940,20 @@ data assets:
       - *DGEDataDir
       - &erccSubDir "ERCC_NormDGE"
       - "ERCCnorm_contrasts.csv"
-      
+
+    tags:
+      - processed
+            
     resource categories: *DGEAnalysisData
 
   DESeq2 annotated DGE table:
     processed location: 
       - *DGEDataDir
       - "differential_expression.csv"
-      
+
+    tags:
+      - processed
+            
     resource categories: *DGEAnalysisData
 
   ERCC normalized DESeq2 annotated DGE table:
@@ -763,14 +961,20 @@ data assets:
       - *DGEDataDir
       - *erccSubDir
       - "ERCCnorm_differential_expression.csv"
-      
+
+    tags:
+      - processed
+            
     resource categories: *DGEAnalysisData
 
   DESeq2 annotated DGE extended for viz table:
     processed location: 
       - *DGEDataDir
       - "visualization_output_table.csv"
-      
+
+    tags:
+      - processed
+            
     resource categories: *neverPublished
 
   ERCC normalized DESeq2 annotated DGE extended for viz table:
@@ -778,14 +982,20 @@ data assets:
       - *DGEDataDir
       - *erccSubDir
       - "visualization_output_table_ERCCnorm.csv"
-      
+
+    tags:
+      - processed
+            
     resource categories: *neverPublished
 
   DESeq2 viz PCA table:
     processed location: 
       - *DGEDataDir
       - "visualization_PCA_table.csv"
-      
+
+    tags:
+      - processed
+            
     resource categories: *neverPublished
 
   ERCC normalized DESeq2 viz PCA table:
@@ -793,7 +1003,10 @@ data assets:
       - *DGEDataDir
       - *erccSubDir
       - "visualization_PCA_table_ERCCnorm.csv"
-      
+
+    tags:
+      - processed
+            
     resource categories: *neverPublished
 
 
@@ -801,7 +1014,10 @@ data assets:
     processed location: 
       - *ERCCAnalysisDir
       - "ERCC_analysis.html"
-      
+
+    tags:
+      - processed
+            
     resource categories:
       subcategory: ERCC Analyses
       subdirectory: ""
@@ -826,6 +1042,9 @@ Archived Data Assets:
       - *trimmingReportsDir
       - "trimming_multiqc_report.zip"
 
+    tags:
+      - processed
+      
     resource categories: *neverPublished
 
 
