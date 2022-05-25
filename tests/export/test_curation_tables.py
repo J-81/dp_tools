@@ -6,7 +6,7 @@ def test_update_curation_tables_paired(glds194_dataSystem_STAGE04):
         glds194_dataSystem_STAGE04.dataset, config=("bulkRNASeq", "Latest")
     )
 
-    assert df.shape == (13, 64)
+    assert df.shape == (13, 66)
 
 
 def test_update_curation_tables_single(glds48_dataSystem_STAGE04):
@@ -14,4 +14,4 @@ def test_update_curation_tables_single(glds48_dataSystem_STAGE04):
         glds48_dataSystem_STAGE04.dataset, config=("bulkRNASeq", "Latest")
     )
 
-    assert df.shape == (14, 55)
+    assert df.shape == (14, 56)

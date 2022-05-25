@@ -24,13 +24,13 @@ def test_empty_GLDSDataSystem():
 
 def test_datafile(glds194_runsheetPath):
     datf = entity_model.DataFile(path=glds194_runsheetPath)
-    assert datf.compute_md5sum() == "02289bc0a96eb623c7850c07bcf7e196"
+    assert datf.compute_md5sum() == "1fe899cef0ca4a3cbc0c4a7fb48340aa"
     assert datf.path == glds194_runsheetPath
 
 
 def test_datafile_with_dummy_md5sum(glds194_runsheetPath):
     datf = entity_model.DataFile(path=glds194_runsheetPath, dummy_md5sum=True)
-    assert datf.compute_md5sum() == "DUMMY:a5bfa1c912584b8a58e0fb9a56178778"
+    assert datf.compute_md5sum() == "DUMMY:7412266c8bb5a3546576263254bf0480"
     assert datf.path == glds194_runsheetPath
 
 

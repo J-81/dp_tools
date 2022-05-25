@@ -12,33 +12,10 @@ def test_bulkRNASeq_STAGE00_Components_paired(glds194_dataSystem_STAGE00):
         revReads = sample.rawReverseReads
 
         # test general stats from multiqc
-        assert fwdReads.mqcData["FastQC"]["General_Stats"]["total_sequences"] == 200
-        assert revReads.mqcData["FastQC"]["General_Stats"]["total_sequences"] == 200
-        assert fwdReads.mqcData["FastQC"]["General_Stats"]["total_sequences"] == 200
-        assert revReads.mqcData["FastQC"]["General_Stats"]["total_sequences"] == 200
-
-        # test plot data from multiqc
-        # should return a dataframe representing plot data for the sample
-        assert set(fwdReads.mqcData["FastQC"]["Plots"].keys()) == {
-            "Adapter Content:Subplot::illumina_universal_adapter",
-            "Mean Quality Scores",
-            "Overrepresented sequences",
-            "Per Base N Content",
-            "Per Sequence GC Content",
-            "Per Sequence Quality Scores",
-            "Sequence Counts",
-            "Sequence Duplication Levels",
-        }
-        assert set(revReads.mqcData["FastQC"]["Plots"].keys()) == {
-            "Adapter Content:Subplot::illumina_universal_adapter",
-            "Mean Quality Scores",
-            "Overrepresented sequences",
-            "Per Base N Content",
-            "Per Sequence GC Content",
-            "Per Sequence Quality Scores",
-            "Sequence Counts",
-            "Sequence Duplication Levels",
-        }
+        assert fwdReads.mqcData["FastQC"]["General_Stats"]["total_sequences"] == 2000
+        assert revReads.mqcData["FastQC"]["General_Stats"]["total_sequences"] == 2000
+        assert fwdReads.mqcData["FastQC"]["General_Stats"]["total_sequences"] == 2000
+        assert revReads.mqcData["FastQC"]["General_Stats"]["total_sequences"] == 2000
 
 
 def test_bulkRNASeq_STAGE00_Components_single(glds48_dataSystem_STAGE00):
@@ -48,7 +25,7 @@ def test_bulkRNASeq_STAGE00_Components_single(glds48_dataSystem_STAGE00):
         reads = sample.rawReads
 
         # test general stats from multiqc
-        assert reads.mqcData["FastQC"]["General_Stats"]["total_sequences"] == 200
+        assert reads.mqcData["FastQC"]["General_Stats"]["total_sequences"] == 2000
 
         # test plot data from multiqc
         # should return a dataframe representing plot data for the sample
@@ -73,8 +50,8 @@ def test_bulkRNASeq_STAGE01_Components_paired(glds194_dataSystem_STAGE01):
         revReads = sample.trimReverseReads
 
         # test general stats from multiqc
-        assert fwdReads.mqcData["FastQC"]["General_Stats"]["total_sequences"] <= 200
-        assert revReads.mqcData["FastQC"]["General_Stats"]["total_sequences"] <= 200
+        assert fwdReads.mqcData["FastQC"]["General_Stats"]["total_sequences"] <= 2000
+        assert revReads.mqcData["FastQC"]["General_Stats"]["total_sequences"] <= 2000
 
         # test plot data from multiqc
         # should return a dataframe representing plot data for the sample
@@ -93,7 +70,7 @@ def test_bulkRNASeq_STAGE01_Components_single(glds48_dataSystem_STAGE01):
         reads = sample.trimReads
 
         # test general stats from multiqc
-        assert reads.mqcData["FastQC"]["General_Stats"]["total_sequences"] <= 200
+        assert reads.mqcData["FastQC"]["General_Stats"]["total_sequences"] <= 2000
 
         # test plot data from multiqc
         # should return a dataframe representing plot data for the sample
