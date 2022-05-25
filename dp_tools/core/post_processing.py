@@ -2,11 +2,13 @@
 Depends on standard data asset metadata as loaded from packaged config files.
 """
 from collections import defaultdict
+import hashlib
 import os
 from pathlib import Path
 import re
-from typing import Optional, Union
-from dp_tools.core.entity_model import TemplateDataset
+from typing import Optional, TypedDict, Union
+from dp_tools.core.entity_model import DataDir, DataFile, TemplateDataset
+from dp_tools.core.configuration import load_config
 import pkg_resources
 
 
@@ -24,7 +26,7 @@ _PARAMETER_VALUE_COL_SUFFIX = "]"
 _PROTOCOL_REP_COL_PREFIX = "Protocol REF"
 
 
-def load_config(
+def _load_config(
     config: Union[tuple[str, str], Path], subsection: str = "ISA Meta"
 ) -> dict:
     if isinstance(config, tuple):
@@ -141,6 +143,36 @@ def get_assay_table_path(dataset: TemplateDataset, configuration: dict) -> Path:
     return assay_path
 
 
+# typehints mapping to config
+ResourceCategory = TypedDict(
+    "ResourceCategory",
+    {
+        "subcategory": "str",
+        "subdirectory": "str",
+        "publish to repo": "bool",
+        "include subdirectory in table": "bool",
+        "table order": "int",
+    },
+)
+
+DataAssetConfig = TypedDict(
+    "DataAssetConfig",
+    {"processed location": "list", "resource categories": "ResourceCategory"},
+)
+
+
+def get_repolike_category_string(data_asset_metadata: ResourceCategory) -> str:
+    if all(
+        [
+            data_asset_metadata["subdirectory"] != "",
+            data_asset_metadata["include subdirectory in table"],
+        ]
+    ):
+        return f"{data_asset_metadata['subcategory']}/{data_asset_metadata['subdirectory']}"
+    else:
+        return data_asset_metadata["subcategory"]
+
+
 def generate_new_column_dicts(
     dataset: TemplateDataset, configuration: dict
 ) -> tuple[dict, dict]:
@@ -171,19 +203,9 @@ def generate_new_column_dicts(
         if not asset.metadata["resource categories"]["publish to repo"]:
             continue
 
-        # alias
-        resource_config = asset.metadata["resource categories"]
-
         # format header
-        category_string = (
-            f"{resource_config['subcategory']}/{resource_config['subdirectory']}"
-            if all(
-                [
-                    resource_config["subdirectory"] != "",
-                    resource_config["include subdirectory in table"],
-                ]
-            )
-            else resource_config["subcategory"]
+        category_string = get_repolike_category_string(
+            asset.metadata["resource categories"]
         )
         header = (
             _PARAMETER_VALUE_COL_PREFIX + category_string + _PARAMETER_VALUE_COL_SUFFIX
@@ -196,15 +218,24 @@ def generate_new_column_dicts(
             else all_samples
         )
 
-        # now remap those processing sample names to their orignal names, 
+        # now remap those processing sample names to their orignal names,
         # required for joining to orignal assay table
-        processing_to_orignal_mapping = pd.read_csv(dataset.metadata.runsheet.path, index_col="Sample Name")["Original Sample Name"].to_dict()
+        processing_to_orignal_mapping = pd.read_csv(
+            dataset.metadata.runsheet.path, index_col="Sample Name"
+        )["Original Sample Name"].to_dict()
         # TODO: ineffecient, should only iterate once
-        remapped_samples = [f"{sample} remapped to {processing_to_orignal_mapping[sample]}" for sample in associated_samples if sample != processing_to_orignal_mapping[sample]]
-        associated_samples = [processing_to_orignal_mapping[sample] for sample in associated_samples]
+        remapped_samples = [
+            f"{sample} remapped to {processing_to_orignal_mapping[sample]}"
+            for sample in associated_samples
+            if sample != processing_to_orignal_mapping[sample]
+        ]
+        associated_samples = [
+            processing_to_orignal_mapping[sample] for sample in associated_samples
+        ]
         if remapped_samples:
-            log.info(f"Post processing using remapped samples for the following: {remapped_samples} for header: '{header}'")
-
+            log.info(
+                f"Post processing using remapped samples for the following: {remapped_samples} for header: '{header}'"
+            )
 
         # TODO: this likely will be better placed elsewhere but for now this is fine
         # Track column order here as a dict
@@ -332,7 +363,9 @@ def add_protocol(
 
 
 def setup_output_target(
-    output_file: Optional[str], original_path: Path, output_dir: str = "updated_curation_tables"
+    output_file: Optional[str],
+    original_path: Path,
+    output_dir: str = "updated_curation_tables",
 ) -> Path:
     """Set ups target output file location.  Uses specified output_file name if provided.
     Defaults to the original table filename but saves to a directory 'output_dir' in either case.
@@ -377,7 +410,7 @@ def update_curation_tables(
     :param investigation_table: Controls the updating and syncing of the investigation table, defaults to False
     :type investigation_table: bool, optional
     """
-    configuration = load_config(config)
+    configuration = _load_config(config)
 
     # first extend the assay table
     # load assay dataframe
@@ -419,3 +452,131 @@ def update_curation_tables(
     )
 
     return df_assay_extended
+
+
+class Md5sum_row(TypedDict):
+    resource_category: str
+    filename: str
+    md5sum: str
+
+
+def compute_md5sum(file_path: Path) -> str:
+    return hashlib.md5(file_path.open("rb").read()).hexdigest()
+
+
+# ALLOWED MISSING KEYS CONSTANTS
+ALLOWED_MISSING_KEYS_FOR_SINGLE_END = {
+    "raw forward reads fastq GZ",
+    "raw reverse reads fastq GZ",
+    "forward reads trimming report",
+    "reverse reads trimming report",
+    "trimmed reverse reads fastq GZ",
+    "trimmed forward reads fastq GZ",
+    "inner distance MultiQC directory ZIP",
+}
+""" Data assets unique to paired end layouts """
+
+ALLOWED_MISSING_KEYS_FOR_PAIRED_END = {
+    "raw reads fastq GZ",
+    "trimmed reads fastq GZ",
+    "reads trimming report",
+    # "ERCC normalized DESeq2 normalized counts table",
+}
+""" Data assets unique to single end layouts """
+
+
+ALLOWED_MISSING_KEYS_FOR_NON_ERCC = {
+    "ERCC normalized DESeq2 contrasts table",
+    "ERCC normalized DESeq2 normalized counts table",
+    "ERCC normalized DESeq2 annotated DGE table",
+    "ERCC analysis HTML",
+}
+""" Data assets unique to ERCC spiked-in datasets """
+
+
+def generate_md5sum_table(
+    dataset: TemplateDataset,
+    config: Union[tuple[str, str], Path],
+    allowed_unused_keys: set[str] = None,
+) -> pd.DataFrame:
+    if allowed_unused_keys is None:
+        allowed_unused_keys = set()
+    loaded_config = load_config(config)
+    print(1)
+
+    # generate all md5sums for all data assets that will be published
+    # table columns: resource_category, filename, md5sum
+    data: list[Md5sum_row] = list()
+    for asset in dataset.all_data_assets:
+        if not asset.metadata["resource categories"]["publish to repo"]:
+            continue
+
+        # catch rare cases where a data asset is 'psuedo loaded'
+        # this occurs when a data asset is loaded without verifying
+        # the asset exists. Used when a data asset is part of the repo publish assets
+        # but not generated during automated processing and rather added after the fact
+        if not asset.check_exists:
+            data.append(
+                {
+                    "resource_category": get_repolike_category_string(
+                        asset.metadata["resource categories"]
+                    ),
+                    "filename": asset.path.name,
+                    "md5sum": "USER MUST ADD MANUALLY!",
+                }
+            )
+            continue  # to next data asset
+
+        match asset:
+            # branch for data files
+            case DataFile():
+                data.append(
+                    {
+                        "resource_category": get_repolike_category_string(
+                            asset.metadata["resource categories"]
+                        ),
+                        "filename": asset.path.name,
+                        "md5sum": compute_md5sum(asset.path),
+                    }
+                )
+
+            # branch for data dirs
+            case DataDir():
+                for sub_asset in asset.path.iterdir():
+                    data.append(
+                        {
+                            "resource_category": get_repolike_category_string(
+                                asset.metadata["resource categories"]
+                            ),
+                            "filename": sub_asset.name,
+                            "md5sum": compute_md5sum(sub_asset),
+                        }
+                    )
+
+    # compare all data assets against configuration
+    asset_keys_in_dataset: set[str] = {
+        asset.metadata["data asset key"] for asset in dataset.all_data_assets
+    }
+    publishable_asset_keys_in_config: set[str] = {
+        key
+        for key, value in loaded_config["data assets"].items()
+        if value["resource categories"]["publish to repo"]
+    }
+
+    missing_publishables_by_key = (
+        publishable_asset_keys_in_config - asset_keys_in_dataset
+    )
+
+    # report any missing data assets that are supposed to be published
+    if not_allowed_missing := missing_publishables_by_key - allowed_unused_keys:
+        raise ValueError(
+            f"The following data assets keys are not allowed to be missing: {not_allowed_missing}. Allowed missing keys: {allowed_unused_keys}."
+        )
+
+    # generate dataframe and return
+    df = (
+        pd.DataFrame(data)
+        .sort_values(by=["resource_category", "filename"])
+        .drop_duplicates()
+    )
+    return df
