@@ -88,7 +88,12 @@ class BulkRNASeqDataset(TemplateDataset):
     metadata: Union[EmptyComponent, BulkRNASeqMetadataComponent] = field(
         default_factory=EmptyComponent
     )
-    geneCounts: Union[EmptyComponent, DatasetGeneCounts] = field(
+
+    rsemGeneCounts: Union[EmptyComponent, DatasetGeneCounts] = field(
+        default_factory=EmptyComponent
+    )
+
+    starGeneCounts: Union[EmptyComponent, DatasetGeneCounts] = field(
         default_factory=EmptyComponent
     )
 
@@ -98,6 +103,7 @@ class BulkRNASeqDataset(TemplateDataset):
     differentialGeneExpression: Union[
         EmptyComponent, DifferentialGeneExpression
     ] = field(default_factory=EmptyComponent)
+
     differentialGeneExpressionERCC: Union[
         EmptyComponent, DifferentialGeneExpression
     ] = field(default_factory=EmptyComponent)
