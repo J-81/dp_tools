@@ -28,11 +28,13 @@ class Locator():
     data_asset_config: dict
 """
 
+
 @cache
 def _rIterDir(p: Path) -> Set[Path]:
     files = {f for f in p.rglob("*")}
     log.debug(f"Caching {len(files)} files found in {p}")
     return files
+
 
 @dataclass
 class Locator:
@@ -83,7 +85,8 @@ class Locator:
             if self.return_parsed_config_as_metadata:
                 return {
                     "metadata": this_data_asset_config
-                    | {"template_kwargs": {**template_kwargs}},
+                    | {"template_kwargs": {**template_kwargs}}
+                    | {"data asset key": config_key},
                     "path": search_pattern,
                 }
             else:
@@ -116,7 +119,8 @@ class Locator:
             if self.return_parsed_config_as_metadata:
                 return {
                     "metadata": this_data_asset_config
-                    | {"template_kwargs": {**template_kwargs}},
+                    | {"template_kwargs": {**template_kwargs}}
+                    | {"data asset key": config_key},
                     "path": found,
                 }
             else:
