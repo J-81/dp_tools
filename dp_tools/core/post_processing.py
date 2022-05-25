@@ -458,8 +458,11 @@ class Md5sum_row(TypedDict):
     resource_category: str
     filename: str
     md5sum: str
+
+
 class Md5sum_row_with_tags(Md5sum_row):
     tags: str
+
 
 def compute_md5sum(file_path: Path) -> str:
     return hashlib.md5(file_path.open("rb").read()).hexdigest()
@@ -503,7 +506,7 @@ def generate_md5sum_table(
     # set default empty set
     if allowed_unused_keys is None:
         allowed_unused_keys = set()
-    
+
     loaded_config = load_config(config)
 
     # generate all md5sums for all data assets that will be published
@@ -525,7 +528,8 @@ def generate_md5sum_table(
                     ),
                     "filename": asset.path.name,
                     "md5sum": "USER MUST ADD MANUALLY!",
-                } | {"tags":asset.metadata['tags']} if include_tags else {}
+                }
+                | ({"tags": asset.metadata["tags"]} if include_tags else {})
             )
             continue  # to next data asset
 
@@ -539,7 +543,8 @@ def generate_md5sum_table(
                         ),
                         "filename": asset.path.name,
                         "md5sum": compute_md5sum(asset.path),
-                    } | {"tags":asset.metadata['tags']} if include_tags else {}
+                    }
+                    | ({"tags": asset.metadata["tags"]} if include_tags else {})
                 )
 
             # branch for data dirs
@@ -552,7 +557,8 @@ def generate_md5sum_table(
                             ),
                             "filename": sub_asset.name,
                             "md5sum": compute_md5sum(sub_asset),
-                        } | {"tags":asset.metadata['tags']} if include_tags else {}
+                        }
+                        | ({"tags": asset.metadata["tags"]} if include_tags else {})
                     )
 
     # compare all data assets against configuration
@@ -579,6 +585,6 @@ def generate_md5sum_table(
     df = (
         pd.DataFrame(data)
         .sort_values(by=["resource_category", "filename"])
-        .drop_duplicates(subset=["md5sum","resource_category", "filename"])
+        .drop_duplicates(subset=["md5sum", "resource_category", "filename"])
     )
     return df
