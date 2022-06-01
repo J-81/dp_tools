@@ -298,7 +298,7 @@ def test_bulkRNASeq_STAGE04_paired(caplog, glds194_test_dir, glds194_sample_name
     # pull dataset
     dataset = ds.datasets["GLDS-194__BulkRNASeq"]
 
-    assert list(dataset.samples.keys()) == glds194_sample_names
+    assert list(dataset.samples) == glds194_sample_names
 
 
 def test_bulkRNASeq_STAGE04_single(caplog, glds48_test_dir, glds48_sample_names):
