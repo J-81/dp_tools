@@ -11,6 +11,8 @@ log = logging.getLogger(__name__)
 from dp_tools.bulkRNASeq.entity import BulkRNASeqDataset, BulkRNASeqSample
 from dp_tools.core.check_model import ValidationProtocol, FlagCode
 from dp_tools.bulkRNASeq.checks import (
+    check_aggregate_star_unnormalized_counts_table_values_against_samplewise_tables,
+    check_aggregate_rsem_unnormalized_counts_table_values_against_samplewise_tables,
     check_fastqgz_file_contents,
     check_forward_and_reverse_reads_counts_match,
     check_file_exists,
@@ -70,7 +72,7 @@ def validate_bulkRNASeq(
         protocol_args = dict()
     # init validation protocol
     vp = ValidationProtocol(**protocol_args)
-    # fmt: on
+    # fmt: off
     with vp.component_start(
         name=dataset.name,
         description="Validate processing from trim reads through differential gene expression output",
@@ -183,26 +185,51 @@ def validate_bulkRNASeq(
             with vp.payload(
                 payloads=[
                     {
-                        "rsem_table_path": lambda: dataset.geneCounts.unnormalizedCounts.path,
+                        "rsem_table_path": lambda: dataset.rsemGeneCounts.unnormalizedCounts.path,
                         "deseq2_table_path": lambda: dataset.normalizedGeneCounts.unnormalizedCountsCSV.path,
                     }
                 ]
             ):
                 vp.add(check_rsem_counts_and_unnormalized_tables_parity)
 
-        with vp.component_start(
-            name="Unnormalized Gene Counts",
-            description="Validate normalization related output",
-        ):
             with vp.payload(
                 payloads=[
                     {
-                        "rsem_table_path": lambda: dataset.geneCounts.unnormalizedCounts.path,
+                        "rsem_table_path": lambda: dataset.rsemGeneCounts.unnormalizedCounts.path,
                         "deseq2_table_path": lambda: dataset.normalizedGeneCounts.unnormalizedCountsCSV.path,
                     }
                 ]
             ):
                 vp.add(check_rsem_counts_and_unnormalized_tables_parity)
+
+            with vp.payload(
+                payloads=[
+                    {
+                        "unnormalizedCountTable": lambda: dataset.starGeneCounts.unnormalizedCounts.path,
+                        "samplewise_tables": lambda: {
+                            s.name: s.genomeAlignments.readsPerGeneTable.path
+                            for s in dataset.samples.values()
+                        },
+                    },
+                ]
+            ):
+                vp.add(
+                    check_aggregate_star_unnormalized_counts_table_values_against_samplewise_tables
+                )
+            with vp.payload(
+                payloads=[
+                    {
+                        "unnormalizedCountTable": lambda: dataset.rsemGeneCounts.unnormalizedCounts.path,
+                        "samplewise_tables": lambda: {
+                            s.name: s.geneCounts.genesResults.path
+                            for s in dataset.samples.values()
+                        },
+                    },
+                ]
+            ):
+                vp.add(
+                    check_aggregate_rsem_unnormalized_counts_table_values_against_samplewise_tables
+                )
 
         sample: BulkRNASeqSample
         for sample in dataset.samples.values():

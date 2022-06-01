@@ -490,3 +490,97 @@ def check_rsem_counts_and_unnormalized_tables_parity(
             f"Tables of unnormalized counts have same columns but values do not match."
         )
     return {"code": code, "message": message}
+
+
+def check_aggregate_star_unnormalized_counts_table_values_against_samplewise_tables(
+    unnormalizedCountTable: Path, samplewise_tables: dict[str, Path]
+) -> FlagEntry:
+    STAR_COUNT_MODES = ["unstranded", "sense", "antisense"]
+    # data specific preprocess
+    df_agg = pd.read_csv(unnormalizedCountTable, index_col=0)
+
+    # based on which column matches the first entry
+    # all columns must match with the same strand column
+    strand_assessment: str = None  # type: ignore
+    samples_with_issues: dict[str, list[str]] = {
+        "Not in aggregate table": list(),
+        "Sample counts mismatch": list(),
+    }
+    for sample, path in samplewise_tables.items():
+        # check if samples exist as a column
+        if sample not in df_agg:
+            samples_with_issues["Not in aggregate table"].append(sample)
+            break
+
+        # load
+        df_samp = pd.read_csv(
+            path, sep="\t", names=STAR_COUNT_MODES, index_col=0
+        ).filter(
+            regex="^(?!N_.*).*", axis="rows"
+        )  # filter out N_* entries
+
+        # check if the values match for any of the count modes
+        #   unstranded, sense, antisense
+        # for remaining samples, only check the match for the first count mode
+        for count_mode in STAR_COUNT_MODES:
+            # make sure to sort indicies
+            if df_agg[sample].sort_index().equals(df_samp[count_mode].sort_index()):
+                # assign strand assessment if first sample
+                if strand_assessment is None:
+                    strand_assessment = count_mode
+
+                if strand_assessment == count_mode:
+                    # no issues found (i.e. counts match with a consistent count mode column), break out
+                    break
+        else:  # no break
+            samples_with_issues["Sample counts mismatch"].append(sample)
+
+    # check logic
+    if not any([issue_type for issue_type in samples_with_issues.values()]):
+        code = FlagCode.GREEN
+        message = (
+            f"All samples accounted for and with matching counts "
+            f"between samplewise and aggregate table using strand assessment: '{strand_assessment}'"
+        )
+    else:
+        code = FlagCode.HALT
+        message = f"Identified issues: {samples_with_issues}"
+    return {"code": code, "message": message}
+
+
+def check_aggregate_rsem_unnormalized_counts_table_values_against_samplewise_tables(
+    unnormalizedCountTable: Path, samplewise_tables: dict[str, Path]
+) -> FlagEntry:
+    # data specific preprocess
+    df_agg = pd.read_csv(unnormalizedCountTable, index_col=0)
+
+    # based on which column matches the first entry
+    samples_with_issues: dict[str, list[str]] = {
+        "Not in aggregate table": list(),
+        "Sample counts mismatch": list(),
+    }
+    for sample, path in samplewise_tables.items():
+        # check if samples exist as a column
+        if sample not in df_agg:
+            samples_with_issues["Not in aggregate table"].append(sample)
+            break
+
+        # load
+        df_samp = pd.read_csv(path, sep="\t", index_col=0)  # filter out N_* entries
+
+        # check if values match
+        if (
+            not df_agg[sample]
+            .sort_index()
+            .equals(df_samp["expected_count"].sort_index())
+        ):
+            samples_with_issues["Sample counts mismatch"].append(sample)
+
+    # check logic
+    if not any([issue_type for issue_type in samples_with_issues.values()]):
+        code = FlagCode.GREEN
+        message = f"All samples accounted for and with matching counts between samplewise and aggregate table"
+    else:
+        code = FlagCode.HALT
+        message = f"Identified issues: {samples_with_issues}"
+    return {"code": code, "message": message}
