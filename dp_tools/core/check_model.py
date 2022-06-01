@@ -283,12 +283,28 @@ class ValidationProtocol:
             return any([(name in other_list) for name in self.ancestor_line])
 
     class _QueuedCheck(TypedDict):
-        check_fcn: Callable
+        """A queued check including checks that will be skipped"""
+
+        check_fcn: Union[str, Callable[..., FlagEntry]]
+        """ A callable function that returns a flag entry or a string placeholder"""
+
+        fcn_name: str
+        """ Denotes the function or placeholder name """
+
         description: str
+        """ A user friendly description of the specific check, useful when a general check function where the function name alone is too non-specific"""
+
         payload: dict
+        """ The keyword arguments that will be supplied to the function if it is run. Considered 'dynamic' compared to the config (e.g. the specifc log file path for a validation protocol execution is best defined as a payload) """
+
         config: dict
+        """ Additional keyword arguments that will be supplied to the function. Considered 'static' compared to payload (e.g. 'number of lines to check' is best defined as check configuration)"""
+
         component: "ValidationProtocol._Component"
+        """ The component that results of the check will be attached to for reporting purposes """
+
         to_run: bool
+        """ Defines whether the check will be executed on protocol run (and whether the payload will be evaluated in the case of lambda style payloads). """
 
     class _ALL_COMPONENTS(list):
         """Dummy list that works as a default whitelist of all components"""
