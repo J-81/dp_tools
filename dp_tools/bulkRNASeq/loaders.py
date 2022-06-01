@@ -82,14 +82,12 @@ def load_config(config: Union[str, Path]) -> dict:
                 # existing RAW DATA assay table
                 "table order": int,
             },
-
             # used to denote human description of the data asset
             # e.g. this is 'raw' data, or this is 'experimental' data
             # Can be leveraged by downstream applications
-            # An example here includes dividing the asset 
+            # An example here includes dividing the asset
             # into different tables
-            'tags': [str],
-
+            "tags": [str],
             # controls validation of expected data asset path,
             # disabling this means the path will not be checked for existence
             # some example use cases:
@@ -549,6 +547,13 @@ def load_BulkRNASeq_STAGE_02(
                 check_exists=validation_enabled,
                 **loc.find_data_asset_path(
                     config_key="aligned sjTab",
+                    sample=sample_name,
+                ),
+            ),
+            readsPerGeneTable=DataFile(
+                check_exists=validation_enabled,
+                **loc.find_data_asset_path(
+                    config_key="sample reads per gene table",
                     sample=sample_name,
                 ),
             ),

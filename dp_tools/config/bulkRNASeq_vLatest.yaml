@@ -837,6 +837,17 @@ data assets:
       
     resource categories: *RawCountsTables
 
+  sample reads per gene table:
+    processed location: 
+      - *alignDataDir
+      - "{sample}"
+      - "{sample}_ReadsPerGene.out.tab"
+
+    tags:
+      - processed
+      
+    resource categories: *neverPublished # TODO: Discuss, should this be repo published? In what way?
+
   sample gene counts table:
     processed location: 
       - *countsDataDir

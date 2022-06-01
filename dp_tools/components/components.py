@@ -317,6 +317,7 @@ class GenomeAlignments(TemplateComponent):
     logFull: Union[DataFile, None] = field(default=None)
     sjTab: Union[DataFile, None] = field(default=None)
     multiQCDirZIP: Union[DataFile, None] = field(default=None)
+    readsPerGeneTable: Union[DataFile, None] = field(default=None)
 
 
 @dataclass(eq=False)
