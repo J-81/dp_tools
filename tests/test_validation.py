@@ -78,16 +78,18 @@ def test_updated_protocol_model_paired_end_custom(
 ):
     custom_run_components = {
         "run_components": [
-            "RSEM Counts",
+            "DGE Output",
         ]
     }
 
+    """
     report = validate_bulkRNASeq(
         glds194_dataSystem_STAGE04.dataset,
         config_path=check_config,
         report_args={"include_skipped": False},
         protocol_args=custom_run_components,
     )
+    """
 
     print(1)
 
@@ -127,13 +129,29 @@ def test_updated_protocol_model_single_end(glds48_dataSystem_STAGE04, check_conf
         report_args={"include_skipped": True},
     )
 
-    assert report["flag_table"].shape == (444, 6)
+    assert report["flag_table"].shape == (500, 6)
     # now check without skipped entries (should only be the fastq read parity check)
     assert report["flag_table"].loc[
         report["flag_table"].code.apply(lambda v: v.name != "SKIPPED")
-    ].shape == (297, 6)
-    assert report["outliers"].shape == (3, 2)
-    assert pseudo_fingerprint(report["flag_table"]) == 8829.101538461538
+    ].shape == (418, 6)
+    assert report["outliers"].shape == (13, 5)
+    assert pseudo_fingerprint(report["flag_table"]) == 11769.504
+
+
+def test_updated_protocol_model_paired_end(glds194_dataSystem_STAGE04, check_config):
+    report = validate_bulkRNASeq(
+        glds194_dataSystem_STAGE04.dataset,
+        config_path=check_config,
+        report_args={"include_skipped": True},
+    )
+
+    assert report["flag_table"].shape == (614, 6)
+    # now check without skipped entries (should only be the fastq read parity check)
+    assert report["flag_table"].loc[
+        report["flag_table"].code.apply(lambda v: v.name != "SKIPPED")
+    ].shape == (418, 6)
+    assert report["outliers"].shape == (13, 5)
+    assert pseudo_fingerprint(report["flag_table"]) == 11769.504
 
 
 def test_updated_protocol_model_skipping(glds48_dataSystem_STAGE00, check_config):
@@ -182,9 +200,7 @@ def test_updated_protocol_model_skipping(glds48_dataSystem_STAGE00, check_config
 
 def test_updated_protcol_model(glds194_dataSystem_STAGE04, check_config):
     vp = validate_bulkRNASeq(
-        glds194_dataSystem_STAGE04.dataset,
-        config_path=check_config,
-        defer_run=True,
+        glds194_dataSystem_STAGE04.dataset, config_path=check_config, defer_run=True
     )
 
     print(vp.queued_checks(include_individual_checks=False))
