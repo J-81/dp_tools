@@ -40,16 +40,160 @@ class STAGE(enum.Enum):
         return {stage for stage in cls if stage <= query_stage}
 
 
+CONFIG = {
+    "Metadata-check_metadata_attributes_exist": {
+        "expected_attrs": ["paired_end", "has_ercc"]
+    },
+    "Raw Reads-check_for_outliers": {
+        "mqc_module": "FastQC",
+        "mqc_plot": "general_stats",
+        "mqc_keys": [
+            "percent_gc",
+            "avg_sequence_length",
+            "total_sequences",
+            "percent_duplicates",
+        ],
+        "thresholds": [
+            {"code": "YELLOW", "stdev_threshold": 2, "middle_fcn": "median"},
+            {"code": "RED", "stdev_threshold": 4, "middle_fcn": "median"},
+        ],
+    },
+    "Trim Reads-check_for_outliers": {
+        "mqc_module": "FastQC",
+        "mqc_plot": "general_stats",
+        "mqc_keys": [
+            "percent_gc",
+            "avg_sequence_length",
+            "total_sequences",
+            "percent_duplicates",
+        ],
+        "thresholds": [
+            {"code": "YELLOW", "stdev_threshold": 2, "middle_fcn": "median"},
+            {"code": "RED", "stdev_threshold": 4, "middle_fcn": "median"},
+        ],
+    },
+    "Raw Reads By Sample-check_fastqgz_file_contents": {
+        "count_lines_to_check": 200000000
+    },
+    "Trim Reads By Sample-check_fastqgz_file_contents": {
+        "count_lines_to_check": 200000000
+    },
+    "STAR Alignments By Sample-check_thresholds-Mapped": {
+        "mqc_key": "STAR",
+        "stat_string": "uniquely_mapped_percent + multimapped_percent",
+        "thresholds": [
+            {"code": "YELLOW", "type": "lower", "value": 70},
+            {"code": "RED", "type": "lower", "value": 50},
+        ],
+    },
+    "STAR Alignments By Sample-check_thresholds-MultiMapped": {
+        "mqc_key": "STAR",
+        "stat_string": "multimapped_toomany_percent + multimapped_percent",
+        "thresholds": [
+            {"code": "YELLOW", "type": "lower", "value": 30},
+            {"code": "RED", "type": "lower", "value": 15},
+        ],
+    },
+    "STAR Alignments-check_for_outliers": {
+        "mqc_module": "STAR",
+        "mqc_plot": "general_stats",
+        "mqc_keys": [
+            "uniquely_mapped_percent",
+            "avg_mapped_read_length",
+            "mismatch_rate",
+            "deletion_rate",
+            "deletion_length",
+            "insertion_rate",
+            "insertion_length",
+            "multimapped_percent",
+            "multimapped_toomany_percent",
+            "unmapped_mismatches_percent",
+            "unmapped_tooshort_percent",
+            "unmapped_other_percent",
+        ],
+        "thresholds": [
+            {"code": "YELLOW", "stdev_threshold": 2, "middle_fcn": "median"},
+            {"code": "RED", "stdev_threshold": 4, "middle_fcn": "median"},
+        ],
+    },
+    "RSeQC-check_for_outliers-geneBody_coverage": {
+        "mqc_module": "RSeQC",
+        "mqc_plot": "Gene Body Coverage",
+        "mqc_keys": ["_ALL"],
+        "thresholds": [
+            {"code": "YELLOW", "stdev_threshold": 2, "middle_fcn": "median"},
+            {"code": "RED", "stdev_threshold": 4, "middle_fcn": "median"},
+        ],
+    },
+    "RSeQC-check_for_outliers-infer_experiment": {
+        "mqc_module": "RSeQC",
+        "mqc_plot": "Infer experiment",
+        "mqc_keys": ["_ALL"],
+        "thresholds": [
+            {"code": "YELLOW", "stdev_threshold": 2, "middle_fcn": "median"},
+            {"code": "RED", "stdev_threshold": 4, "middle_fcn": "median"},
+        ],
+    },
+    "RSeQC-check_for_outliers-inner_distance": {
+        "mqc_module": "RSeQC",
+        "mqc_plot": "Inner Distance",
+        "mqc_keys": ["_ALL"],
+        "thresholds": [
+            {"code": "YELLOW", "stdev_threshold": 2, "middle_fcn": "median"},
+            {"code": "RED", "stdev_threshold": 4, "middle_fcn": "median"},
+        ],
+    },
+    "RSeQC-check_for_outliers-read_distribution": {
+        "mqc_module": "RSeQC",
+        "mqc_plot": "Read Distribution",
+        "mqc_keys": ["_ALL"],
+        "thresholds": [
+            {"code": "YELLOW", "stdev_threshold": 2, "middle_fcn": "median"},
+            {"code": "RED", "stdev_threshold": 4, "middle_fcn": "median"},
+        ],
+    },
+    "RSeQC-check_strandedness_assessable_from_infer_experiment": {
+        "stranded_assessment_range": {"max": 100, "min": 75},
+        "unstranded_assessment_range": {"min": 40, "max": 60},
+        "valid_dominant_strandedness_assessments": [
+            "Sense (% Tags)",
+            "Antisense (% Tags)",
+        ],
+    },
+    "RSEM Counts-check_for_outliers": {
+        "mqc_module": "Rsem",
+        "mqc_plot": "general_stats",
+        "mqc_keys": [
+            "Unalignable",
+            "Alignable",
+            "Filtered",
+            "Total",
+            "alignable_percent",
+            "Unique",
+            "Multi",
+            "Uncertain",
+        ],
+        "thresholds": [
+            {"code": "YELLOW", "stdev_threshold": 2, "middle_fcn": "median"},
+            {"code": "RED", "stdev_threshold": 4, "middle_fcn": "median"},
+        ],
+    },
+}
+
+
 def validate_bulkRNASeq(
     dataset: BulkRNASeqDataset,
-    config_path: Path,
+    config_path: Path = None,
     report_args: dict = None,
     protocol_args: dict = None,
     defer_run: bool = False,
 ) -> Union[ValidationProtocol, ValidationProtocol.Report]:
 
-    with open(config_path, "r") as f:
-        config = yaml.safe_load(f)
+    if config_path is not None:
+        with open(config_path, "r") as f:
+            config = yaml.safe_load(f)
+    else:
+        config = CONFIG
 
     if report_args is None:
         report_args = dict()
