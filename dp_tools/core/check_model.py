@@ -615,6 +615,16 @@ class ValidationProtocol:
         Returns:
             ValidationProtocol.Report: A report of all check results
         """
+        COL_ORDER = [
+            "description",
+            "function",
+            "code",
+            "message",
+            "code_level",
+            "kwargs",
+            "config",
+        ]
+
         self.results = dict(self.results)
         data = list(self._get_report_data(self._root_component))
         df_data: list[dict] = list()
@@ -636,6 +646,11 @@ class ValidationProtocol:
             if isinstance(d, defaultdict):
                 d = {k: default_to_regular(v) for k, v in d.items()}
             return d
+
+        # creating derivative colun from code
+        df["code_level"] = df["code"].apply(lambda x: x.value)
+        # resort columns
+        df = df[COL_ORDER]
 
         return {
             "flag_table": df,
