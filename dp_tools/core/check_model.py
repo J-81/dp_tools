@@ -371,12 +371,13 @@ class ValidationProtocol:
             # determine if skipping needs to be set for the new component
             if any(
                 [
-                    new_component.ancestry_is_in(self.skip_components),
+                    new_component.parent.skip,
                     not new_component.ancestry_is_in(self.run_components),
                     skip,
                 ]
             ):
                 new_component.skip = True
+                self.skip_components.append(new_component)
             yield
         finally:
             self.cur_component = self.cur_component.parent
@@ -458,7 +459,11 @@ class ValidationProtocol:
     ### METHODS FOR DESCRIBING PLANNED VALIDATION CHECKS
     ##################################################################
 
-    def queued_checks(self, include_individual_checks: bool = True) -> str:
+    def queued_checks(
+        self,
+        include_individual_checks: bool = True,
+        include_skipped_components: bool = False,
+    ) -> str:
         """Returns a print-friendly string describing the queued checks.
 
         Args:
@@ -484,10 +489,12 @@ class ValidationProtocol:
 
         # print tree of components from top down
         def render_self_and_children(component: ValidationProtocol._Component) -> str:
+            if not include_skipped_components and component.skip:
+                return ""
             INDENT_STR = INDENT_CHAR * (len(component.ancestor_line) - 1)
             count_str = f"[{sum_all_children(component)}"
             count_str2 = f"[{len(check_by_component[component])}"
-            lead_str = f"{INDENT_STR}↳'{component.name}'"
+            lead_str = f"{INDENT_STR}↳'{component.name}'{'-> !SKIPPED!' if component.skip else ''}"
             buffer = f"{lead_str : <55}DIRECT:{count_str2 : >4}] ALL:{count_str : >5}]"
 
             if include_individual_checks:
@@ -505,7 +512,8 @@ class ValidationProtocol:
                     buffer += "\n" + "\n".join(check_line_print)
 
             for child in component.children:
-                buffer += "\n" + render_self_and_children(child)
+                if render_self_and_children(child):
+                    buffer += "\n" + render_self_and_children(child)
             return buffer
 
         return render_self_and_children(self._root_component)
