@@ -733,7 +733,7 @@ def validate_bulkRNASeq(
                         # vp.add(check_bam_file_integrity, config={"samtools_bin":#TODO: fill with private config file})
                         vp.add(
                             check_bam_file_integrity,
-                            config={"samtools_bin": os.environ["SAMTOOLS_BIN"]},
+                            config={"samtools_bin": 'samtools'}, # assumes accessible on path already
                         )
 
                     with vp.payload(
