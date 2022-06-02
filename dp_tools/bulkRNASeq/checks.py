@@ -651,7 +651,7 @@ def utils_runsheet_to_expected_groups(
     runsheet: Path,
     formatting: GroupFormatting = GroupFormatting.ampersand_join,
     map_to_lists: bool = False,
-) -> dict[str, str]:
+) -> Union[dict[str, str], dict[str, list[str]]]:
     df_rs = (
         pd.read_csv(runsheet, index_col="Sample Name")
         .filter(regex="^Factor Value\[.*\]")
@@ -685,7 +685,7 @@ def utils_runsheet_to_expected_groups(
                 for sample, group in expected_conditions_based_on_runsheet.items()
                 if group == query_group
             ]
-        expected_conditions_based_on_runsheet = reformatted_dict
+        expected_conditions_based_on_runsheet: dict[str, list[str]] = reformatted_dict
 
     return expected_conditions_based_on_runsheet
 
@@ -803,7 +803,6 @@ def check_dge_table_annotation_columns_exist(
         "ENTREZID",
         "STRING_id",
         "GOSLIM_IDS",
-        "EXTRA",
     }
     MASTER_ANNOTATION_KEY = {"_DEFAULT": "ENSEMBL", "Arabidopsis": "TAIR"}
 
@@ -1093,8 +1092,8 @@ def check_dge_table_fixed_statistical_columns_constraints(
 ) -> FlagEntry:
     # data specific preprocess
     fixed_stats_columns = (
-        (["All.mean", "All.stdev"], {"nonNull": True, "nonNegative": True}),
-        (["LRT.p.value"], {"nonNull": False, "nonNegative": True}),
+        ({"All.mean", "All.stdev"}, {"nonNull": True, "nonNegative": True}),
+        ({"LRT.p.value"}, {"nonNull": False, "nonNegative": True}),
     )
 
     df_dge = pd.read_csv(dge_table)
