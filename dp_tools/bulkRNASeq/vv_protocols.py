@@ -312,25 +312,6 @@ def validate_bulkRNASeq(
             name="Unnormalized Gene Counts",
             description="Validate normalization related output",
         ):
-            with vp.payload(
-                payloads=[
-                    {
-                        "rsem_table_path": lambda: dataset.rsemGeneCounts.unnormalizedCounts.path,
-                        "deseq2_table_path": lambda: dataset.normalizedGeneCounts.unnormalizedCountsCSV.path,
-                    }
-                ]
-            ):
-                vp.add(check_rsem_counts_and_unnormalized_tables_parity)
-
-            with vp.payload(
-                payloads=[
-                    {
-                        "rsem_table_path": lambda: dataset.rsemGeneCounts.unnormalizedCounts.path,
-                        "deseq2_table_path": lambda: dataset.normalizedGeneCounts.unnormalizedCountsCSV.path,
-                    }
-                ]
-            ):
-                vp.add(check_rsem_counts_and_unnormalized_tables_parity)
 
             with vp.payload(
                 payloads=[
@@ -415,6 +396,16 @@ def validate_bulkRNASeq(
             name="DGE Output",
             description="",
             ):
+            with vp.payload(
+                payloads=[
+                    {
+                        "rsem_table_path": lambda: dataset.rsemGeneCounts.unnormalizedCounts.path,
+                        "deseq2_table_path": lambda: dataset.normalizedGeneCounts.unnormalizedCountsCSV.path,
+                    }
+                ]
+            ):
+                vp.add(check_rsem_counts_and_unnormalized_tables_parity)
+
             with vp.payload(payloads=[
                 {
                 'organism': lambda: dataset.metadata.organism,
