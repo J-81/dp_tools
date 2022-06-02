@@ -371,8 +371,12 @@ class ValidationProtocol:
             # determine if skipping needs to be set for the new component
             if any(
                 [
-                    new_component.parent.skip,
-                    not new_component.ancestry_is_in(self.run_components),
+                    new_component.name
+                    in self.skip_components,  # if in skip list explicitly
+                    new_component.parent.skip,  # parent was skipped
+                    not new_component.ancestry_is_in(
+                        self.run_components
+                    ),  # not explictly in run components
                     skip,
                 ]
             ):
