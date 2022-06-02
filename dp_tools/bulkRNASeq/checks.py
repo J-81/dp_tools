@@ -1,9 +1,13 @@
 from collections import defaultdict
 import copy
+import enum
 import gzip
+import itertools
 import logging
 import math
 from pathlib import Path
+from statistics import mean
+import string
 import subprocess
 from typing import Dict, Union
 from dp_tools.bulkRNASeq.entity import BulkRNASeqDataset
@@ -20,6 +24,29 @@ from dp_tools.core.entity_model import (
 log = logging.getLogger(__name__)
 
 from dp_tools.core.check_model import FlagCode, FlagEntry, FlagEntryWithOutliers
+
+
+def r_style_make_names(s: str) -> str:
+    """Recreates R's make.names function for individual strings.
+    This function is often used to create syntactically valid names in R which are then saved in R outputs.
+    Source: https://www.rdocumentation.org/packages/base/versions/3.6.2/topics/make.names
+
+    Args:
+        s (str): A string to convert
+
+    Returns:
+        str: A string converted in the same way as R's make.names function
+    """
+    VALID_CHARACTERS = string.ascii_letters + string.digits + "."
+    REPLACEMENT_CHAR = "."
+    new_string_chars = list()
+    for char in s:
+        if char in VALID_CHARACTERS:
+            new_string_chars.append(char)
+        else:
+            new_string_chars.append(REPLACEMENT_CHAR)
+    return "".join(new_string_chars)
+
 
 # adapted from reference: https://stackoverflow.com/questions/56048627/round-floats-in-a-nested-dictionary-recursively
 # used to round values for easier to read messages
@@ -583,4 +610,695 @@ def check_aggregate_rsem_unnormalized_counts_table_values_against_samplewise_tab
     else:
         code = FlagCode.HALT
         message = f"Identified issues: {samples_with_issues}"
+    return {"code": code, "message": message}
+
+
+def check_sample_table_for_all_samples(runsheet: Path, sampleTable: Path) -> FlagEntry:
+    """Check the sample table includes all samples as denoted in the runsheet.
+
+    Args:
+        runsheet (Path): csv file used for processing, the index denotes all samples
+        sampleTable (Path): csv file that pairs each sample with resolved experimental group (called condition within the table)
+
+    Returns:
+        FlagEntry: A check result
+    """
+    # data specific preprocess
+    df_rs = pd.read_csv(runsheet, index_col="Sample Name").sort_index()
+    df_sample = pd.read_csv(sampleTable, index_col=0).sort_index()
+
+    extra_samples: dict[str, set[str]] = {
+        "unique_to_runsheet": set(df_rs.index) - set(df_sample.index),
+        "unique_to_sampleTable": set(df_sample.index) - set(df_rs.index),
+    }
+
+    # check logic
+    if not any([entry for entry in extra_samples.values()]):
+        code = FlagCode.GREEN
+        message = f"All samples matching"
+    else:
+        code = FlagCode.HALT
+        message = f"Samples mismatched: {[f'{entry}:{v}' for entry, v  in extra_samples.items() if v]}"
+    return {"code": code, "message": message}
+
+
+class GroupFormatting(enum.Enum):
+    r_make_names = enum.auto()
+    ampersand_join = enum.auto()
+
+
+def utils_runsheet_to_expected_groups(
+    runsheet: Path,
+    formatting: GroupFormatting = GroupFormatting.ampersand_join,
+    map_to_lists: bool = False,
+) -> dict[str, str]:
+    df_rs = (
+        pd.read_csv(runsheet, index_col="Sample Name")
+        .filter(regex="^Factor Value\[.*\]")
+        .sort_index()
+    )  # using only Factor Value columns
+
+    match formatting:
+        case GroupFormatting.r_make_names:
+            expected_conditions_based_on_runsheet = (
+                df_rs.apply(lambda x: "...".join(x), axis="columns")
+                .apply(r_style_make_names)  # join factors with '...'
+                .to_dict()
+            )  # reformat entire group in the R style
+        case GroupFormatting.ampersand_join:
+            expected_conditions_based_on_runsheet = df_rs.apply(
+                lambda x: f"({' & '.join(x)})", axis="columns"
+            ).to_dict()
+        case _:
+            raise ValueError(
+                f"Formatting method invalid, must be one of the following: {list(GroupFormatting)}"
+            )
+
+    # convert from {sample: group} dict
+    #         to {group: [samples]} dict
+    if map_to_lists:
+        unique_groups = set(expected_conditions_based_on_runsheet.values())
+        reformatted_dict: dict[str, list[str]] = dict()
+        for query_group in unique_groups:
+            reformatted_dict[query_group] = [
+                sample
+                for sample, group in expected_conditions_based_on_runsheet.items()
+                if group == query_group
+            ]
+        expected_conditions_based_on_runsheet = reformatted_dict
+
+    return expected_conditions_based_on_runsheet
+
+
+def check_sample_table_for_correct_group_assignments(
+    runsheet: Path, sampleTable: Path
+) -> FlagEntry:
+    """Check the sample table is assigned to the correct experimental group.
+    An experimental group is defined by the Factor Value columns found in the runsheet.
+
+    Args:
+        runsheet (Path): csv file used for processing, includes metadata used for experimental group designation
+        sampleTable (Path): csv file that pairs each sample with resolved experimental group (called condition within the table)
+
+    Returns:
+        FlagEntry: A check result
+    """
+    # data specific preprocess
+    df_rs = (
+        pd.read_csv(runsheet, index_col="Sample Name")
+        .filter(regex="^Factor Value\[.*\]")
+        .sort_index()
+    )  # using only Factor Value columns
+    df_sample = pd.read_csv(sampleTable, index_col=0).sort_index()
+
+    # TODO: refactor with utils_runsheet_to_expected_groups
+    expected_conditions_based_on_runsheet = df_rs.apply(
+        lambda x: "...".join(x), axis="columns"
+    ).apply(  # join factors with '...'
+        r_style_make_names
+    )  # reformat entire group in the R style
+
+    mismatched_rows = expected_conditions_based_on_runsheet != df_sample["condition"]
+
+    # check logic
+    if not any(mismatched_rows):
+        code = FlagCode.GREEN
+        message = f"Conditions are formatted and assigned correctly based on runsheet"
+    else:
+        code = FlagCode.HALT
+        mismatch_description = (
+            df_sample[mismatched_rows]["condition"]
+            + " <--SAMPLETABLE : RUNSHEET--> "
+            + expected_conditions_based_on_runsheet[mismatched_rows]
+        ).to_dict()
+        message = f"Mismatch in expected conditions based on runsheet for these rows: {mismatch_description}"
+    return {"code": code, "message": message}
+
+
+def check_contrasts_table_headers(contrasts_table: Path, runsheet: Path) -> FlagEntry:
+    # data specific preprocess
+    expected_groups = utils_runsheet_to_expected_groups(runsheet, map_to_lists=True)
+    expected_comparisons = [
+        "v".join(paired_groups)
+        for paired_groups in itertools.permutations(expected_groups, 2)
+    ]
+    df_contrasts = pd.read_csv(contrasts_table, index_col=0)
+
+    # check logic
+    differences = set(expected_comparisons).symmetric_difference(
+        set(df_contrasts.columns)
+    )
+    if not differences:
+        code = FlagCode.GREEN
+        message = f"Contrasts header includes expected comparisons as determined runsheet Factor Value Columns: {set(expected_comparisons)}"
+    else:
+        code = FlagCode.HALT
+        message = f"Contrasts header does not match expected comparisons as determined runsheet Factor Value Columns: {differences}"
+    return {"code": code, "message": message}
+
+
+def check_contrasts_table_rows(contrasts_table: Path, **_) -> FlagEntry:
+    # data specific preprocess
+    df_contrasts = pd.read_csv(contrasts_table, index_col=0)
+
+    def _get_groups_from_comparisions(s: str) -> set[str]:
+        """Converts '(G1)v(G2)'
+        into G1...G2 where G1 and G2 are renamed as per the r make names function
+
+        Args:
+            s (str): Input that fits this format: '(G1)v(G2)'
+
+        Returns:
+            str: Reformatted string
+        """
+        g1, g2 = s.split("v")
+        # remove parens and reformat with r make names style
+        g1 = r_style_make_names(g1[1:-1].replace(" & ", "..."))
+        g2 = r_style_make_names(g2[1:-1].replace(" & ", "..."))
+        return {g1, g2}
+
+    bad_columns: list[str] = list()
+    for (col_name, col_series) in df_contrasts.iteritems():
+        expected_values = _get_groups_from_comparisions(col_name)
+        if not expected_values == set(col_series):
+            bad_columns.append(col_name)
+
+    # check logic
+    if not bad_columns:
+        code = FlagCode.GREEN
+        message = f"Contrasts column and rows match expected formatting"
+    else:
+        code = FlagCode.HALT
+        message = f"Contrasts columns {bad_columns} have unexpected values"
+    return {"code": code, "message": message}
+
+
+def check_dge_table_annotation_columns_exist(
+    dge_table: Path, organism: str, **_
+) -> FlagEntry:
+    REQUIRED_ANNOTATION_KEYS = {
+        "SYMBOL",
+        "GENENAME",
+        "REFSEQ",
+        "ENTREZID",
+        "STRING_id",
+        "GOSLIM_IDS",
+        "EXTRA",
+    }
+    MASTER_ANNOTATION_KEY = {"_DEFAULT": "ENSEMBL", "Arabidopsis": "TAIR"}
+
+    df_dge = pd.read_csv(dge_table)
+
+    required_columns = REQUIRED_ANNOTATION_KEYS.union(
+        {MASTER_ANNOTATION_KEY.get(organism, MASTER_ANNOTATION_KEY["_DEFAULT"])}
+    )
+
+    missing_columns = required_columns - set(df_dge.columns)
+    # check logic
+    if not missing_columns:
+        code = FlagCode.GREEN
+        message = f"Found all required annotation columns: {required_columns}"
+    else:
+        code = FlagCode.HALT
+        message = (
+            f"Missing the following required annotation columns: {missing_columns}"
+        )
+    return {"code": code, "message": message}
+
+
+def check_dge_table_sample_columns_exist(
+    dge_table: Path, samples: set[str], **_
+) -> FlagEntry:
+    # data specific preprocess
+    df_dge = pd.read_csv(dge_table)
+
+    missing_sample_columns = samples - set(df_dge.columns)
+
+    # check logic
+    if not missing_sample_columns:
+        code = FlagCode.GREEN
+        message = f"All samplewise columns present"
+    else:
+        code = FlagCode.HALT
+        message = f"Missing these sample count columns: {missing_sample_columns}"
+    return {"code": code, "message": message}
+
+
+def check_dge_table_sample_columns_constraints(
+    dge_table: Path, samples: set[str], **_
+) -> FlagEntry:
+    MINIMUM_COUNT = 0
+    # data specific preprocess
+    df_dge = pd.read_csv(dge_table)[samples]
+
+    column_meets_constraints = df_dge.apply(
+        lambda col: all(col >= MINIMUM_COUNT), axis="rows"
+    )
+
+    # check logic
+    contraint_description = f"All counts are greater or equal to {MINIMUM_COUNT}"
+    if all(column_meets_constraints):
+        code = FlagCode.GREEN
+        message = (
+            f"All values in columns: {samples} met constraint: {contraint_description}"
+        )
+    else:
+        code = FlagCode.HALT
+        message = (
+            f"These columns {list(column_meets_constraints.index[~column_meets_constraints])} "
+            f"fail the contraint: {contraint_description}."
+        )
+    return {"code": code, "message": message}
+
+
+def check_dge_table_group_columns_exist(
+    dge_table: Path, runsheet: Path, **_
+) -> FlagEntry:
+    # data specific preprocess
+    GROUP_PREFIXES = ["Group.Stdev_", "Group.Mean_"]
+    expected_groups = utils_runsheet_to_expected_groups(runsheet)
+    expected_columns = {
+        "".join(comb)
+        for comb in itertools.product(GROUP_PREFIXES, expected_groups.values())
+    }
+    df_dge_columns = set(pd.read_csv(dge_table).columns)
+    missing_cols = expected_columns - df_dge_columns
+
+    # check logic
+    if not missing_cols:
+        code = FlagCode.GREEN
+        message = (
+            f"All group summary stat columns present. {sorted(list(expected_columns))}"
+        )
+    else:
+        code = FlagCode.HALT
+        message = (
+            f"Missing these group summary stat columns: {sorted(list(missing_cols))}"
+        )
+    return {"code": code, "message": message}
+
+
+def check_dge_table_group_columns_constraints(
+    dge_table: Path, runsheet: Path, **_
+) -> FlagEntry:
+    FLOAT_TOLERANCE = (
+        0.001  # Percent allowed difference due to float precision differences
+    )
+    # data specific preprocess
+    GROUP_PREFIXES = ["Group.Stdev_", "Group.Mean_"]
+    expected_groups = utils_runsheet_to_expected_groups(runsheet)
+    query_columns = {
+        "".join(comb)
+        for comb in itertools.product(GROUP_PREFIXES, expected_groups.values())
+    }
+
+    expected_group_lists = utils_runsheet_to_expected_groups(
+        runsheet, map_to_lists=True
+    )
+    df_dge = pd.read_csv(dge_table)
+
+    # issue trackers
+    issues: dict[str, list[str]] = {
+        f"mean computation deviates by more than {FLOAT_TOLERANCE} percent": [],
+        f"standard deviation deviates by more than {FLOAT_TOLERANCE} percent": [],
+    }
+
+    group: str
+    samples: list[str]
+    for group, samples in expected_group_lists.items():
+        abs_percent_differences = abs(
+            (df_dge[f"Group.Mean_{group}"] - df_dge[samples].mean(axis="columns"))
+            / df_dge[samples].mean(axis="columns")
+            * 100
+        )
+        if any(abs_percent_differences > FLOAT_TOLERANCE):
+            issues["mean computation incorrect"].append(group)
+
+        abs_percent_differences = abs(
+            (df_dge[f"Group.Stdev_{group}"] - df_dge[samples].std(axis="columns"))
+            / df_dge[samples].mean(axis="columns")
+            * 100
+        )
+        if any(abs_percent_differences > FLOAT_TOLERANCE):
+            issues["standard deviation incorrect"].append(group)
+
+    # check logic
+    contraint_description = f"Group mean and standard deviations are correctly computed from samplewise normalized counts within a tolerance of {FLOAT_TOLERANCE} percent (to accomodate minor float related differences )"
+    if not any([issue_type for issue_type in issues.values()]):
+        code = FlagCode.GREEN
+        message = f"All values in columns: {query_columns} met constraint: {contraint_description}"
+    else:
+        code = FlagCode.HALT
+        message = (
+            f"Issues found {issues} that"
+            f"fail the contraint: {contraint_description}."
+        )
+    return {"code": code, "message": message}
+
+
+def check_dge_table_comparison_statistical_columns_exist(
+    dge_table: Path, runsheet: Path, **_
+) -> FlagEntry:
+    # data specific preprocess
+    COMPARISON_PREFIXES = ["Log2fc_", "Stat_", "P.value_", "Adj.p.value_"]
+    expected_groups = utils_runsheet_to_expected_groups(runsheet, map_to_lists=True)
+    expected_comparisons = [
+        "v".join(paired_groups)
+        for paired_groups in itertools.permutations(expected_groups, 2)
+    ]
+    expected_columns = {
+        "".join(comb)
+        for comb in itertools.product(COMPARISON_PREFIXES, expected_comparisons)
+    }
+    df_dge_columns = set(pd.read_csv(dge_table).columns)
+    missing_cols = expected_columns - df_dge_columns
+
+    # check logic
+    if not missing_cols:
+        code = FlagCode.GREEN
+        message = f"All comparision summary stat columns present. {sorted(list(expected_columns))}"
+    else:
+        code = FlagCode.HALT
+        message = f"Missing these comparision summary stat columns: {sorted(list(missing_cols))}"
+    return {"code": code, "message": message}
+
+
+def utils_common_constraints_on_dataframe(
+    df: pd.DataFrame, constraints: tuple[tuple[set, dict], ...]
+) -> dict:
+
+    issues: dict[str, list[str]] = {
+        "Failed non null constraint": list(),
+        "Failed non negative constraint": list(),
+    }
+
+    for (col_set, col_constraints) in constraints:
+        # this will avoid overriding the original constraints dictionary
+        # which is likely used in the check message
+        col_constraints = col_constraints.copy()
+
+        # limit to only columns of interest
+        query_df = df[col_set]
+        for (colname, colseries) in query_df.iteritems():
+            # check non null constraint
+            if col_constraints.pop("nonNull", False) and nonNull(colseries) == False:
+                issues["Failed non null constraint"].append(colname)
+            # check non negative constraint
+            if (
+                col_constraints.pop("nonNegative", False)
+                and nonNegative(colseries) == False
+            ):
+                issues["Failed non negative constraint"].append(colname)
+            # check allowed values constraint
+            if allowedValues := col_constraints.pop("allowedValues", False):
+                if onlyAllowedValues(colseries, allowedValues) == False:
+                    issues["Failed non negative constraint"].append(colname)
+
+            # raise exception if there are unhandled constraint keys
+            if col_constraints:
+                raise ValueError(f"Unhandled constraint types: {col_constraints}")
+
+    return issues
+
+
+def check_dge_table_group_statistical_columns_constraints(
+    dge_table: Path, runsheet: Path, **_
+) -> FlagEntry:
+    expected_groups = utils_runsheet_to_expected_groups(runsheet, map_to_lists=True)
+    expected_comparisons = [
+        "v".join(paired_groups)
+        for paired_groups in itertools.permutations(expected_groups, 2)
+    ]
+
+    resolved_constraints = (
+        ({f"Log2fc_{comp}" for comp in expected_comparisons}, {"nonNull": True}),
+        ({f"Stat_{comp}" for comp in expected_comparisons}, {"nonNull": True}),
+        # can be removed from analysis before p-value and adj-p-value assessed
+        # ref: https://bioconductor.org/packages/release/bioc/vignettes/DESeq2/inst/doc/DESeq2.html#why-are-some-p-values-set-to-na
+        (
+            {f"P.value_{comp}" for comp in expected_comparisons},
+            {"nonNegative": True, "nonNull": False},
+        ),
+        (
+            {f"Adj.p.value_{comp}" for comp in expected_comparisons},
+            {"nonNegative": True, "nonNull": False},
+        ),
+    )
+
+    df_dge = pd.read_csv(dge_table)
+
+    # issue trackers
+    # here: {prefix+constraint: [failed_columns]}
+    issues: dict[str, list[str]] = dict()
+
+    issues = utils_common_constraints_on_dataframe(df_dge, resolved_constraints)
+
+    # check logic
+    if not any([issue_type for issue_type in issues.values()]):
+        code = FlagCode.GREEN
+        message = f"All values in columns met constraint: {resolved_constraints}"
+    else:
+        code = FlagCode.HALT
+        message = (
+            f"Issues found {issues} that" f"fail the contraint: {resolved_constraints}."
+        )
+    return {"code": code, "message": message}
+
+
+def check_dge_table_fixed_statistical_columns_exist(dge_table: Path, **_) -> FlagEntry:
+    # data specific preprocess
+    fixed_stats_columns = {
+        "All.mean": {"nonNull": True, "nonNegative": True},
+        "All.stdev": {"nonNull": True, "nonNegative": True},
+        "LRT.p.value": {"nonNull": False, "nonNegative": True},
+    }
+    expected_columns = set(fixed_stats_columns)
+    df_dge_columns = set(pd.read_csv(dge_table).columns)
+    missing_cols = expected_columns - df_dge_columns
+
+    # check logic
+    if not missing_cols:
+        code = FlagCode.GREEN
+        message = f"All dataset summary stat columns present. {sorted(list(expected_columns))}"
+    else:
+        code = FlagCode.HALT
+        message = (
+            f"Missing these dataset summary stat columns: {sorted(list(missing_cols))}"
+        )
+    return {"code": code, "message": message}
+
+
+def check_dge_table_fixed_statistical_columns_constraints(
+    dge_table: Path, **_
+) -> FlagEntry:
+    # data specific preprocess
+    fixed_stats_columns = (
+        (["All.mean", "All.stdev"], {"nonNull": True, "nonNegative": True}),
+        (["LRT.p.value"], {"nonNull": False, "nonNegative": True}),
+    )
+
+    df_dge = pd.read_csv(dge_table)
+
+    # issue trackers
+    # here: {prefix+constraint: [failed_columns]}
+    issues: dict[str, list[str]] = dict()
+
+    issues = utils_common_constraints_on_dataframe(df_dge, fixed_stats_columns)
+
+    # check logic
+    if not any([issue_type for issue_type in issues.values()]):
+        code = FlagCode.GREEN
+        message = f"All values in columns met constraint: {fixed_stats_columns}"
+    else:
+        code = FlagCode.HALT
+        message = (
+            f"Issues found {issues} that" f"fail the contraint: {fixed_stats_columns}."
+        )
+    return {"code": code, "message": message}
+
+
+def check_dge_table_log2fc_within_reason(
+    dge_table: Path, runsheet: Path, **_
+) -> FlagEntry:
+    LOG2FC_CROSS_METHOD_PERCENT_DIFFERENCE_THRESHOLD = 10  # Percent
+    LOG2FC_CROSS_METHOD_TOLERANCE_PERCENT = 50  # Percent
+    # data specific preprocess
+    expected_groups = utils_runsheet_to_expected_groups(runsheet, map_to_lists=True)
+    expected_comparisons = [
+        "v".join(paired_groups)
+        for paired_groups in itertools.permutations(expected_groups, 2)
+    ]
+    df_dge = pd.read_csv(dge_table)
+
+    # Track error messages
+    err_msg = ""
+    for comparision in expected_comparisons:
+        query_column = f"Log2fc_{comparision}"
+        group1_mean_col = (
+            "Group.Mean_" + comparision.split(")v(")[0] + ")"
+        )  # Uses parens and adds them back to prevent slicing on 'v' within factor names
+        group2_mean_col = "Group.Mean_" + "(" + comparision.split(")v(")[1]
+        computed_log2fc = (df_dge[group1_mean_col] / df_dge[group2_mean_col]).apply(
+            math.log, args=[2]
+        )
+        abs_percent_difference = abs(
+            ((computed_log2fc - df_dge[query_column]) / df_dge[query_column]) * 100
+        )
+        percent_within_tolerance = (
+            mean(
+                abs_percent_difference
+                < LOG2FC_CROSS_METHOD_PERCENT_DIFFERENCE_THRESHOLD
+            )
+            * 100
+        )
+        # flag if not enough within tolerance
+        if percent_within_tolerance < LOG2FC_CROSS_METHOD_TOLERANCE_PERCENT:
+            err_msg += (
+                f"For comparison: '{comparision}' {percent_within_tolerance:.2f} % of genes have absolute percent differences "
+                f"(between log2fc direct computation and DESeq2's approach) "
+                f"less than {LOG2FC_CROSS_METHOD_PERCENT_DIFFERENCE_THRESHOLD} % which does not met the minimum percentage "
+                f"({LOG2FC_CROSS_METHOD_TOLERANCE_PERCENT} %) of genes required.  "
+                f"This may indicate misassigned or misaligned columns. "
+            )
+
+    if err_msg:
+        code = FlagCode.YELLOW
+        message = f"Pairwise statistical column(s) failing constraints: {err_msg}"
+    else:
+        code = FlagCode.GREEN
+        message = (
+            f"All log2fc within reason, specifically no more than {LOG2FC_CROSS_METHOD_TOLERANCE_PERCENT}% "
+            f"of genes (actual %: {100 - percent_within_tolerance:.2f}) have a percent difference greater than "
+            f"{LOG2FC_CROSS_METHOD_PERCENT_DIFFERENCE_THRESHOLD}%. "
+        )
+
+    return {"code": code, "message": message}
+
+
+def check_viz_table_columns_exist(dge_table: Path, runsheet: Path, **_) -> FlagEntry:
+    # data specific preprocess
+    expected_groups = utils_runsheet_to_expected_groups(runsheet, map_to_lists=True)
+    expected_comparisons = [
+        "v".join(paired_groups)
+        for paired_groups in itertools.permutations(expected_groups, 2)
+    ]
+    viz_pairwise_columns_prefixes = (
+        (
+            {f"Log2_Adj.p.value_{comp}" for comp in expected_comparisons},
+            {"nonNull": False},
+        ),
+        (
+            {f"Sig.1_{comp}" for comp in expected_comparisons},
+            {"allowedValues": [False, True], "nonNull": False},
+        ),
+        (
+            {f"Sig.05_{comp}" for comp in expected_comparisons},
+            {"allowedValues": [False, True], "nonNull": False},
+        ),
+        (
+            {f"Log2_P.value_{comp}" for comp in expected_comparisons},
+            {"nonNegative": False, "nonNull": False},
+        ),
+        (
+            {f"Updown_{comp}" for comp in expected_comparisons},
+            {"allowedValues": [1, 0, -1], "nonNull": True},
+        ),
+    )
+
+    expected_columns = set(
+        itertools.chain(*[c1 for c1, _ in viz_pairwise_columns_prefixes])
+    )
+    df_dge_columns = set(pd.read_csv(dge_table).columns)
+    missing_cols = expected_columns - df_dge_columns
+
+    # check logic
+    if not missing_cols:
+        code = FlagCode.GREEN
+        message = f"All viz specific comparison columns present. {sorted(list(expected_columns))}"
+    else:
+        code = FlagCode.HALT
+        message = f"Missing these viz specific comparison columns: {sorted(list(missing_cols))}"
+    return {"code": code, "message": message}
+
+
+def check_viz_table_columns_constraints(
+    dge_table: Path, runsheet: Path, **_
+) -> FlagEntry:
+    # data specific preprocess
+    expected_groups = utils_runsheet_to_expected_groups(runsheet, map_to_lists=True)
+    expected_comparisons = [
+        "v".join(paired_groups)
+        for paired_groups in itertools.permutations(expected_groups, 2)
+    ]
+    viz_pairwise_columns_constraints = (
+        (
+            {f"Log2_Adj.p.value_{comp}" for comp in expected_comparisons},
+            {"nonNull": False},
+        ),
+        (
+            {f"Sig.1_{comp}" for comp in expected_comparisons},
+            {"allowedValues": [False, True], "nonNull": False},
+        ),
+        (
+            {f"Sig.05_{comp}" for comp in expected_comparisons},
+            {"allowedValues": [False, True], "nonNull": False},
+        ),
+        (
+            {f"Log2_P.value_{comp}" for comp in expected_comparisons},
+            {"nonNegative": False, "nonNull": False},
+        ),
+        (
+            {f"Updown_{comp}" for comp in expected_comparisons},
+            {"allowedValues": [1, 0, -1], "nonNull": True},
+        ),
+    )
+
+    df_viz = pd.read_csv(dge_table)
+
+    # issue trackers
+    # here: {prefix+constraint: [failed_columns]}
+    issues: dict[str, list[str]] = dict()
+
+    issues = utils_common_constraints_on_dataframe(
+        df_viz, viz_pairwise_columns_constraints
+    )
+
+    # check logic
+    if not any([issue_type for issue_type in issues.values()]):
+        code = FlagCode.GREEN
+        message = (
+            f"All values in columns met constraint: {viz_pairwise_columns_constraints}"
+        )
+    else:
+        code = FlagCode.HALT
+        message = (
+            f"Issues found {issues} that"
+            f"fail the contraint: {viz_pairwise_columns_constraints}."
+        )
+    return {"code": code, "message": message}
+
+
+def check_viz_pca_table_index_and_columns_exist(
+    pca_table: Path, samples: set[str]
+) -> FlagEntry:
+    EXPECTED_VIS_PCA_COLUMNS = {"PC1", "PC2", "PC3"}
+    err_msg = ""
+    # data specific preprocess
+    df = pd.read_csv(pca_table, index_col=0)
+
+    # check all samples included
+    if missing_samples := samples - set(df.index):
+        err_msg += f"Missing samples in index: {missing_samples}"
+
+    # check all expected columns exist
+    if missing_cols := EXPECTED_VIS_PCA_COLUMNS - set(df.columns):
+        err_msg += f"Missing expected columns: {missing_cols}"
+
+    if not err_msg:
+        code = FlagCode.GREEN
+        message = f"PCA Table has all the samples in the index and these columns exist: {EXPECTED_VIS_PCA_COLUMNS}"
+    else:
+        code = FlagCode.HALT
+        message = err_msg
+
     return {"code": code, "message": message}

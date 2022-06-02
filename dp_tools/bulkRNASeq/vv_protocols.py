@@ -10,21 +10,7 @@ log = logging.getLogger(__name__)
 
 from dp_tools.bulkRNASeq.entity import BulkRNASeqDataset, BulkRNASeqSample
 from dp_tools.core.check_model import ValidationProtocol, FlagCode
-from dp_tools.bulkRNASeq.checks import (
-    check_aggregate_star_unnormalized_counts_table_values_against_samplewise_tables,
-    check_aggregate_rsem_unnormalized_counts_table_values_against_samplewise_tables,
-    check_fastqgz_file_contents,
-    check_forward_and_reverse_reads_counts_match,
-    check_file_exists,
-    check_bam_file_integrity,
-    check_thresholds,
-    check_metadata_attributes_exist,
-    check_for_outliers,
-    check_genebody_coverage_output,
-    check_inner_distance_output,
-    check_strandedness_assessable_from_infer_experiment,
-    check_rsem_counts_and_unnormalized_tables_parity,
-)
+from dp_tools.bulkRNASeq.checks import *  # normally this isn't ideal, however, as a library of functions this seems reasonable
 from dp_tools.core.entity_model import TemplateComponent
 from dp_tools.components import (
     BulkRNASeqMetadataComponent,
@@ -230,6 +216,169 @@ def validate_bulkRNASeq(
                 vp.add(
                     check_aggregate_rsem_unnormalized_counts_table_values_against_samplewise_tables
                 )
+
+        with vp.component_start(
+            name="DGE Metadata",
+            description="",
+            ):
+            
+            with vp.component_start(
+                name="Sample Table",
+                description="",
+                ):
+                with vp.payload(payloads=[
+                    {
+                    'runsheet': lambda: dataset.metadata.runsheet.path,
+                    'sampleTable': lambda: dataset.normalizedGeneCounts.sampleTableCSV.path
+                    }
+                ]):
+                    vp.add(check_sample_table_for_all_samples)
+                    vp.add(check_sample_table_for_correct_group_assignments)
+                    
+            with vp.component_start(
+                name="Contrasts Tables",
+                description="",
+                ):
+                with vp.payload(payloads=[
+                    {
+                    'runsheet': lambda: dataset.metadata.runsheet.path,
+                    'contrasts_table': lambda: dataset.differentialGeneExpression.contrastsCSV.path
+                    }
+                ]):
+                    vp.add(check_contrasts_table_headers)
+                    vp.add(check_contrasts_table_rows)
+
+        with vp.component_start(
+            name="DGE Metadata ERCC",
+            description="",
+            skip=(not dataset.metadata.has_ercc)
+            ):
+                    
+            with vp.component_start(
+                name="Contrasts Tables",
+                description="",
+                ):
+                with vp.payload(payloads=[
+                    {
+                    'runsheet': lambda: dataset.metadata.runsheet.path,
+                    'contrasts_table': lambda: dataset.differentialGeneExpressionERCC.contrastsCSV.path
+                    }
+                ]):
+                    vp.add(check_contrasts_table_headers)
+                    vp.add(check_contrasts_table_rows)
+                    
+        with vp.component_start(
+            name="DGE Output",
+            description="",
+            ):
+            with vp.payload(payloads=[
+                {
+                'organism': lambda: dataset.metadata.organism,
+                'samples': lambda: set(dataset.samples),
+                'dge_table': lambda: dataset.differentialGeneExpression.annotatedTableCSV.path,
+                'runsheet': lambda: dataset.metadata.runsheet.path
+                }
+            ]):
+                vp.add(check_dge_table_annotation_columns_exist)
+                vp.add(check_dge_table_sample_columns_exist)
+                vp.add(check_dge_table_sample_columns_constraints)
+                vp.add(check_dge_table_group_columns_exist)
+                vp.add(check_dge_table_group_columns_constraints)
+                vp.add(check_dge_table_comparison_statistical_columns_exist)
+                vp.add(check_dge_table_group_statistical_columns_constraints)
+                vp.add(check_dge_table_fixed_statistical_columns_exist)
+                vp.add(check_dge_table_fixed_statistical_columns_constraints)
+                vp.add(check_dge_table_log2fc_within_reason)
+
+            with vp.component_start(
+                name="Viz Tables",
+                description="Extended from the dge tables",
+                ):
+                with vp.payload(payloads=[
+                    {
+                    'organism': lambda: dataset.metadata.organism,
+                    'samples': lambda: set(dataset.samples),
+                    'dge_table': lambda: dataset.differentialGeneExpression.visualizationTableCSV.path,
+                    'runsheet': lambda: dataset.metadata.runsheet.path
+                    }
+                ]):
+                    vp.add(check_dge_table_annotation_columns_exist)
+                    vp.add(check_dge_table_sample_columns_exist)
+                    vp.add(check_dge_table_sample_columns_constraints)
+                    vp.add(check_dge_table_group_columns_exist)
+                    vp.add(check_dge_table_group_columns_constraints)
+                    vp.add(check_dge_table_comparison_statistical_columns_exist)
+                    vp.add(check_dge_table_group_statistical_columns_constraints)
+                    vp.add(check_dge_table_fixed_statistical_columns_exist)
+                    vp.add(check_dge_table_fixed_statistical_columns_constraints)
+                    vp.add(check_dge_table_log2fc_within_reason)
+                    vp.add(check_viz_table_columns_exist)
+                    vp.add(check_viz_table_columns_constraints)
+
+                with vp.payload(payloads=[
+                    {
+                    'samples': lambda: set(dataset.samples),
+                    'pca_table': lambda: dataset.differentialGeneExpression.visualizationPCATableCSV.path,
+                    }
+                ]):
+                    vp.add(check_viz_pca_table_index_and_columns_exist)
+
+        with vp.component_start(
+            name="DGE Output ERCC",
+            description="",
+            skip=(not dataset.metadata.has_ercc)
+            ):
+            with vp.payload(payloads=[
+                {
+                'organism': lambda: dataset.metadata.organism,
+                'samples': lambda: set(dataset.samples),
+                'dge_table': lambda: dataset.differentialGeneExpressionERCC.annotatedTableCSV.path,
+                'runsheet': lambda: dataset.metadata.runsheet.path
+                }
+            ]):
+                vp.add(check_dge_table_annotation_columns_exist)
+                vp.add(check_dge_table_sample_columns_exist)
+                vp.add(check_dge_table_sample_columns_constraints)
+                vp.add(check_dge_table_group_columns_exist)
+                vp.add(check_dge_table_group_columns_constraints)
+                vp.add(check_dge_table_comparison_statistical_columns_exist)
+                vp.add(check_dge_table_group_statistical_columns_constraints)
+                vp.add(check_dge_table_fixed_statistical_columns_exist)
+                vp.add(check_dge_table_fixed_statistical_columns_constraints)
+                vp.add(check_dge_table_log2fc_within_reason)
+
+            with vp.component_start(
+                name="Viz Tables",
+                description="Extended from the dge tables",
+                ):
+                with vp.payload(payloads=[
+                    {
+                    'organism': lambda: dataset.metadata.organism,
+                    'samples': lambda: set(dataset.samples),
+                    'dge_table': lambda: dataset.differentialGeneExpressionERCC.visualizationTableCSV.path,
+                    'runsheet': lambda: dataset.metadata.runsheet.path
+                    }
+                ]):
+                    vp.add(check_dge_table_annotation_columns_exist)
+                    vp.add(check_dge_table_sample_columns_exist)
+                    vp.add(check_dge_table_sample_columns_constraints)
+                    vp.add(check_dge_table_group_columns_exist)
+                    vp.add(check_dge_table_group_columns_constraints)
+                    vp.add(check_dge_table_comparison_statistical_columns_exist)
+                    vp.add(check_dge_table_group_statistical_columns_constraints)
+                    vp.add(check_dge_table_fixed_statistical_columns_exist)
+                    vp.add(check_dge_table_fixed_statistical_columns_constraints)
+                    vp.add(check_dge_table_log2fc_within_reason)
+                    vp.add(check_viz_table_columns_exist)
+                    vp.add(check_viz_table_columns_constraints)
+
+                with vp.payload(payloads=[
+                    {
+                    'samples': lambda: set(dataset.samples),
+                    'pca_table': lambda: dataset.differentialGeneExpressionERCC.visualizationPCATableCSV.path,
+                    }
+                ]):
+                    vp.add(check_viz_pca_table_index_and_columns_exist)
 
         sample: BulkRNASeqSample
         for sample in dataset.samples.values():
