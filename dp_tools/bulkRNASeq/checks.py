@@ -1122,6 +1122,11 @@ def check_dge_table_log2fc_within_reason(
 ) -> FlagEntry:
     LOG2FC_CROSS_METHOD_PERCENT_DIFFERENCE_THRESHOLD = 10  # Percent
     LOG2FC_CROSS_METHOD_TOLERANCE_PERCENT = 50  # Percent
+
+    # TODO: discuss, this might even be fine to lower quite a bit
+    # e.g THRESHOLD_PERCENT_MEANS_DIFFERENCE = 1  # percent
+    THRESHOLD_PERCENT_MEANS_DIFFERENCE = 50  # percent
+
     # data specific preprocess
     expected_groups = utils_runsheet_to_expected_groups(runsheet, map_to_lists=True)
     expected_comparisons = [
@@ -1131,7 +1136,8 @@ def check_dge_table_log2fc_within_reason(
     df_dge = pd.read_csv(dge_table)
 
     # Track error messages
-    err_msg = ""
+    err_msg_yellow = ""
+    all_suspect_signs: dict[int, dict[str, float]] = dict()
     for comparision in expected_comparisons:
         query_column = f"Log2fc_{comparision}"
         group1_mean_col = (
@@ -1153,7 +1159,7 @@ def check_dge_table_log2fc_within_reason(
         )
         # flag if not enough within tolerance
         if percent_within_tolerance < LOG2FC_CROSS_METHOD_TOLERANCE_PERCENT:
-            err_msg += (
+            err_msg_yellow += (
                 f"For comparison: '{comparision}' {percent_within_tolerance:.2f} % of genes have absolute percent differences "
                 f"(between log2fc direct computation and DESeq2's approach) "
                 f"less than {LOG2FC_CROSS_METHOD_PERCENT_DIFFERENCE_THRESHOLD} % which does not met the minimum percentage "
@@ -1161,15 +1167,49 @@ def check_dge_table_log2fc_within_reason(
                 f"This may indicate misassigned or misaligned columns. "
             )
 
-    if err_msg:
+        #### sign based checks
+
+        # filter to genes with based on groups means
+        abs_percent_differences = (
+            abs(
+                (df_dge[group1_mean_col] - df_dge[group2_mean_col])
+                / df_dge[group2_mean_col]
+            )
+            * 100
+        )
+        df_dge_filtered = df_dge.loc[
+            abs_percent_differences > THRESHOLD_PERCENT_MEANS_DIFFERENCE
+        ]
+
+        df_dge_filtered["positive_sign_expected"] = (
+            df_dge[group1_mean_col] - df_dge[group2_mean_col] > 0
+        )
+
+        df_dge_filtered["matches_expected_sign"] = (
+            (df_dge[query_column] > 0) & df_dge_filtered["positive_sign_expected"]
+        ) | ((df_dge[query_column] < 0) & ~df_dge_filtered["positive_sign_expected"])
+
+        all_suspect_signs = all_suspect_signs | df_dge_filtered.loc[
+            df_dge_filtered["matches_expected_sign"] == False
+        ][[group1_mean_col, group2_mean_col, query_column]].to_dict("index")
+
+    if all_suspect_signs:
+        code = FlagCode.RED
+        message = f"At least one log2fc sign is suspect, the following log2fc compared to actual group means: {all_suspect_signs}"
+    elif err_msg_yellow:
         code = FlagCode.YELLOW
-        message = f"Pairwise statistical column(s) failing constraints: {err_msg}"
+        message = (
+            f"All log2fc not within reason, specifically no more than {LOG2FC_CROSS_METHOD_TOLERANCE_PERCENT}% "
+            f"of genes (actual %: {100 - percent_within_tolerance:.2f}) have a percent difference greater than "
+            f"{LOG2FC_CROSS_METHOD_PERCENT_DIFFERENCE_THRESHOLD}%. "
+        )
     else:
         code = FlagCode.GREEN
         message = (
             f"All log2fc within reason, specifically no more than {LOG2FC_CROSS_METHOD_TOLERANCE_PERCENT}% "
             f"of genes (actual %: {100 - percent_within_tolerance:.2f}) have a percent difference greater than "
-            f"{LOG2FC_CROSS_METHOD_PERCENT_DIFFERENCE_THRESHOLD}%. "
+            f"{LOG2FC_CROSS_METHOD_PERCENT_DIFFERENCE_THRESHOLD}%. Additionally, for comparisons with mean differences "
+            f"greater than {THRESHOLD_PERCENT_MEANS_DIFFERENCE}% all have reasonable log2fc signs"
         )
 
     return {"code": code, "message": message}

@@ -3,6 +3,7 @@ from pathlib import Path
 from dp_tools.bulkRNASeq.checks import (
     check_ERCC_subgroup_representation,
     check_bam_file_integrity,
+    check_dge_table_log2fc_within_reason,
     check_forward_and_reverse_reads_counts_match,
     check_rsem_counts_and_unnormalized_tables_parity,
 )
@@ -60,4 +61,16 @@ def test_check_ERCC_group_represention(glds194_dataSystem_STAGE04):
     )
 
     assert res["code"] == FlagCode.RED
+    assert res["message"]
+
+
+def test_check_dge_table_log2fc_within_reason(glds194_dataSystem_STAGE04):
+    dataset: BulkRNASeqDataset = glds194_dataSystem_STAGE04.dataset
+
+    res = check_dge_table_log2fc_within_reason(
+        dge_table=dataset.differentialGeneExpression.annotatedTableCSV.path,
+        runsheet=dataset.metadata.runsheet.path
+    )
+
+    assert res["code"] == FlagCode.GREEN
     assert res["message"]
