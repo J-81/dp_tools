@@ -216,8 +216,8 @@ data assets:
       - raw
 
     resource categories: &MergedSequenceData_MultiQCReports
-      subcategory: Merged sequence data
-      subdirectory: MultiQC reports
+      subcategory: Merged Sequence Data
+      subdirectory: Multiqc Reports
       publish to repo: true
       include subdirectory in table: true
       table order: 1
@@ -232,7 +232,7 @@ data assets:
       - raw
 
     resource categories: &MergedSequenceData_Fastq
-      subcategory: Merged sequence data
+      subcategory: Merged Sequence Data
       subdirectory: Fastq
       publish to repo: true
       include subdirectory in table: false
@@ -349,8 +349,8 @@ data assets:
       - processed
       
     resource categories: &TrimmedSequenceData_MultiQCReports
-      subcategory: Trimmed sequence data
-      subdirectory: MultiQC reports
+      subcategory: Trimmed Sequence Data
+      subdirectory: Multiqc Reports
       publish to repo: true
       include subdirectory in table: true
       table order: 4
@@ -365,7 +365,7 @@ data assets:
       - processed
       
     resource categories:
-      subcategory: Trimmed sequence data
+      subcategory: Trimmed Sequence Data
       subdirectory: Fastq
       publish to repo: true
       include subdirectory in table: false
@@ -474,8 +474,8 @@ data assets:
       - processed
       
     resource categories: 
-      subcategory: Trimmed sequence data
-      subdirectory: Trimming reports
+      subcategory: Trimmed Sequence Data
+      subdirectory: Trimming Reports
       publish to repo: true
       include subdirectory in table: true
       table order: 5
@@ -535,7 +535,7 @@ data assets:
       - processed
       
     resource categories: &AlignedSequenceData_AlignedData
-      subcategory: Aligned sequence data
+      subcategory: Aligned Sequence Data
       subdirectory: Aligned Data
       publish to repo: true
       include subdirectory in table: false
@@ -584,8 +584,8 @@ data assets:
       - processed
       
     resource categories: &AlignedSequenceData_AlignmentLogs
-      subcategory: Aligned sequence data
-      subdirectory: Alignment logs
+      subcategory: Aligned Sequence Data
+      subdirectory: Alignment Logs
       publish to repo: true
       include subdirectory in table: true
       table order: 7
@@ -645,7 +645,7 @@ data assets:
       
     resource categories: &RSeQC_MultiQCReports
       subcategory: RSeQC
-      subdirectory: MultiQC reports
+      subdirectory: MultiQC Reports
       publish to repo: true
       include subdirectory in table: true
       table order: 9
@@ -786,8 +786,8 @@ data assets:
       - processed
       
     resource categories: &RawCountsData_MultiQCReports
-      subcategory: Raw counts data
-      subdirectory: MultiQC reports
+      subcategory: Raw Counts Data
+      subdirectory: Multiqc Reports
       publish to repo: true
       include subdirectory in table: true
       table order: 11
@@ -858,7 +858,7 @@ data assets:
       - processed
       
     resource categories: &RawCountsData_CountData
-      subcategory: Raw counts data
+      subcategory: Raw Counts Data
       subdirectory: Count Data
       publish to repo: true
       include subdirectory in table: false
@@ -895,7 +895,7 @@ data assets:
       - processed
             
     resource categories: &normalizedCountsData
-      subcategory: Normalized counts data
+      subcategory: Normalized Counts Data
       subdirectory: ""
       publish to repo: true
       include subdirectory in table: false
@@ -920,7 +920,7 @@ data assets:
       - processed
             
     resource categories: &DGEAnalysisData
-      subcategory: Differential expression analysis data
+      subcategory: Differential Expression Analysis Data
       subdirectory: ""
       publish to repo: true
       include subdirectory in table: false
