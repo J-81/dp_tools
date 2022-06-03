@@ -78,18 +78,17 @@ def test_updated_protocol_model_paired_end_custom(
 ):
     custom_run_components = {
         "run_components": [
-            "DGE Output",
+            "Unnormalized Gene Counts",
         ]
     }
 
-    """
     report = validate_bulkRNASeq(
         glds194_dataSystem_STAGE04.dataset,
         config_path=check_config,
         report_args={"include_skipped": False},
         protocol_args=custom_run_components,
+        run_args={"flag_unhandled_exceptions": False},
     )
-    """
 
     print(1)
 
@@ -129,11 +128,11 @@ def test_updated_protocol_model_single_end(glds48_dataSystem_STAGE04, check_conf
         report_args={"include_skipped": True},
     )
 
-    assert report["flag_table"].shape == (500, 6)
+    assert report["flag_table"].shape == (500, 7)
     # now check without skipped entries (should only be the fastq read parity check)
     assert report["flag_table"].loc[
         report["flag_table"].code.apply(lambda v: v.name != "SKIPPED")
-    ].shape == (418, 6)
+    ].shape == (418, 7)
     assert report["outliers"].shape == (13, 5)
     assert pseudo_fingerprint(report["flag_table"]) == 11769.504
 
