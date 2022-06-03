@@ -380,8 +380,16 @@ class ValidationProtocol:
                     skip,
                 ]
             ):
-                new_component.skip = True
-                self.skip_components.append(new_component)
+                # but also check if this component is explicitely in run components
+                # if so, run it
+                if (
+                    new_component.name in self.run_components
+                    and self.run_components != [ValidationProtocol._ALL_COMPONENTS]
+                ):
+                    pass
+                else:
+                    new_component.skip = True
+                    self.skip_components.append(new_component)
             yield
         finally:
             self.cur_component = self.cur_component.parent
@@ -525,9 +533,15 @@ class ValidationProtocol:
     ##################################################################
     ### METHODS FOR RUNNING VALIDATION CHECKS
     ##################################################################
+    def run(self, flag_unhandled_exceptions: bool = False):
+        """Runs all queued checks not marked as skipped.
 
-    def run(self):
-        """Runs all queued checks not marked as skipped."""
+        Args:
+            flag_unhandled_exceptions (bool, optional): If true, any unhandled exceptions within
+                check functions will be flagged with a DEV_UNHANDLED flag but
+                will not halt the generation of the overall protocol report.
+                Defaults to False which means the protocol will raise the exception and stop midway.
+        """
         for queued in self._check_queue:
             fcn = queued["check_fcn"]
             fcn_name = fcn.__name__
@@ -573,15 +587,18 @@ class ValidationProtocol:
                     )
                 # except: computing failed
                 # on exception, capture exception
-                except SystemExit as e:
-                    packed_result = {
-                        "code": FlagCode.DEV_UNHANDLED,
-                        "message": e,
-                        "function": fcn_name,
-                        "description": queued["description"],
-                        "kwargs": payload_and_config,
-                        "config": queued["config"],
-                    }
+                except Exception as e:
+                    if flag_unhandled_exceptions:
+                        packed_result = {
+                            "code": FlagCode.DEV_UNHANDLED,
+                            "message": str(e),
+                            "function": fcn_name,
+                            "description": queued["description"],
+                            "kwargs": payload_and_config,
+                            "config": queued["config"],
+                        }
+                    else:
+                        raise RuntimeError(f"Function failed: {fcn_name}") from e 
             # add result (including skip flag) to component
             queued["component"].flags.append(packed_result)
 
