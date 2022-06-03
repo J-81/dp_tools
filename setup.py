@@ -20,6 +20,7 @@ setup(
     scripts=[],
     package_data={
         "dp_tools": ["config/*.yaml"],
+        "dp_tools": ["assets/*"],
     },
     include_package_data=True,
     python_requires=">=3.10",
