@@ -198,7 +198,21 @@ def test_updated_protocol_model_skipping(glds48_dataSystem_STAGE00, check_config
     assert pseudo_fingerprint(report["flag_table"]) == 3659.243076923077
 
 
-def test_updated_protcol_model(glds194_dataSystem_STAGE04, check_config):
+def test_updated_protcol_model_printouts_single(
+    glds48_dataSystem_STAGE04, check_config
+):
+    vp = validate_bulkRNASeq(
+        glds48_dataSystem_STAGE04.dataset, config_path=check_config, defer_run=True
+    )
+
+    print(vp.queued_checks(include_individual_checks=False))
+    print(vp.queued_checks())
+    1 / 0  # Manually Validated by inspecting print statement
+
+
+def test_updated_protcol_model_printouts_paired(
+    glds194_dataSystem_STAGE04, check_config
+):
     vp = validate_bulkRNASeq(
         glds194_dataSystem_STAGE04.dataset, config_path=check_config, defer_run=True
     )
