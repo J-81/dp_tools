@@ -11,6 +11,7 @@ import string
 import subprocess
 from typing import Dict, Union
 from dp_tools.bulkRNASeq.entity import BulkRNASeqDataset
+from importlib_metadata import PackagePath, files
 
 import pandas as pd
 from dp_tools.components.components import RawReadsComponent
@@ -1300,4 +1301,124 @@ def check_viz_pca_table_index_and_columns_exist(
         code = FlagCode.HALT
         message = err_msg
 
+    return {"code": code, "message": message}
+
+
+def utils_formatting_list(l: list[str], spaces: int = 2) -> str:
+    """Reformats list to print friendly multi line string.
+
+    Example:
+        Reformatting a list of samples::
+
+            l = ['groundControl_1','groundControl_2','spaceFlight_1','spaceFlight-2']
+            print(f"Samples: \n{utils_formatting_list(l)}")
+
+    Args:
+        l (list): A list of strings to format
+        spaces (int): Number of leading spaces per line
+
+    Returns:
+        str: Print friendly multiline string
+    """
+    leading_spaces = " " * spaces
+    return "\n".join([f"{leading_spaces}- {item}" for item in l])
+
+
+def utils_rsem_counts_table_to_dataframe(
+    counts_table: Path, describe: bool = True
+) -> pd.DataFrame:
+    df = pd.read_csv(counts_table, index_col=0).rename_axis("geneID")
+    if describe:
+        print(f"Loaded rsem counts table:")
+        print(f"  Samples: \n{utils_formatting_list(list(df.columns), spaces = 4)}")
+        print(f"  Number of Genes: {len(df)}")
+    return df
+
+
+def utils_get_asset(asset_name: str) -> Path:
+    [p] = (p for p in files("dp_tools") if p.name == asset_name)
+    return p.locate()
+
+
+def check_ERCC_subgroup_representation(unnormalizedCountTable: Path, **_) -> FlagEntry:
+    """Check ERCC subgroup representation is robust.
+    Specifically, counts the dataset wide ERCC IDs then categorizes each subgroup
+    by the number of represented ERCC IDs in that subgroup.
+    Finally, generates a Flag result by comparison to thresholds.
+
+    Args:
+        counts_table (Path): RSEM unnormalized counts table
+
+    Returns:
+        FlagEntry: Result of the check.
+    """
+    MINIMUM_GREEN = 21
+    MINIMUM_YELLOW = 19
+    MINIMUM_RED = 0
+    MINIMUM_HALT = 0
+
+    # data specific preprocess
+    df_counts = utils_rsem_counts_table_to_dataframe(unnormalizedCountTable)
+
+    ercc_file = utils_get_asset("cms_095046.txt")
+    df_ercc = pd.read_csv(ercc_file, sep="\t")
+
+    # filter to only ercc genes
+    df_counts = df_counts.loc[df_counts.index.isin(df_ercc["ERCC ID"])]
+
+    # filter to only genes with at least one count (i.e. ERCC genes represented in the dataset)
+    df_counts = df_counts.loc[df_counts.sum(axis="columns") > 0]
+
+    # merge to ercc table data including subgroup
+    df_counts = df_counts.merge(df_ercc, left_index=True, right_on="ERCC ID")
+
+    # generate subgroup counts
+    df_subgroup_counts = df_counts["subgroup"].value_counts().sort_index()
+
+    green_key = f"green level subgroups: > {MINIMUM_GREEN} ERCC represented"
+    yellow_key = (
+        f"yellow level subgroups: {MINIMUM_YELLOW}-{MINIMUM_GREEN} ERCC represented"
+    )
+    red_key = f"red level subgroups: {MINIMUM_RED}-{MINIMUM_YELLOW} ERCC represented"
+    halt_key = f"halt level subgroups: < {MINIMUM_HALT} ERCC represented"
+
+    # classify each representation count
+    representation_category: dict[str, list[str]] = {
+        green_key: list(df_subgroup_counts.loc[df_subgroup_counts > MINIMUM_GREEN]),
+        yellow_key: list(
+            df_subgroup_counts.loc[
+                df_subgroup_counts.between(MINIMUM_YELLOW, MINIMUM_GREEN)
+            ].index
+        ),
+        red_key: list(
+            df_subgroup_counts.loc[
+                df_subgroup_counts.between(
+                    MINIMUM_RED, MINIMUM_YELLOW, inclusive="left"
+                )
+            ].index
+        ),
+        halt_key: list(df_subgroup_counts.loc[df_subgroup_counts < MINIMUM_HALT].index),
+    }
+
+    # check logic
+    if representation_category[halt_key]:
+        code = FlagCode.HALT
+        message = (
+            f"Dataset wide ERCC representation is not robust: {representation_category}"
+        )
+    elif representation_category[red_key]:
+        code = FlagCode.RED
+        message = (
+            f"Dataset wide ERCC representation is not robust: {representation_category}"
+        )
+    elif representation_category[yellow_key]:
+        code = FlagCode.YELLOW
+        message = (
+            f"Dataset wide ERCC representation is not robust: {representation_category}"
+        )
+    else:
+        code = FlagCode.GREEN
+        message = (
+            f"Dataset wide ERCC representation is robust: {representation_category}"
+        )
     return {"code": code, "message": message}

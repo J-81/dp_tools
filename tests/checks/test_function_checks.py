@@ -1,10 +1,12 @@
 import os
 from pathlib import Path
 from dp_tools.bulkRNASeq.checks import (
+    check_ERCC_subgroup_representation,
     check_bam_file_integrity,
     check_forward_and_reverse_reads_counts_match,
     check_rsem_counts_and_unnormalized_tables_parity,
 )
+from dp_tools.bulkRNASeq.entity import BulkRNASeqDataset
 from dp_tools.core.check_model import FlagCode
 
 
@@ -48,3 +50,14 @@ def test_check_bam_file_integrity(glds48_dataSystem_STAGE04):
 
         assert res["code"] == FlagCode.HALT
         assert res["message"]
+
+
+def test_check_ERCC_group_represention(glds194_dataSystem_STAGE04):
+    dataset: BulkRNASeqDataset = glds194_dataSystem_STAGE04.dataset
+
+    res = check_ERCC_subgroup_representation(
+        unnormalizedCountTable=dataset.rsemGeneCounts.unnormalizedCounts.path
+    )
+
+    assert res["code"] == FlagCode.RED
+    assert res["message"]

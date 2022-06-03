@@ -184,6 +184,7 @@ CONFIG = {
 def validate_bulkRNASeq(
     dataset: BulkRNASeqDataset,
     config_path: Path = None,
+    run_args: dict = None,
     report_args: dict = None,
     protocol_args: dict = None,
     defer_run: bool = False,
@@ -194,6 +195,9 @@ def validate_bulkRNASeq(
             config = yaml.safe_load(f)
     else:
         config = CONFIG
+
+    if run_args is None:
+        run_args = dict()
 
     if report_args is None:
         report_args = dict()
@@ -341,6 +345,7 @@ def validate_bulkRNASeq(
                 vp.add(
                     check_aggregate_rsem_unnormalized_counts_table_values_against_samplewise_tables
                 )
+                vp.add(check_ERCC_subgroup_representation, skip=(not dataset.metadata.has_ercc))
 
         with vp.component_start(
             name="DGE Metadata",
@@ -840,7 +845,7 @@ def validate_bulkRNASeq(
     if defer_run:
         return vp
 
-    vp.run()
+    vp.run(**run_args)
 
     # return report
     return vp.report(**report_args)
