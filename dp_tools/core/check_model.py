@@ -272,7 +272,7 @@ class ValidationProtocol:
         def __repr__(self):
             if self.name == "ROOT":
                 return f"Component(name={self.name}, parent=!!NONE THIS IS THE ROOT COMPONENT!!)"
-            return f"Component(name={self.name}, parent={self.parent.name})"
+            return f"Component(name={self.name}, parent={self.parent.name}, skip={self.skip}, skip_children={self.skip_children})"
 
         @property
         def ancestor_line(self):
@@ -574,7 +574,13 @@ class ValidationProtocol:
             else:
                 # case: to_compute is true
                 # try computing, works
-                payload = self._eval_payload_callables(queued["payload"])
+                try:
+                    payload = self._eval_payload_callables(queued["payload"])
+                except Exception as e:
+                    raise RuntimeError(
+                        f"Failed to evaluate payload: component:{queued['component']}, "
+                        f"check function:{fcn_name}"
+                     ) from e
                 payload_and_config = payload | queued["config"]
                 try:
                     result = fcn(**payload_and_config)
