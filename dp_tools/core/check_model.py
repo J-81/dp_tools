@@ -400,7 +400,11 @@ class ValidationProtocol:
             ):
                 new_component.skip = True
                 # propagate skip children
-                if parent_skipping_children or directly_skipped_by_protocol_init:
+                if any([
+                    parent_skipping_children,
+                    directly_skipped_by_protocol_init,
+                    directly_skipped_by_add_call
+                ]):
                     new_component.skip_children = True
             yield
         finally:
