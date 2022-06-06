@@ -251,6 +251,7 @@ class ValidationProtocol:
             name: str,
             parent: "ValidationProtocol._Component",
             skip: bool = False,
+            skip_children: bool = False,
             description: str = "",
         ):
             log.info(f"Creating new entity in validation protocol: {name}")
@@ -262,7 +263,11 @@ class ValidationProtocol:
             if self.parent:
                 self.parent.children.append(self)
             self.children: list["ValidationProtocol._Component"] = list()
+
             self.skip = skip
+            """ Denotes if this components checks will be skipped """
+            self.skip_children = skip_children
+            """ Denotes if the components children should be skipped, propogates to their children as well """
 
         def __repr__(self):
             if self.name == "ROOT":
@@ -368,28 +373,32 @@ class ValidationProtocol:
             )
             self.cur_component = new_component
 
+            directly_skipped_by_protocol_init = (
+                new_component.name in self.skip_components
+            )
+            directly_skipped_by_add_call = skip
+            parent_skipping_children = new_component.parent.skip_children
+            not_in_run = not new_component.ancestry_is_in(self.run_components)
+            explicitly_run_by_protocol_init = (
+                new_component.name in self.run_components
+                and self.run_components != ValidationProtocol._ALL_COMPONENTS()
+            )
+
             # determine if skipping needs to be set for the new component
-            if any(
+            if explicitly_run_by_protocol_init:
+                pass
+            elif any(
                 [
-                    new_component.name
-                    in self.skip_components,  # if in skip list explicitly
-                    new_component.parent.skip,  # parent was skipped
-                    not new_component.ancestry_is_in(
-                        self.run_components
-                    ),  # not explictly in run components
-                    skip,
+                    directly_skipped_by_protocol_init,
+                    directly_skipped_by_add_call,
+                    parent_skipping_children,
+                    not_in_run,
                 ]
             ):
-                # but also check if this component is explicitely in run components
-                # if so, run it
-                if (
-                    new_component.name in self.run_components
-                    and self.run_components != [ValidationProtocol._ALL_COMPONENTS]
-                ):
-                    pass
-                else:
-                    new_component.skip = True
-                    self.skip_components.append(new_component)
+                new_component.skip = True
+                # propagate skip children
+                if parent_skipping_children or directly_skipped_by_protocol_init:
+                    new_component.skip_children = True
             yield
         finally:
             self.cur_component = self.cur_component.parent
