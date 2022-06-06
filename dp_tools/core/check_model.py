@@ -320,6 +320,9 @@ class ValidationProtocol:
         def __contains__(self, _):
             return True
 
+        def __repr__(self):
+            return "ALL_COMPONENTS"
+
     def __init__(self, skip_components: list = None, run_components: list = None):
         if run_components is not None:
             self.run_components = run_components
