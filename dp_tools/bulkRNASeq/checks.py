@@ -583,9 +583,10 @@ def check_aggregate_rsem_unnormalized_counts_table_values_against_samplewise_tab
     df_agg = pd.read_csv(unnormalizedCountTable, index_col=0)
 
     # based on which column matches the first entry
-    samples_with_issues: dict[str, list[str]] = {
-        "Not in aggregate table": list(),
-        "Sample counts mismatch": list(),
+    # TODO: LOW PRIORITY, fix this typehint
+    samples_with_issues: dict[str, Union[list[str], list[tuple[str, list[str]]]]] = {
+        "Not in aggregate table": list(),  # type: ignore
+        "Sample counts mismatch": list(),  # type: ignore
     }
     for sample, path in samplewise_tables.items():
         # check if samples exist as a column
@@ -594,15 +595,15 @@ def check_aggregate_rsem_unnormalized_counts_table_values_against_samplewise_tab
             break
 
         # load
-        df_samp = pd.read_csv(path, sep="\t", index_col=0)  # filter out N_* entries
+        df_samp = pd.read_csv(path, sep="\t", index_col=0)
 
         # check if values match
-        if (
-            not df_agg[sample]
-            .sort_index()
-            .equals(df_samp["expected_count"].sort_index())
+        if geneID_with_mismatched_counts := (
+            list(df_agg.loc[df_agg[sample] != df_samp["expected_count"]].index)
         ):
-            samples_with_issues["Sample counts mismatch"].append(sample)
+            samples_with_issues["Sample counts mismatch"].append(
+                (sample, geneID_with_mismatched_counts)
+            )
 
     # check logic
     if not any([issue_type for issue_type in samples_with_issues.values()]):
