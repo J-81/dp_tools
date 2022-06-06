@@ -192,8 +192,8 @@ class ValidationProtocol:
                     name="Engine",
                     description="Make sure the engine is running fine",
                 ):
-                    with vp.payload(payloads=[{"car": car}]) as ADD:
-                        ADD(check_engine_okay)
+                    with vp.payload(payloads=[{"car": car}]):
+                        vp.add(check_engine_okay)
 
                 with vp.component_start(
                     name="Tires",
@@ -206,8 +206,8 @@ class ValidationProtocol:
                             {"wheel": car["wheels"][2]},
                             {"wheel": car["wheels"][3]},
                         ]
-                    ) as ADD:
-                        ADD(check_if_wheel_flat)
+                    ):
+                        vp.add(check_if_wheel_flat)
 
                 with vp.component_start(
                     name="Fuel",
@@ -215,11 +215,11 @@ class ValidationProtocol:
                 ):
                     # NOTE: lambda is used in payload to defer evaluation conditioned
                     #   on whether the check is run or skipped.
-                    with vp.payload(payloads=[{"cur_gas": lambda: car["gasTank"]}]) as ADD:
-                        ADD(check_gas, config={"minimum_gas": 95}, skip=(car["isElectric"]))
+                    with vp.payload(payloads=[{"cur_gas": lambda: car["gasTank"]}]):
+                        vp.add(check_gas, config={"minimum_gas": 95}, skip=(car["isElectric"]))
 
-                    with vp.payload(payloads=[{"cur_charge": lambda: car["charge"]}]) as ADD:
-                        ADD(
+                    with vp.payload(payloads=[{"cur_charge": lambda: car["charge"]}]):
+                        vp.add(
                             check_charge,
                             config={"minimum_charge": 95},
                             skip=(not car["isElectric"]),
