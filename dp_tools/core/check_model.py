@@ -607,7 +607,7 @@ class ValidationProtocol:
                             "config": queued["config"],
                         }
                     else:
-                        raise RuntimeError(f"Function failed: {fcn_name}") from e 
+                        raise RuntimeError(f"Function failed: {fcn_name}") from e
             # add result (including skip flag) to component
             queued["component"].flags.append(packed_result)
 
