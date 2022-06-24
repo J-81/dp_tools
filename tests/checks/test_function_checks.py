@@ -1,12 +1,6 @@
 import os
 from pathlib import Path
-from dp_tools.bulkRNASeq.checks import (
-    check_ERCC_subgroup_representation,
-    check_bam_file_integrity,
-    check_dge_table_log2fc_within_reason,
-    check_forward_and_reverse_reads_counts_match,
-    check_rsem_counts_and_unnormalized_tables_parity,
-)
+from dp_tools.bulkRNASeq.checks import *
 from dp_tools.bulkRNASeq.entity import BulkRNASeqDataset
 from dp_tools.core.check_model import FlagCode
 
@@ -69,8 +63,82 @@ def test_check_dge_table_log2fc_within_reason(glds194_dataSystem_STAGE04):
 
     res = check_dge_table_log2fc_within_reason(
         dge_table=dataset.differentialGeneExpression.annotatedTableCSV.path,
-        runsheet=dataset.metadata.runsheet.path
+        runsheet=dataset.metadata.runsheet.path,
     )
+
+    assert res["code"] == FlagCode.GREEN
+    assert res["message"]
+
+
+def test_check_sample_table_against_runsheet(glds194_dataSystem_STAGE04):
+    dataset: BulkRNASeqDataset = glds194_dataSystem_STAGE04.dataset
+
+    res = check_sample_table_against_runsheet(
+        runsheet=dataset.metadata.runsheet.path,
+        sampleTable=dataset.normalizedGeneCounts.sampleTableCSV.path,
+        all_samples_required=True,
+    )
+
+    assert res["code"] == FlagCode.GREEN
+    assert res["message"]
+
+    res = check_sample_table_against_runsheet(
+        runsheet=dataset.metadata.runsheet.path,
+        sampleTable=dataset.normalizedGeneCounts.erccSampleTableCSV.path,
+        all_samples_required=False,
+    )
+
+    assert res["code"] == FlagCode.GREEN
+    assert res["message"]
+
+
+def test_check_sample_table_for_correct_group_assignments(glds194_dataSystem_STAGE04):
+    dataset: BulkRNASeqDataset = glds194_dataSystem_STAGE04.dataset
+
+    res = check_sample_table_for_correct_group_assignments(
+        runsheet=dataset.metadata.runsheet.path,
+        sampleTable=dataset.normalizedGeneCounts.sampleTableCSV.path,
+    )
+
+    assert res["code"] == FlagCode.GREEN
+    assert res["message"]
+
+    res = check_sample_table_for_correct_group_assignments(
+        runsheet=dataset.metadata.runsheet.path,
+        sampleTable=dataset.normalizedGeneCounts.erccSampleTableCSV.path,
+    )
+
+    assert res["code"] == FlagCode.GREEN
+    assert res["message"]
+
+
+def test_check_dge_table_group_columns_constraints(glds194_dataSystem_STAGE04):
+    dataset: BulkRNASeqDataset = glds194_dataSystem_STAGE04.dataset
+
+    payload = {
+        "organism": dataset.metadata.organism,
+        "samples": set(dataset.samples),
+        "dge_table": dataset.differentialGeneExpression.annotatedTableCSV.path,
+        "runsheet": dataset.metadata.runsheet.path,
+    }
+
+    res = check_dge_table_group_columns_constraints(**payload)
+
+    assert res["code"] == FlagCode.GREEN
+    assert res["message"]
+
+    payload = {
+        "organism": dataset.metadata.organism,
+        "samples": set(
+            pd.read_csv(
+                dataset.normalizedGeneCounts.erccSampleTableCSV.path, index_col=0
+            ).index
+        ),
+        "dge_table": dataset.differentialGeneExpressionERCC.annotatedTableCSV.path,
+        "runsheet": dataset.metadata.runsheet.path,
+    }
+
+    res = check_dge_table_group_columns_constraints(**payload)
 
     assert res["code"] == FlagCode.GREEN
     assert res["message"]
