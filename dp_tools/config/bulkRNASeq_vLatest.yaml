@@ -926,6 +926,16 @@ data assets:
       include subdirectory in table: false
       table order: 14
 
+  ERCC sample table:
+    processed location: 
+      - *normCountsDataDir
+      - "ERCC_SampleTable.csv"
+
+    tags:
+      - processed
+            
+    resource categories: *DGEAnalysisData
+
   DESeq2 unnormalized counts table:
     processed location: 
       - *normCountsDataDir

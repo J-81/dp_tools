@@ -921,6 +921,12 @@ def load_BulkRNASeq_STAGE_04(
                 config_key="ERCC normalized DESeq2 normalized counts table",
             ),
         )
+        dataset.normalizedGeneCounts.erccSampleTableCSV = DataFile(
+            check_exists=validation_enabled,
+            **loc.find_data_asset_path(
+                config_key="ERCC sample table",
+            ),
+        )
         dataset.attach_component(
             ERCCAnalysis(
                 base=BaseComponent(description="ERCC Notebook analysis related files"),
