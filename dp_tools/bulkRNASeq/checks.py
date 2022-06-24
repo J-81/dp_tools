@@ -615,12 +615,15 @@ def check_aggregate_rsem_unnormalized_counts_table_values_against_samplewise_tab
     return {"code": code, "message": message}
 
 
-def check_sample_table_for_all_samples(runsheet: Path, sampleTable: Path) -> FlagEntry:
+def check_sample_table_against_runsheet(
+    runsheet: Path, sampleTable: Path, all_samples_required: bool
+) -> FlagEntry:
     """Check the sample table includes all samples as denoted in the runsheet.
 
     Args:
         runsheet (Path): csv file used for processing, the index denotes all samples
         sampleTable (Path): csv file that pairs each sample with resolved experimental group (called condition within the table)
+        all_samples_required (bool): denotes if all samples must be shared or if a subset of samples from the runsheet is okay.
 
     Returns:
         FlagEntry: A check result
@@ -635,12 +638,17 @@ def check_sample_table_for_all_samples(runsheet: Path, sampleTable: Path) -> Fla
     }
 
     # check logic
-    if not any([entry for entry in extra_samples.values()]):
-        code = FlagCode.GREEN
-        message = f"All samples matching"
-    else:
+    if any(
+        [
+            (extra_samples["unique_to_runsheet"] and all_samples_required),
+            (extra_samples["unique_to_sampleTable"]),
+        ]
+    ):
         code = FlagCode.HALT
         message = f"Samples mismatched: {[f'{entry}:{v}' for entry, v  in extra_samples.items() if v]}"
+    else:
+        code = FlagCode.GREEN
+        message = f"All samples accounted for based on runsheet (All samples required?: {all_samples_required}"
     return {"code": code, "message": message}
 
 
@@ -652,6 +660,7 @@ class GroupFormatting(enum.Enum):
 def utils_runsheet_to_expected_groups(
     runsheet: Path,
     formatting: GroupFormatting = GroupFormatting.ampersand_join,
+    limit_to_samples: list = None,
     map_to_lists: bool = False,
 ) -> Union[dict[str, str], dict[str, list[str]]]:
     df_rs = (
@@ -659,6 +668,9 @@ def utils_runsheet_to_expected_groups(
         .filter(regex="^Factor Value\[.*\]")
         .sort_index()
     )  # using only Factor Value columns
+
+    if limit_to_samples:
+        df_rs = df_rs.filter(items=limit_to_samples, axis="rows")
 
     match formatting:
         case GroupFormatting.r_make_names:
@@ -705,13 +717,14 @@ def check_sample_table_for_correct_group_assignments(
     Returns:
         FlagEntry: A check result
     """
+    df_sample = pd.read_csv(sampleTable, index_col=0).sort_index()
     # data specific preprocess
     df_rs = (
         pd.read_csv(runsheet, index_col="Sample Name")
         .filter(regex="^Factor Value\[.*\]")
+        .loc[df_sample.index]  # ensure only sampleTable groups are checked
         .sort_index()
     )  # using only Factor Value columns
-    df_sample = pd.read_csv(sampleTable, index_col=0).sort_index()
 
     # TODO: refactor with utils_runsheet_to_expected_groups
     expected_conditions_based_on_runsheet = df_rs.apply(
@@ -725,7 +738,7 @@ def check_sample_table_for_correct_group_assignments(
     # check logic
     if not any(mismatched_rows):
         code = FlagCode.GREEN
-        message = f"Conditions are formatted and assigned correctly based on runsheet"
+        message = f"Conditions are formatted and assigned correctly based on runsheet for all {len(df_sample)} samples in sample table: {list(df_sample.index)}"
     else:
         code = FlagCode.HALT
         mismatch_description = (
@@ -900,7 +913,7 @@ def check_dge_table_group_columns_exist(
 
 
 def check_dge_table_group_columns_constraints(
-    dge_table: Path, runsheet: Path, **_
+    dge_table: Path, runsheet: Path, samples: set[str], **_
 ) -> FlagEntry:
     FLOAT_TOLERANCE = (
         0.001  # Percent allowed difference due to float precision differences
@@ -914,7 +927,7 @@ def check_dge_table_group_columns_constraints(
     }
 
     expected_group_lists = utils_runsheet_to_expected_groups(
-        runsheet, map_to_lists=True
+        runsheet, map_to_lists=True, limit_to_samples=samples
     )
     df_dge = pd.read_csv(dge_table)
 
@@ -925,23 +938,27 @@ def check_dge_table_group_columns_constraints(
     }
 
     group: str
-    samples: list[str]
-    for group, samples in expected_group_lists.items():
+    sample_set: list[str]
+    for group, sample_set in expected_group_lists.items():
         abs_percent_differences = abs(
-            (df_dge[f"Group.Mean_{group}"] - df_dge[samples].mean(axis="columns"))
-            / df_dge[samples].mean(axis="columns")
+            (df_dge[f"Group.Mean_{group}"] - df_dge[sample_set].mean(axis="columns"))
+            / df_dge[sample_set].mean(axis="columns")
             * 100
         )
         if any(abs_percent_differences > FLOAT_TOLERANCE):
-            issues["mean computation incorrect"].append(group)
+            issues[
+                f"mean computation deviates by more than {FLOAT_TOLERANCE} percent"
+            ].append(group)
 
         abs_percent_differences = abs(
-            (df_dge[f"Group.Stdev_{group}"] - df_dge[samples].std(axis="columns"))
-            / df_dge[samples].mean(axis="columns")
+            (df_dge[f"Group.Stdev_{group}"] - df_dge[sample_set].std(axis="columns"))
+            / df_dge[sample_set].mean(axis="columns")
             * 100
         )
         if any(abs_percent_differences > FLOAT_TOLERANCE):
-            issues["standard deviation incorrect"].append(group)
+            issues[
+                f"standard deviation deviates by more than {FLOAT_TOLERANCE} percent"
+            ].append(group)
 
     # check logic
     contraint_description = f"Group mean and standard deviations are correctly computed from samplewise normalized counts within a tolerance of {FLOAT_TOLERANCE} percent (to accomodate minor float related differences )"
