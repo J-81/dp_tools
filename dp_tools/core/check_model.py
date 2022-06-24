@@ -400,11 +400,13 @@ class ValidationProtocol:
             ):
                 new_component.skip = True
                 # propagate skip children
-                if any([
-                    parent_skipping_children,
-                    directly_skipped_by_protocol_init,
-                    directly_skipped_by_add_call
-                ]):
+                if any(
+                    [
+                        parent_skipping_children,
+                        directly_skipped_by_protocol_init,
+                        directly_skipped_by_add_call,
+                    ]
+                ):
                     new_component.skip_children = True
             yield
         finally:
@@ -584,7 +586,7 @@ class ValidationProtocol:
                     raise RuntimeError(
                         f"Failed to evaluate payload: component:{queued['component']}, "
                         f"check function:{fcn_name}"
-                     ) from e
+                    ) from e
                 payload_and_config = payload | queued["config"]
                 try:
                     result = fcn(**payload_and_config)
