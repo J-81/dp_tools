@@ -388,7 +388,7 @@ class ValidationProtocol:
             )
 
             # determine if skipping needs to be set for the new component
-            if explicitly_run_by_protocol_init:
+            if explicitly_run_by_protocol_init and not directly_skipped_by_add_call:
                 pass
             elif any(
                 [
