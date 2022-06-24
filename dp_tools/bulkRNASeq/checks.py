@@ -11,7 +11,7 @@ import string
 import subprocess
 from typing import Dict, Union
 from dp_tools.bulkRNASeq.entity import BulkRNASeqDataset
-from importlib_metadata import PackagePath, files
+from importlib.metadata import files
 
 import pandas as pd
 from dp_tools.components.components import RawReadsComponent
