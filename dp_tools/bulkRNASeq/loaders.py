@@ -811,7 +811,7 @@ def load_BulkRNASeq_STAGE_04(
         raise FileNotFoundError(f"Root path doesn't exist!: {root_path}")
 
     # log about datasystem being built upon
-    log.info(f"Loading STAGE 03 BulkRNASeq data into: \n\t{dataSystem}")
+    log.info(f"Loading STAGE 04 BulkRNASeq data into: \n\t{dataSystem}")
 
     # load data assets config
     conf_data_assets = load_config(config)
