@@ -362,7 +362,7 @@ def validate_bulkRNASeq(
                     'sampleTable': lambda: dataset.normalizedGeneCounts.sampleTableCSV.path
                     }
                 ]):
-                    vp.add(check_sample_table_for_all_samples)
+                    vp.add(check_sample_table_against_runsheet, config={"all_samples_required": True})
                     vp.add(check_sample_table_for_correct_group_assignments)
                     
             with vp.component_start(
@@ -383,7 +383,20 @@ def validate_bulkRNASeq(
             description="",
             skip=(not dataset.metadata.has_ercc)
             ):
-                    
+
+            with vp.component_start(
+                name="Sample Table",
+                description="",
+                ):
+                with vp.payload(payloads=[
+                    {
+                    'runsheet': lambda: dataset.metadata.runsheet.path,
+                    'sampleTable': lambda: dataset.normalizedGeneCounts.erccSampleTableCSV.path
+                    }
+                ]):
+                    vp.add(check_sample_table_against_runsheet, config={"all_samples_required": False})
+                    vp.add(check_sample_table_for_correct_group_assignments) 
+
             with vp.component_start(
                 name="Contrasts Tables",
                 description="",
@@ -471,7 +484,7 @@ def validate_bulkRNASeq(
             with vp.payload(payloads=[
                 {
                 'organism': lambda: dataset.metadata.organism,
-                'samples': lambda: set(dataset.samples),
+                'samples': lambda: set(pd.read_csv(dataset.normalizedGeneCounts.erccSampleTableCSV.path, index_col=0).index),
                 'dge_table': lambda: dataset.differentialGeneExpressionERCC.annotatedTableCSV.path,
                 'runsheet': lambda: dataset.metadata.runsheet.path
                 }
@@ -494,7 +507,7 @@ def validate_bulkRNASeq(
                 with vp.payload(payloads=[
                     {
                     'organism': lambda: dataset.metadata.organism,
-                    'samples': lambda: set(dataset.samples),
+                    'samples': lambda: set(pd.read_csv(dataset.normalizedGeneCounts.erccSampleTableCSV.path, index_col=0).index),
                     'dge_table': lambda: dataset.differentialGeneExpressionERCC.visualizationTableCSV.path,
                     'runsheet': lambda: dataset.metadata.runsheet.path
                     }
@@ -514,7 +527,7 @@ def validate_bulkRNASeq(
 
                 with vp.payload(payloads=[
                     {
-                    'samples': lambda: set(dataset.samples),
+                    'samples': lambda: set(pd.read_csv(dataset.normalizedGeneCounts.erccSampleTableCSV.path, index_col=0).index),
                     'pca_table': lambda: dataset.differentialGeneExpressionERCC.visualizationPCATableCSV.path,
                     }
                 ]):
