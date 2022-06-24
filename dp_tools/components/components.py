@@ -369,6 +369,7 @@ class NormalizedGeneCounts(TemplateComponent):
     base: BaseComponent = field(repr=False)
     erccNormalizedCountsCSV: Union[DataFile, None] = field(default=None)
     normalizedCountsCSV: Union[DataFile, None] = field(default=None)
+    erccSampleTableCSV: Union[DataFile, None] = field(default=None)
     sampleTableCSV: Union[DataFile, None] = field(default=None)
     unnormalizedCountsCSV: Union[DataFile, None] = field(default=None)
 
