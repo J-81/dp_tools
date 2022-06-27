@@ -1,22 +1,10 @@
 """ Tests for validation report results, relies on test for loaders passing """
-from collections import defaultdict
-from contextlib import contextmanager
 from decimal import DivisionByZero
 from pathlib import Path
 import os
-from typing import Callable, TypedDict
-from dp_tools.core.check_model import FlagCode, ValidationProtocol
 
-from pytest import MonkeyPatch
 import pytest
-from dp_tools.bulkRNASeq.entity import BulkRNASeqSample
-
-from dp_tools.bulkRNASeq.loaders import (
-    load_BulkRNASeq_STAGE_00,
-    load_BulkRNASeq_STAGE_01,
-)
 from dp_tools.bulkRNASeq.vv_protocols import (
-    STAGE,
     validate_bulkRNASeq,
 )
 
@@ -49,108 +37,150 @@ logging.basicConfig(level=logging.DEBUG)
 log = logging.getLogger(__name__)
 
 
-def test_updated_protocol_model_paired_end_part_1(
-    glds194_dataSystem_STAGE04, check_config
+@pytest.mark.parametrize(
+    "components,expected_flag_table_shape,expected_outlier_table_shape,expected_flag_table_fingerprint",
+    [
+        pytest.param(
+            ["Raw Reads By Sample", "Raw Reads"],
+            (145, 7),
+            (2, 1),
+            3945.0689655172414,
+            id="Raw Reads Checks Only",
+        ),
+        pytest.param(
+            ["Trimmed Reads By Sample", "Trim Reads"],
+            (171, 7),
+            (4, 1),
+            4657.116959064328,
+            id="Trimmed Reads Checks Only",
+        ),
+        pytest.param(
+            ["STAR Alignments", "STAR Alignments By Sample"],
+            (131, 7),
+            (6, 1),
+            3960.053435114504,
+            id="STAR Alignments Checks Only",
+        ),
+        pytest.param(
+            ["RSeQC", "RSeQC By Sample"],
+            (109, 7),
+            (13, 1),
+            3003.3669724770643,
+            id="RSeQC Checks Only",
+        ),
+        pytest.param(
+            ["RSEM Counts", "Unnormalized Gene Counts"],
+            (4, 7),
+            (2, 1),
+            178.0,
+            id="RSEM Counts Checks Only",
+        ),
+        pytest.param(
+            ["DGE Metadata", "DGE Metadata ERCC", "DGE Output", "DGE Output ERCC"],
+            (55, 7),
+            (0, 0),
+            1566.090909090909,
+            id="DGE Checks Only",
+        ),
+    ],
+)
+def test_updated_protocol_model_paired_end(
+    glds194_dataSystem_STAGE04,
+    check_config,
+    components,
+    expected_flag_table_shape,
+    expected_outlier_table_shape,
+    expected_flag_table_fingerprint,
 ):
     report = validate_bulkRNASeq(
         glds194_dataSystem_STAGE04.dataset,
         config_path=check_config,
         report_args={"include_skipped": False},
-        protocol_args={
-            "run_components": [
-                "Raw Reads By Sample",
-                "Trimmed Reads By Sample",
-                "STAR Alignments By Sample",
-                "Metadata",
-                "Raw Reads",
-                "Trim Reads",
-            ]
-        },
+        protocol_args={"run_components": components},
     )
 
-    assert report["flag_table"].shape == (447, 6)
-    assert report["outliers"].shape == (4, 2)
-    assert pseudo_fingerprint(report["flag_table"]) == 12463.834451901566
+    assert (
+        report["flag_table"].shape,
+        report["outliers"].shape,
+        pseudo_fingerprint(report["flag_table"]),
+    ) == (
+        expected_flag_table_shape,
+        expected_outlier_table_shape,
+        expected_flag_table_fingerprint,
+    )
 
 
-def test_updated_protocol_model_paired_end_custom(
-    glds194_dataSystem_STAGE04, glds48_dataSystem_STAGE04, check_config
+@pytest.mark.parametrize(
+    "components,expected_flag_table_shape,expected_outlier_table_shape,expected_flag_table_fingerprint",
+    [
+        pytest.param(
+            ["Raw Reads By Sample", "Raw Reads"],
+            (71, 7),
+            (1, 1),
+            1947.1408450704225,
+            id="Raw Reads Checks Only",
+        ),
+        pytest.param(
+            ["Trimmed Reads By Sample", "Trim Reads"],
+            (85, 7),
+            (2, 1),
+            2325.1176470588234,
+            id="Trimmed Reads Checks Only",
+        ),
+        pytest.param(
+            ["STAR Alignments", "STAR Alignments By Sample"],
+            (141, 7),
+            (9, 1),
+            3837.0709219858154,
+            id="STAR Alignments Checks Only",
+        ),
+        pytest.param(
+            ["RSeQC", "RSeQC By Sample"],
+            (88, 7),
+            (11, 1),
+            2426.340909090909,
+            id="RSeQC Checks Only",
+        ),
+        pytest.param(
+            ["RSEM Counts", "Unnormalized Gene Counts"],
+            (3, 7),
+            (1, 1),
+            114.33333333333333,
+            id="RSEM Counts Checks Only",
+        ),
+        pytest.param(
+            ["DGE Metadata", "DGE Metadata ERCC", "DGE Output", "DGE Output ERCC"],
+            (28, 7),
+            (0, 0),
+            838.1428571428571,
+            id="DGE Checks Only",
+        ),
+    ],
+)
+def test_updated_protocol_model_single_end(
+    glds48_dataSystem_STAGE04,
+    check_config,
+    components,
+    expected_flag_table_shape,
+    expected_outlier_table_shape,
+    expected_flag_table_fingerprint,
 ):
-    custom_run_components = {
-        "run_components": [
-            "Unnormalized Gene Counts",
-        ]
-    }
-
-    report = validate_bulkRNASeq(
-        glds194_dataSystem_STAGE04.dataset,
-        config_path=check_config,
-        report_args={"include_skipped": False},
-        protocol_args=custom_run_components,
-        run_args={"flag_unhandled_exceptions": False},
-    )
-
-    print(1)
-
     report = validate_bulkRNASeq(
         glds48_dataSystem_STAGE04.dataset,
         config_path=check_config,
         report_args={"include_skipped": False},
-        protocol_args=custom_run_components,
+        protocol_args={"run_components": components},
     )
 
-    print(1)
-
-
-def test_updated_protocol_model_paired_end_part_2(
-    glds194_dataSystem_STAGE04, check_config
-):
-    report = validate_bulkRNASeq(
-        glds194_dataSystem_STAGE04.dataset,
-        config_path=check_config,
-        report_args={"include_skipped": False},
-        protocol_args={
-            "run_components": [
-                "RSeQC By Sample",
-            ]
-        },
+    assert (
+        report["flag_table"].shape,
+        report["outliers"].shape,
+        pseudo_fingerprint(report["flag_table"]),
+    ) == (
+        expected_flag_table_shape,
+        expected_outlier_table_shape,
+        expected_flag_table_fingerprint,
     )
-
-    assert report["flag_table"].shape == (26, 6)
-    # assert report["outliers"].shape == (4, 2)
-    # assert pseudo_fingerprint(report["flag_table"]) == 12493.901565995526
-
-
-def test_updated_protocol_model_single_end(glds48_dataSystem_STAGE04, check_config):
-    report = validate_bulkRNASeq(
-        glds48_dataSystem_STAGE04.dataset,
-        config_path=check_config,
-        report_args={"include_skipped": True},
-    )
-
-    assert report["flag_table"].shape == (500, 7)
-    # now check without skipped entries (should only be the fastq read parity check)
-    assert report["flag_table"].loc[
-        report["flag_table"].code.apply(lambda v: v.name != "SKIPPED")
-    ].shape == (418, 7)
-    assert report["outliers"].shape == (13, 5)
-    assert pseudo_fingerprint(report["flag_table"]) == 11769.504
-
-
-def test_updated_protocol_model_paired_end(glds194_dataSystem_STAGE04, check_config):
-    report = validate_bulkRNASeq(
-        glds194_dataSystem_STAGE04.dataset,
-        config_path=check_config,
-        report_args={"include_skipped": True},
-    )
-
-    assert report["flag_table"].shape == (614, 6)
-    # now check without skipped entries (should only be the fastq read parity check)
-    assert report["flag_table"].loc[
-        report["flag_table"].code.apply(lambda v: v.name != "SKIPPED")
-    ].shape == (418, 6)
-    assert report["outliers"].shape == (13, 5)
-    assert pseudo_fingerprint(report["flag_table"]) == 11769.504
 
 
 def test_updated_protocol_model_skipping(glds48_dataSystem_STAGE00, check_config):
@@ -183,8 +213,6 @@ def test_updated_protocol_model_skipping(glds48_dataSystem_STAGE00, check_config
         protocol_args={
             "run_components": [
                 "Raw Reads By Sample",
-                # "Trimmed Reads By Sample",
-                # "STAR Alignments By Sample",
                 "Metadata",
                 "Raw Reads",
                 # "Trim Reads",
@@ -206,7 +234,7 @@ def test_updated_protcol_model_printouts_single(
 
     print(vp.queued_checks(include_individual_checks=False))
     print(vp.queued_checks())
-    1 / 0  # Manually Validated by inspecting print statement
+    # 1 / 0  # Manually Validated by inspecting print statement
 
 
 def test_updated_protcol_model_printouts_paired(
@@ -218,4 +246,4 @@ def test_updated_protcol_model_printouts_paired(
 
     print(vp.queued_checks(include_individual_checks=False))
     print(vp.queued_checks())
-    1 / 0  # Manually Validated by inspecting print statement
+    # 1 / 0  # Manually Validated by inspecting print statement
