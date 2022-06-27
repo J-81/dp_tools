@@ -492,6 +492,7 @@ ALLOWED_MISSING_KEYS_FOR_NON_ERCC = {
     "ERCC normalized DESeq2 contrasts table",
     "ERCC normalized DESeq2 normalized counts table",
     "ERCC normalized DESeq2 annotated DGE table",
+    "ERCC sample table",
     "ERCC analysis HTML",
 }
 """ Data assets unique to ERCC spiked-in datasets """
