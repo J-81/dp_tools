@@ -786,17 +786,20 @@ def check_contrasts_table_rows(contrasts_table: Path, **_) -> FlagEntry:
         Returns:
             str: Reformatted string
         """
-        g1, g2 = s.split("v")
+        g1, g2 = s.split(")v(")
         # remove parens and reformat with r make names style
-        g1 = r_style_make_names(g1[1:-1].replace(" & ", "..."))
-        g2 = r_style_make_names(g2[1:-1].replace(" & ", "..."))
+        g1 = r_style_make_names(g1[1:].replace(" & ", "..."))
+        g2 = r_style_make_names(g2[:-1].replace(" & ", "..."))
         return {g1, g2}
 
-    bad_columns: list[str] = list()
+    bad_columns: dict[str, dict[str, set]] = dict()
     for (col_name, col_series) in df_contrasts.iteritems():
         expected_values = _get_groups_from_comparisions(col_name)
         if not expected_values == set(col_series):
-            bad_columns.append(col_name)
+            bad_columns[col_name] = {
+                "expected": expected_values,
+                "actual": col_series
+            }
 
     # check logic
     if not bad_columns:

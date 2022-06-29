@@ -92,6 +92,17 @@ def test_check_sample_table_against_runsheet(glds194_dataSystem_STAGE04):
     assert res["message"]
 
 
+def test_check_contrasts_table_rows(glds48_dataSystem_STAGE04):
+    dataset: BulkRNASeqDataset = glds48_dataSystem_STAGE04.dataset
+
+    res = check_contrasts_table_rows(
+        contrasts_table=dataset.differentialGeneExpression.contrastsCSV.path
+    )
+
+    assert res["code"] == FlagCode.GREEN
+    assert res["message"]
+
+
 def test_check_sample_table_for_correct_group_assignments(glds194_dataSystem_STAGE04):
     dataset: BulkRNASeqDataset = glds194_dataSystem_STAGE04.dataset
 
