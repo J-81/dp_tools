@@ -1,3 +1,12 @@
+def check_if_valid_extensions(file, valid_ext):
+    """description
+    params (description + data type)
+    return (description + data type)"""
+    pass
+def check_factor():
+    """description"""
+    pass
+
 def check_if_extensions_valid(file, valid_ext):
     """ Description of the function
     Description Line 2
