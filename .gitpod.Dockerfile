@@ -1,7 +1,6 @@
-FROM gitpod/workspace-full:latest
+FROM continuumio/miniconda3
 
-USER gitpod
-
-RUN pyenv install miniconda3-4.7.12 && \
-    pyenv activate miniconda3-4.7.12 && \
+# Install conda environment for this project
+RUN wget https://github.com/J-81/dp_tools/raw/gitpod_setups/condaEnv.yaml && \
+    cat condaEnv.yaml && \
     conda env create -f condaEnv.yaml
