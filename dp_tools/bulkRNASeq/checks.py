@@ -796,10 +796,7 @@ def check_contrasts_table_rows(contrasts_table: Path, **_) -> FlagEntry:
     for (col_name, col_series) in df_contrasts.iteritems():
         expected_values = _get_groups_from_comparisions(col_name)
         if not expected_values == set(col_series):
-            bad_columns[col_name] = {
-                "expected": expected_values,
-                "actual": col_series
-            }
+            bad_columns[col_name] = {"expected": expected_values, "actual": col_series}
 
     # check logic
     if not bad_columns:
@@ -822,7 +819,7 @@ def check_dge_table_annotation_columns_exist(
         "STRING_id",
         "GOSLIM_IDS",
     }
-    MASTER_ANNOTATION_KEY = {"_DEFAULT": "ENSEMBL", "Arabidopsis": "TAIR"}
+    MASTER_ANNOTATION_KEY = {"_DEFAULT": "ENSEMBL", "Arabidopsis thaliana": "TAIR"}
 
     df_dge = pd.read_csv(dge_table)
 
