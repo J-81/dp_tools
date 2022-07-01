@@ -1,7 +1,7 @@
+image:
+  file: .gitpod.Dockerfile
 # Commands to start on workspace startup
 tasks:
-  - init: pyenv install miniconda3-4.7.12 && \
-          pyenv activate miniconda3-4.7.12 && \
-          conda env create -f condaEnv.yaml
-  - command: pyenv activate miniconda3-4.7.12 && \
+  - command: |
+             pyenv activate miniconda3-4.7.12
              conda activate dp_tools
