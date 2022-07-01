@@ -56,6 +56,7 @@ Staging:
             - spike-in quality control role
             - spike-in protocol
             - spike-in control
+            - Spike-in Control
           Runsheet Column Name: has_ERCC
           Processing Usage: >-
             Indicates is ERCC spike-in has been added. This can be automatically
