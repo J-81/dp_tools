@@ -13,5 +13,3 @@ dependencies:
    - tabulate # used to generate markdown tables from pandas dataframe in post processing
    - pytest
    - pip
-   - pip:
-     - git+https://github.com/J-81/dp_tools.git@rc1.0.6
