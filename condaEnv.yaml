@@ -5,11 +5,11 @@ channels:
    - defaults
 dependencies:
    - python=3.10 # required for in-house codebase compatibility
-   - pandas
-   - samtools
-   - isatools
-   - multiqc
-   - schema
-   - tabulate # used to generate markdown tables from pandas dataframe in post processing
-   - pytest
-   - pip
+   # - pandas
+   # - samtools
+   # - isatools
+   # - multiqc
+   # - schema
+   # - tabulate # used to generate markdown tables from pandas dataframe in post processing
+   # - pytest
+   # - pip
