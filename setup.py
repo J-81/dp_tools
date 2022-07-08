@@ -19,8 +19,7 @@ setup(
     packages=find_packages(),  # same as name
     scripts=[],
     package_data={
-        "dp_tools": ["config/*.yaml"],
-        "dp_tools": ["assets/*"],
+        "dp_tools": ["config/*.yaml", "assets/*"],
     },
     include_package_data=True,
     python_requires=">=3.10",
