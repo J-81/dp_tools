@@ -1,7 +1,6 @@
 image: nfcore/gitpod:latest
 
 tasks:
-  - init: conda install condaEnv.yaml
+  - init: conda env create -f condaEnv.yaml && conda init bash
   - command: conda activate dp_tools
-
 
