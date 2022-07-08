@@ -1,0 +1,7 @@
+image: nfcore/gitpod:latest
+
+tasks:
+  - init: conda install condaEnv.yaml
+  - command: conda activate dp_tools
+
+
