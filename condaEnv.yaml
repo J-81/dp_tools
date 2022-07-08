@@ -14,4 +14,4 @@ dependencies:
    - pytest
    - pip
    - pip:
-     - git+https://github.com/J-81/dp_tools.git@rc1.0.6b
+     - git+https://github.com/J-81/dp_tools.git@1.0.7rc1
