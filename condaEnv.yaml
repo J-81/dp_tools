@@ -6,7 +6,7 @@ channels:
 dependencies:
    - python=3.10 # required for in-house codebase compatibility
    - pandas
-   - samtools
+  # - samtools
    - isatools
    - multiqc
    - schema
