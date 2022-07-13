@@ -19,5 +19,24 @@ def check_factor_values_in_runsheet(runsheet_file: str) -> FlagEntry:
             message = f"Factor Value column detected in runsheet"
     return {"code": code, "message": message}
 
+def check_html_file(html_file: str) -> FlagEntry:
+    """Verifies if the rendered Rmarkdown file has a valid extension
+
+    :param html_file: Path to rendered Rmarkdown
+    :type html_file: str
+    :return: determination if the file has a valid extension
+    :rtype: FlagEntry
+    """
+    if html_file[-4:] == "html":
+        code = FlagCode.GREEN
+        message = f"File is an html file"
+    else:
+        code = FlagCode.HALT
+        message = f"File is not an html file"
+    return {"code": code, "message": message}
+
+
+
+
 
     
