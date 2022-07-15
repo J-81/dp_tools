@@ -25,9 +25,15 @@ setup(
     python_requires=">=3.10",
     install_requires=[
         "requests",
+        "yaml",
+        "pandas",
+        "schema",
+        "tabulate"
     ],
     setup_requires=[],
-    tests_require=[],
+    tests_require=[
+        "pytest"
+    ],
     entry_points={
         "console_scripts": [
             "dpt-get-isa-archive=dp_tools.glds_api.isa:main",
