@@ -26,6 +26,6 @@ USER genuser
 RUN curl -sS https://bootstrap.pypa.io/get-pip.py | python3.10 && \
     /home/genuser/.local/bin/pip install /app &&  \
     echo "export PATH=/home/genuser/.local/bin:$PATH" >> ~/.bashrc && \
-    echo "alias python=python3.10" >> ~/.bashrc
+    echo "ln -s /usr/bin/python3.10 /usr/bin/python" >> ~/.bashrc
 
 WORKDIR /home/genuser
