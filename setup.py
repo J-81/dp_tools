@@ -28,7 +28,8 @@ setup(
         "pyyaml",
         "pandas",
         "schema",
-        "tabulate"
+        "tabulate",
+        "multiqc"
     ],
     setup_requires=[],
     tests_require=[
