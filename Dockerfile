@@ -11,7 +11,9 @@ RUN groupadd -r genuser && \
     apt-get update
 RUN apt-get install software-properties-common -y && \
     add-apt-repository ppa:deadsnakes/ppa -y && \
-    apt-get install python3.10 python3.10-distutils curl -y
+    apt-get install python3.10 python3.10-distutils curl -y && \
+    # ensure python3.10 is linked to python for shebang support
+    ln -s /usr/bin/python3.10 /usr/bin/python
     
 
 # copy dp_tools into container
@@ -25,7 +27,6 @@ USER genuser
 
 RUN curl -sS https://bootstrap.pypa.io/get-pip.py | python3.10 && \
     /home/genuser/.local/bin/pip install /app &&  \
-    echo "export PATH=/home/genuser/.local/bin:$PATH" >> ~/.bashrc && \
-    echo "ln -s /usr/bin/python3.10 /usr/bin/python" >> ~/.bashrc
+    echo "export PATH=/home/genuser/.local/bin:$PATH" >> ~/.bashrc
 
 WORKDIR /home/genuser
