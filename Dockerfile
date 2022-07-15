@@ -22,11 +22,11 @@ COPY . /app
 # set ownership and permissions
 RUN chown -R genuser:genuser /app
 
+RUN curl -sS https://bootstrap.pypa.io/get-pip.py | python3.10 && \
+    pip install /app &&  \
+    echo "export PATH=/home/genuser/.local/bin:$PATH" >> ~/.bashrc
+
 # swith to user
 USER genuser
-
-RUN curl -sS https://bootstrap.pypa.io/get-pip.py | python3.10 && \
-    /home/genuser/.local/bin/pip install /app &&  \
-    echo "export PATH=/home/genuser/.local/bin:$PATH" >> ~/.bashrc
 
 WORKDIR /home/genuser
