@@ -116,6 +116,7 @@ def load_BulkRNASeq_STAGE_00(
     dataSystem_name: str = None,
     stack: bool = False,
     validation_enabled: bool = True,
+    load_isa_archive: bool = True
 ):
     """config is either an string version referring to a packaged config file or a path to a local config file."""
     # ensure root path exists!
@@ -146,27 +147,50 @@ def load_BulkRNASeq_STAGE_00(
 
     dataSystem.attach_dataset(dataset)
     # attach dataset components
-    dataSystem.dataset.attach_component(
-        BulkRNASeqMetadataComponent(
-            base=BaseComponent(description="Metadata in a runsheet csv file"),
-            runsheet=DataFile(
-                check_exists=validation_enabled,
-                **loc.find_data_asset_path(
-                    config_key="runsheet",
-                    dataset=dataSystem_name,
+    if load_isa_archive:
+        dataSystem.dataset.attach_component(
+            BulkRNASeqMetadataComponent(
+                base=BaseComponent(description="Metadata in a runsheet csv file"),
+                runsheet=DataFile(
+                    check_exists=validation_enabled,
+                    **loc.find_data_asset_path(
+                        config_key="runsheet",
+                        dataset=dataSystem_name,
+                    ),
+                ),
+                ISAarchive=DataFile(
+                    check_exists=validation_enabled,
+                    **loc.find_data_asset_path(
+                        config_key="ISA Archive",
+                        glob=True,
+                        dataset=dataSystem_name,
+                    ),
                 ),
             ),
-            ISAarchive=DataFile(
-                check_exists=validation_enabled,
-                **loc.find_data_asset_path(
-                    config_key="ISA Archive",
-                    glob=True,
-                    dataset=dataSystem_name,
+            attr="metadata",
+        )
+    else:
+        dataSystem.dataset.attach_component(
+            BulkRNASeqMetadataComponent(
+                base=BaseComponent(description="Metadata in a runsheet csv file"),
+                runsheet=DataFile(
+                    check_exists=validation_enabled,
+                    **loc.find_data_asset_path(
+                        config_key="runsheet",
+                        dataset=dataSystem_name,
+                    ),
                 ),
+                # ISAarchive=DataFile(
+                #     check_exists=validation_enabled,
+                #     **loc.find_data_asset_path(
+                #         config_key="ISA Archive",
+                #         glob=True,
+                #         dataset=dataSystem_name,
+                #     ),
+                # ),
             ),
-        ),
-        attr="metadata",
-    )
+            attr="metadata",
+        )
 
     # alias metadata for convenience
     metadata = dataSystem.dataset.all_components["metadata"]
