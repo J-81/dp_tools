@@ -798,7 +798,7 @@ def check_contrasts_table_rows(contrasts_table: Path, **_) -> FlagEntry:
         if not expected_values == set(col_series):
             bad_columns[col_name] = {
                 "expected": expected_values,
-                "actual": col_series
+                "actual": set(col_series)
             }
 
     # check logic
