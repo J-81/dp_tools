@@ -11,6 +11,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - Added samtools as needed for certain checks
 
+### Checks
+
+#### Fixed
+
+- check_contrasts_table_rows: message no longer introduces extra newlines into log
+
 ## Planned
 
 ## rc1.0.6
