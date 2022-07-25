@@ -1,12 +1,14 @@
 import hashlib
+import os
 
 import pandas as pd
 
 from dp_tools.scripts.convert import isa_to_runsheet
 
 # Updated to microarray development version api
-def test_paired_isa_to_runsheet(glds194_dataSystem_STAGE00):
+def test_paired_isa_to_runsheet(glds194_dataSystem_STAGE00, tmpdir):
     """This tests validation as it would be run on dataset after demultiplexing"""
+    os.chdir(tmpdir)
     ds = glds194_dataSystem_STAGE00
     df_runsheet = isa_to_runsheet(
         ds.name, ds.dataset.metadata.ISAarchive.path, config=("bulkRNASeq", "0")
@@ -19,8 +21,9 @@ def test_paired_isa_to_runsheet(glds194_dataSystem_STAGE00):
     ), "Hash did not match, the means the contents changed. Manually validation and reset of test hash is in order"
 
 
-def test_single_isa_to_runsheet(glds48_dataSystem_STAGE00):
+def test_single_isa_to_runsheet(glds48_dataSystem_STAGE00, tmpdir):
     """This tests validation as it would be run on dataset after demultiplexing"""
+    os.chdir(tmpdir)
     ds = glds48_dataSystem_STAGE00
     df_runsheet = isa_to_runsheet(
         ds.name, ds.dataset.metadata.ISAarchive.path, config=("bulkRNASeq", "0")
