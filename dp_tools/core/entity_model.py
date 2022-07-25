@@ -374,6 +374,10 @@ Component: class:{self.__class__.__name__}
                 f"{mqc_target['target']} designated as a mqc target, but data asset was missing"
             )
             return
+        
+        # MULTIQC MONKEY PATCH TO ADDRESS ISSUE: https://github.com/ewels/MultiQC/issues/1643
+        multiqc.config.logger.hasHandlers = lambda : False # this means the logger never gets purged, but more importantly prevents a log purge based exceptoin
+
         mqc_ret = multiqc.run(
             analysis_dir=[mqc_target["target"].path],
             no_report=True,
