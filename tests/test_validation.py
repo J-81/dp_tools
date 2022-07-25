@@ -138,7 +138,7 @@ def test_updated_protocol_model_paired_end(
             ["RSEM Counts", "Unnormalized Gene Counts"],
             (3, 7),
             (1, 1),
-            114.33333333333333,
+            194.33333333333334,
             id="RSEM Counts Checks Only",
         ),
         pytest.param(
@@ -174,7 +174,7 @@ def test_updated_protocol_model_single_end(
     )
 
 
-def test_updated_protocol_model_skipping(glds48_dataSystem_STAGE00, check_config):
+def test_updated_protocol_model_skipping(glds48_dataSystem_STAGE00):
     report = validate_bulkRNASeq(
         glds48_dataSystem_STAGE00.dataset,
         report_args={"include_skipped": False},
@@ -190,9 +190,9 @@ def test_updated_protocol_model_skipping(glds48_dataSystem_STAGE00, check_config
         },
     )
 
-    assert report["flag_table"].shape == (72, 6)
+    assert report["flag_table"].shape == (72, 7)
     assert report["outliers"].shape == (1, 1)
-    assert pseudo_fingerprint(report["flag_table"]) == 1903.1527777777778
+    assert pseudo_fingerprint(report["flag_table"]) == 1974.138888888889
 
     # NOW INCLUDING SKIPPED FLAG TABLE ENTRIES
     # SHOULD MATCH, running all components and not including skips
@@ -209,16 +209,16 @@ def test_updated_protocol_model_skipping(glds48_dataSystem_STAGE00, check_config
         },
     )
 
-    assert report["flag_table"].shape == (325, 6)
+    assert report["flag_table"].shape == (502, 7)
     assert report["outliers"].shape == (1, 1)
-    assert pseudo_fingerprint(report["flag_table"]) == 3659.243076923077
+    assert pseudo_fingerprint(report["flag_table"]) == 5397.745019920319
 
 
 def test_updated_protcol_model_printouts_single(
-    glds48_dataSystem_STAGE04, check_config
+    glds48_dataSystem_STAGE04
 ):
     vp = validate_bulkRNASeq(
-        glds48_dataSystem_STAGE04.dataset, config_path=check_config, defer_run=True
+        glds48_dataSystem_STAGE04.dataset,  defer_run=True
     )
 
     print(vp.queued_checks(include_individual_checks=False))
@@ -227,10 +227,10 @@ def test_updated_protcol_model_printouts_single(
 
 
 def test_updated_protcol_model_printouts_paired(
-    glds194_dataSystem_STAGE04, check_config
+    glds194_dataSystem_STAGE04
 ):
     vp = validate_bulkRNASeq(
-        glds194_dataSystem_STAGE04.dataset, config_path=check_config, defer_run=True
+        glds194_dataSystem_STAGE04.dataset,  defer_run=True
     )
 
     print(vp.queued_checks(include_individual_checks=False))
