@@ -33,14 +33,12 @@ def test_check_bam_file_integrity(glds48_dataSystem_STAGE04):
     for sample in dataset.samples.values():
         res = check_bam_file_integrity(
             file=sample.genomeAlignments.alignedToTranscriptomeBam.path,
-            samtools_bin=Path(os.environ.get("SAMTOOLS_BIN")),
         )
         assert res["code"] == FlagCode.GREEN
         assert res["message"]
 
         res = check_bam_file_integrity(
             file=sample.genomeAlignments.logFinal.path,
-            samtools_bin=Path(os.environ.get("SAMTOOLS_BIN")),
         )
 
         assert res["code"] == FlagCode.HALT
