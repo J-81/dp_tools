@@ -96,7 +96,11 @@ def get_parsed_data(
         logger = log.getLogger("multiqc")
         [logger.removeHandler(h) for h in logger.handlers]
         mqc_ret = multiqc.run(
-            input_f, no_data_dir=True, module=modules
+            input_f, 
+            no_data_dir=True, 
+            module=modules, 
+            quiet=True,
+            no_ansi=True,
         )  # note: empty list for modules falls back on all modules
         log.info(f"Successfully parsed: {input_f}")
     except SystemExit as e:
