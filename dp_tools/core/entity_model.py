@@ -380,6 +380,8 @@ Component: class:{self.__class__.__name__}
 
         mqc_ret = multiqc.run(
             analysis_dir=[mqc_target["target"].path],
+            quiet=True,
+            no_ansi=True,
             no_report=True,
             no_data_dir=True,
             plots_interactive=True,  # ensure data is robustly populated (otherwise flat plots result in missing extractable data)
