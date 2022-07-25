@@ -16,7 +16,7 @@ from dp_tools.bulkRNASeq.loaders import (
 @pytest.fixture
 def root_test_dir():
     """This should be development machine specific, path should be set by env variable for privacy"""
-    return Path(os.environ["TEST_ASSETS_DIR"]) / "bulkRNASeq"
+    return Path(os.environ["TEST_ASSETS_DIR"])
 
 
 @pytest.fixture
@@ -86,9 +86,12 @@ def glds48_sample_names():
     ]
 
 
+#@pytest.fixture
+#def glds194_test_dir(root_test_dir):
+#    return root_test_dir / "GLDS-194_TruncatedProcessed" / "GLDS-194"
 @pytest.fixture
-def glds194_test_dir(root_test_dir):
-    return root_test_dir / "GLDS-194_TruncatedProcessed" / "GLDS-194"
+def glds48_test_dir(root_test_dir):
+    return root_test_dir / "GLDS-48"
 
 
 @pytest.fixture
@@ -98,7 +101,7 @@ def glds194_runsheetPath(glds194_test_dir):
 
 @pytest.fixture
 def glds48_test_dir(root_test_dir):
-    return root_test_dir / "GLDS-48_TruncatedProcessed" / "GLDS-48"
+    return root_test_dir / "GLDS-48"
 
 
 @pytest.fixture
