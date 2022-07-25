@@ -86,12 +86,9 @@ def glds48_sample_names():
     ]
 
 
-#@pytest.fixture
-#def glds194_test_dir(root_test_dir):
-#    return root_test_dir / "GLDS-194_TruncatedProcessed" / "GLDS-194"
 @pytest.fixture
-def glds48_test_dir(root_test_dir):
-    return root_test_dir / "GLDS-48"
+def glds194_test_dir(root_test_dir):
+    return root_test_dir / "GLDS-194"
 
 
 @pytest.fixture
