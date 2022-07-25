@@ -196,7 +196,7 @@ def check_fastqgz_file_contents(file: Path, count_lines_to_check: int) -> FlagEn
     return {"code": code, "message": message}
 
 
-def check_bam_file_integrity(file: Path, samtools_bin: Path) -> FlagEntry:
+def check_bam_file_integrity(file: Path, samtools_bin: Path = Path("samtools")) -> FlagEntry:
     """Uses http://www.htslib.org/doc/samtools-quickcheck.html"""
     # data specific preprocess
 
