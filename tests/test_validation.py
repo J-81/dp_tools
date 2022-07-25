@@ -24,11 +24,6 @@ def pseudo_fingerprint(df):
     )
 
 
-@pytest.fixture
-def check_config():
-    return Path(os.environ["CONFIG_CHECK_PATH"])
-
-
 # TODO: Part of an alternative framework not fully implemented
 
 import logging
@@ -86,7 +81,6 @@ log = logging.getLogger(__name__)
 )
 def test_updated_protocol_model_paired_end(
     glds194_dataSystem_STAGE04,
-    check_config,
     components,
     expected_flag_table_shape,
     expected_outlier_table_shape,
@@ -94,7 +88,6 @@ def test_updated_protocol_model_paired_end(
 ):
     report = validate_bulkRNASeq(
         glds194_dataSystem_STAGE04.dataset,
-        config_path=check_config,
         report_args={"include_skipped": False},
         protocol_args={"run_components": components},
     )
@@ -159,7 +152,6 @@ def test_updated_protocol_model_paired_end(
 )
 def test_updated_protocol_model_single_end(
     glds48_dataSystem_STAGE04,
-    check_config,
     components,
     expected_flag_table_shape,
     expected_outlier_table_shape,
@@ -167,7 +159,6 @@ def test_updated_protocol_model_single_end(
 ):
     report = validate_bulkRNASeq(
         glds48_dataSystem_STAGE04.dataset,
-        config_path=check_config,
         report_args={"include_skipped": False},
         protocol_args={"run_components": components},
     )
@@ -186,7 +177,6 @@ def test_updated_protocol_model_single_end(
 def test_updated_protocol_model_skipping(glds48_dataSystem_STAGE00, check_config):
     report = validate_bulkRNASeq(
         glds48_dataSystem_STAGE00.dataset,
-        config_path=check_config,
         report_args={"include_skipped": False},
         protocol_args={
             "run_components": [
@@ -208,7 +198,6 @@ def test_updated_protocol_model_skipping(glds48_dataSystem_STAGE00, check_config
     # SHOULD MATCH, running all components and not including skips
     report = validate_bulkRNASeq(
         glds48_dataSystem_STAGE00.dataset,
-        config_path=check_config,
         report_args={"include_skipped": True},
         protocol_args={
             "run_components": [
