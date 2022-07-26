@@ -2,8 +2,9 @@ image:
   file: .gitpod.Dockerfile
 
 tasks:
-  - init: |
-    pip install -e . && \
-    cd /tmp && \
-    git clone -b  NF_RCP-F  --depth=1 https://github.com/J-81/test-datasets-extended.git --single-branch && rm -rf test-datasets-extended/.git && \
+  - name: Setting up dp_tools and test assets
+    init: |
+    pip install -e .
+    cd /tmp
+    git clone -b  NF_RCP-F  --depth=1 https://github.com/J-81/test-datasets-extended.git --single-branch && rm -rf test-datasets-extended/.git
     echo "export TEST_ASSETS_DIR="/tmp/test-datasets-extended/testdata" >> ~/.bashrc
