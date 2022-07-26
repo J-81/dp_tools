@@ -648,7 +648,7 @@ class ValidationProtocol:
 
     def report(
         self,
-        include_skipped: bool = True,
+        include_skipped: bool = True
     ) -> "ValidationProtocol.Report":
         """Tabulates the results of the executed protocol.
 
@@ -701,3 +701,24 @@ class ValidationProtocol:
                 default_to_regular(self.outliers), orient="index"
             ).T,
         }
+
+    @staticmethod
+    def append_sample_column(df_flag: pd.DataFrame, samples: list[str]) -> pd.DataFrame:
+        """In place operation which adds a sample(s) column to the flag table dataframe
+
+        :param df_flag: Input flag table dataframe
+        :type df_flag: pd.DataFrame
+        :param samples: Sample names to parse from multiIndex like index
+        :type samples: list[str]
+        :return: Same dataframe object after modification
+        :rtype: pd.DataFrame
+        """
+        def includes_sample(samples: list[str], multiIndex: tuple[str]):
+            included_explicit_samples = set(multiIndex).intersection(set(samples))
+            if included_explicit_samples:
+                return included_explicit_samples
+            else:
+                return "All samples"
+        df_flag.insert(1,"sample(s)",[includes_sample(samples, i) for i in df_flag.index])
+        
+        return df_flag

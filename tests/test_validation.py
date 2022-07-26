@@ -7,6 +7,7 @@ import pytest
 from dp_tools.bulkRNASeq.vv_protocols import (
     validate_bulkRNASeq,
 )
+from dp_tools.core.check_model import ValidationProtocol
 
 
 @pytest.fixture(autouse=True)
@@ -236,3 +237,25 @@ def test_updated_protcol_model_printouts_paired(
     print(vp.queued_checks(include_individual_checks=False))
     print(vp.queued_checks())
     # 1 / 0  # Manually Validated by inspecting print statement
+
+def test_report_modification_add_sample_column(glds48_dataSystem_STAGE00):
+    report = validate_bulkRNASeq(
+        glds48_dataSystem_STAGE00.dataset,
+        report_args={"include_skipped": False},
+        protocol_args={
+                "run_components": [
+                    "Raw Reads By Sample",
+                    # "Trimmed Reads By Sample",
+                    # "STAR Alignments By Sample",
+                    "Metadata",
+                    "Raw Reads",
+                    # "Trim Reads",
+                ]
+            },
+        )
+    samples = [s for s in glds48_dataSystem_STAGE00.dataset.samples]
+    ValidationProtocol.append_sample_column(report["flag_table"], samples=samples)
+
+    assert report["flag_table"].shape == (72, 8)
+    assert report["outliers"].shape == (1, 1)
+    assert pseudo_fingerprint(report["flag_table"]) == 2046.138888888889 
