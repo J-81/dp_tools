@@ -4,7 +4,7 @@ import logging
 log = logging.getLogger(__name__)
 
 from dp_tools.core.configuration import load_config
-from dp_tools.core.entity_model2 import dataSystem_from_runsheet
+from dp_tools.core.entity_model2 import DataSystem, dataSystem_from_runsheet
 
 
 def load_data(
@@ -13,7 +13,7 @@ def load_data(
     runsheet_path: Path,
     key_sets: tuple[str] = None,
     keys: list[str] = None,
-):
+) -> DataSystem:
     # Load config
     conf = load_config(config)
 
@@ -46,3 +46,5 @@ def load_data(
         dataset.load_data_asset(
             data_asset_config=conf_data_assets[key], name=key, root_dir=root_path
         )
+
+    return dataSystem
