@@ -88,6 +88,11 @@ class DataSystem:
         # attach runsheet as dataset asset
         dataset.data_assets["runsheet"] = runsheet_path
 
+        # Add metadata from runsheet_path
+        dataset.metadata.update(
+            df.loc[:, df.nunique() == 1].iloc[0].to_dict()
+        )
+
         # returns attach dataset for convienience
         return dataset
 
@@ -96,10 +101,13 @@ class DataSystem:
 class Dataset:
     name: str
     type: str
+    metadata: dict[str, str] = field(default_factory=dict)
     samples: dict[str, "Sample"] = field(default_factory=dict, repr=False)
     groups: dict[str, "Group"] = field(default_factory=dict, repr=False)
     data_assets: DataAssetDict = field(default_factory=dict, repr=False)
-    ALLOWED_FORMAT_KEYS: tuple[str] = ("dataset", "sample", "group")
+    ALLOWED_FORMAT_KEYS: tuple[str] = field(
+        default=("dataset", "sample", "group"), repr=False
+    )
 
     # TODO: dict -> better typehint via typeddict
     def load_data_asset(self, data_asset_config: dict, root_dir: Path, name: str):
