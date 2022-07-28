@@ -11,6 +11,7 @@ from dp_tools.bulkRNASeq.loaders import (
     load_BulkRNASeq_STAGE_03,
     load_BulkRNASeq_STAGE_04,
 )
+from dp_tools.core.loaders import load_data
 
 # set for testing
 @pytest.fixture
@@ -201,33 +202,14 @@ def glds194_dataSystem_STAGE03(glds194_test_dir):
 
 @pytest.fixture
 def glds194_dataSystem_STAGE04(glds194_test_dir):
-    return copy.deepcopy(
-        load_BulkRNASeq_STAGE_04(
-            *load_BulkRNASeq_STAGE_03(
-                *load_BulkRNASeq_STAGE_0201(
-                    *load_BulkRNASeq_STAGE_02(
-                        *load_BulkRNASeq_STAGE_01(
-                            *load_BulkRNASeq_STAGE_00(
-                                glds194_test_dir,
-                                config="Latest",
-                                dataSystem_name="GLDS-194",
-                                stack=True,
-                            ),
-                            config="Latest",
-                            stack=True
-                        ),
-                        config="Latest",
-                        stack=True
-                    ),
-                    config="Latest",
-                    stack=True
-                ),
-                config="Latest",
-                stack=True
-            ),
-            config="Latest"
-        )
-    )
+    return copy.deepcopy(load_data(
+        key_sets=["is paired end full", "has ercc"],
+        config=("bulkRNASeq", "Latest"),
+        root_path=(glds194_test_dir),
+        runsheet_path=(
+            glds194_test_dir / "Metadata/GLDS-194_bulkRNASeq_v1_runsheet.csv"
+        ),
+    ))
 
 
 @pytest.fixture
