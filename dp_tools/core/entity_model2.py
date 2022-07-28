@@ -40,6 +40,12 @@ class DataSystem:
         dataset_type: str
         version: str
 
+    @property
+    def dataset(self):
+        assert len(self.datasets) == 1, "Can only call 'dataset' if only one dataset exists in the dataSystem"
+        return list(self.datasets.values())[0]
+
+
     @staticmethod
     def parse_runsheet_name(runsheet_name: str) -> RunsheetMeta:
         """Parse runsheet name for runsheet metadata.
