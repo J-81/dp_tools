@@ -387,7 +387,7 @@ def test_list_keys_in_config():
 
 def test_key_based_loader_GLDS48(root_test_dir):
 
-    load_data(
+    ds = load_data(
         key_sets=["is single end full"],
         config=("bulkRNASeq", "Latest"),
         root_path=(root_test_dir / "GLDS-48"),
@@ -410,6 +410,13 @@ def test_key_based_loader_GLDS194(root_test_dir, caplog):
     )
 
 
-def test_key_based_loader_bad_keys():
+def test_key_based_loader_bad_keys(root_test_dir):
     with pytest.raises(AssertionError):
-        load_data(keys={"tonsheet"}, config=("bulkRNASeq", "1"))
+        load_data(
+            keys=["typoassetkey"],
+            config=("bulkRNASeq", "Latest"),
+            root_path=(root_test_dir / "GLDS-194"),
+            runsheet_path=(
+                root_test_dir / "GLDS-194/Metadata/GLDS-194_bulkRNASeq_v1_runsheet.csv"
+            ),
+        )
