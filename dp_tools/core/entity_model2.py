@@ -128,7 +128,7 @@ class Dataset:
     samples: dict[str, "Sample"] = field(default_factory=dict, repr=False)
     groups: dict[str, "Group"] = field(default_factory=dict, repr=False)
     data_assets: DataAssetDict = field(default_factory=dict, repr=False)
-    ALLOWED_FORMAT_KEYS: tuple[str] = field(
+    ALLOWED_FORMAT_KEYS: tuple[str, str, str] = field(
         default=("dataset", "sample", "group"), repr=False
     )
 
