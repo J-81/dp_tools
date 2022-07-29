@@ -20,6 +20,8 @@ def get_id():
 #########################################################################
 @dataclass
 class DataAsset:
+    key: str
+    """ Configuration key for this data asset"""
     path: Path
     """ Path object for the data asset """
     config: dict
