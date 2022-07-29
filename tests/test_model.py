@@ -145,3 +145,39 @@ def test_bulkRNASeq_mqc_api(glds194_dataSystem_STAGE00):
     assert ds.getMQCDataFrame(
         "rawForwardReads", "FastQC", "Overrepresented sequences"
     ).shape == (13, 2)
+
+    1 / 0
+
+
+def test_dataset_accessors(glds194_dataSystem_STAGE04):
+    ds = glds194_dataSystem_STAGE04.dataset
+
+    ds.get_assets()
+
+    ds.get_assets(filter_to=["runsheet"])
+
+
+def test_bulkRNASeq_mqc_api_2(glds194_dataSystem_STAGE04):
+    # check plot name retrieval
+    ds = glds194_dataSystem_STAGE04.dataset
+    plots = ds.getMQCPlots("rawForwardReads", "FastQC")
+    assert set(plots) == set(
+        [
+            "Overrepresented sequences",
+            "Per Sequence GC Content",
+            "Per Base N Content",
+            "general_stats",
+            "Adapter Content:Subplot::illumina_universal_adapter",
+            "Sequence Counts",
+            "Mean Quality Scores",
+            "Per Sequence Quality Scores",
+            "Sequence Duplication Levels",
+        ]
+    )
+
+    # check plot dataframe extraction
+    assert ds.getMQCDataFrame(
+        "rawForwardReads", "FastQC", "Overrepresented sequences"
+    ).shape == (13, 2)
+
+    1 / 0
