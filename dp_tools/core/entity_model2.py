@@ -1,3 +1,4 @@
+from collections import defaultdict
 from dataclasses import dataclass, field
 from pathlib import Path
 from string import Formatter
@@ -5,9 +6,21 @@ import uuid
 from typing import TypedDict, Union
 import logging
 
-import pandas as pd
-
 log = logging.getLogger(__name__)
+
+import pandas as pd
+import multiqc
+
+# MULTIQC MONKEY PATCH TO ADDRESS ISSUE: https://github.com/ewels/MultiQC/issues/1643
+multiqc.config.logger.hasHandlers = (
+    lambda: False
+)  # this means the logger never gets purged, but more importantly prevents a log purge based exceptoin
+
+
+from dp_tools.core.utilites.multiqc_tools import (
+    format_plots_as_dataframe,
+    get_general_stats,
+)
 
 
 def get_id():
@@ -220,6 +233,67 @@ class Dataset:
             assets_found = list(filter(lambda x: x.key in filter_to, assets_found))  # type: ignore
 
         return assets_found
+
+    def compile_multiqc_data(self, data_asset_keys: list[str] = None):
+        assets = self.get_assets(filter_to=data_asset_keys)
+        return multiqc_run_to_dataframes([asset.path for asset in assets])
+
+
+def multiqc_run_to_dataframes(paths: list[Path]) -> dict:
+    try:
+        mqc_ret = multiqc.run(
+            analysis_dir=paths,
+            quiet=True,
+            no_ansi=True,
+            no_report=True,
+            no_data_dir=True,
+            plots_interactive=True,  # ensure data is robustly populated (otherwise flat plots result in missing extractable data)
+            # module=[
+            #     module.lower() for module in mqc_target["mqc_modules"]
+            # ],  # module names here are always lowercase
+        )
+    except SystemExit:
+        log.warning(
+            "MultiQC tried to sys.exit, exit was caught and avoided, this often means the mulitqc.run call had an issue"
+        )
+
+    # extract and set general stats
+    general_stats_data = get_general_stats(mqc_ret)
+    general_stats = dict()
+    for module, data in general_stats_data.items():
+        general_stats[module] = pd.DataFrame(
+            data
+        ).T  # Transpose for consistency with plots dataframes, a samples are the index
+
+    # extract and set plot data
+    df_mqc = format_plots_as_dataframe(mqc_ret)
+
+    plots: dict[str, dict[str, pd.DataFrame]] = defaultdict(dict)
+    for gb_name, df_gb in df_mqc.groupby(level=[0, 1], axis="columns"):
+        # clean dataframe
+        # remove row index (redundant with entity ownership)
+        # df_gb.reset_index(inplace=True, drop=True)
+
+        # remove top two levels of multindex (these are redundant with gb_name)
+        df_gb = df_gb.droplevel(level=[0, 1], axis="columns")
+
+        # Second level of name may indicate subplot (e.g. adapter columns)
+        # clean name if the second level is just a copy of the first
+        if gb_name[0] == gb_name[1]:
+            gb_name = gb_name[0]
+        else:
+            gb_name = f"{gb_name[0]}:Subplot:{gb_name[1].replace(gb_name[0],'')}"
+
+        # Peel off module name
+        module_name, *plot_name = gb_name.split(":")
+        # Clean up plot string
+        plot_name = ":".join(plot_name).strip()
+
+        plots[module_name][plot_name] = df_gb.dropna(
+            how="all"
+        )  # remove rows with no data (Usually related to 'samples' not present in all plots, e.g. reads as samples vs samples as samples)
+
+    return {"plots": plots, "general_stats": general_stats}
 
 
 @dataclass
