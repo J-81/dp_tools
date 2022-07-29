@@ -2,7 +2,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from string import Formatter
 import uuid
-from typing import TypedDict
+from typing import TypedDict, Union
 import logging
 
 import pandas as pd
