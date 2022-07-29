@@ -18,7 +18,15 @@ def get_id():
 #########################################################################
 # DATAFILE
 #########################################################################
-DataAssetDict = dict[str, Path]
+@dataclass
+class DataAsset:
+    path: Path
+    """ Path object for the data asset """
+    config: dict
+    """ Configuration dict directly from yaml file """
+
+
+DataAssetDict = dict[str, DataAsset]
 
 
 def dataSystem_from_runsheet(runsheet_path: Path) -> "DataSystem":
@@ -42,9 +50,10 @@ class DataSystem:
 
     @property
     def dataset(self):
-        assert len(self.datasets) == 1, "Can only call 'dataset' if only one dataset exists in the dataSystem"
+        assert (
+            len(self.datasets) == 1
+        ), "Can only call 'dataset' if only one dataset exists in the dataSystem"
         return list(self.datasets.values())[0]
-
 
     @staticmethod
     def parse_runsheet_name(runsheet_name: str) -> RunsheetMeta:
@@ -92,12 +101,13 @@ class DataSystem:
         self.datasets[dataset.name] = dataset
 
         # attach runsheet as dataset asset
-        dataset.data_assets["runsheet"] = runsheet_path
+        dataset.data_assets["runsheet"] = DataAsset(
+            runsheet_path,
+            config={"key": "runsheet", "processed location": runsheet_path},
+        )
 
         # Add metadata from runsheet_path
-        dataset.metadata.update(
-            df.loc[:, df.nunique() == 1].iloc[0].to_dict()
-        )
+        dataset.metadata.update(df.loc[:, df.nunique() == 1].iloc[0].to_dict())
 
         # returns attach dataset for convienience
         return dataset
@@ -114,6 +124,13 @@ class Dataset:
     ALLOWED_FORMAT_KEYS: tuple[str] = field(
         default=("dataset", "sample", "group"), repr=False
     )
+
+    @staticmethod
+    def _create_asset(asset: Path, config: dict) -> Path:
+        if "*" in asset.name:
+            [asset] = asset.parent.glob(asset.name)
+        assert asset.exists(), f"Failed to load asset at path '{asset}'"
+        return DataAsset(path=asset, config=config)
 
     # TODO: dict -> better typehint via typeddict
     def load_data_asset(self, data_asset_config: dict, root_dir: Path, name: str):
@@ -147,34 +164,22 @@ class Dataset:
         # Locate data asset
         match owner:
             case "dataset":
-                asset = Path(str(location_template).format(dataset=self.name))
-                if "*" in asset.name:
-                    [asset] = asset.parent.glob(asset.name)
-                assert (
-                    asset.exists()
-                ), f"Failed to load asset named '{name}' at path '{asset}'"
+                unloaded_asset = Path(str(location_template).format(dataset=self.name))
+                asset = self._create_asset(unloaded_asset, config=data_asset_config)
                 self.data_assets[name] = asset
             case "group":
                 for group in self.groups:
-                    asset = Path(
+                    unloaded_asset = Path(
                         str(location_template).format(dataset=self.name, group=group)
                     )
-                    if "*" in asset.name:
-                        [asset] = asset.parent.glob(asset.name)
-                    assert (
-                        asset.exists()
-                    ), f"Failed to load asset named '{name}' at path '{asset}'"
+                    asset = self._create_asset(unloaded_asset, config=data_asset_config)
                     self.groups[group].data_assets[name] = asset
             case "sample":
                 for sample in self.samples:
-                    asset = Path(
+                    unloaded_asset = Path(
                         str(location_template).format(dataset=self.name, sample=sample)
                     )
-                    if "*" in asset.name:
-                        [asset] = asset.parent.glob(asset.name)
-                    assert (
-                        asset.exists()
-                    ), f"Failed to load asset named '{name}' at path '{asset}'"
+                    asset = self._create_asset(unloaded_asset, config=data_asset_config)
                     self.samples[sample].data_assets[name] = asset
 
 
