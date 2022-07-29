@@ -109,8 +109,10 @@ class DataSystem:
 
         # attach runsheet as dataset asset
         dataset.data_assets["runsheet"] = DataAsset(
-            runsheet_path,
-            config={"key": "runsheet", "processed location": runsheet_path},
+            key="runsheet",
+            path=runsheet_path,
+            config={"processed location": runsheet_path},
+            owner=dataset,
         )
 
         # Add metadata from runsheet_path
@@ -133,11 +135,13 @@ class Dataset:
     )
 
     @staticmethod
-    def _create_asset(asset: Path, config: dict) -> Path:
+    def _create_asset(
+        asset: Path, key: str, config: dict, owner: ExperimentalEntity
+    ) -> DataAsset:
         if "*" in asset.name:
             [asset] = asset.parent.glob(asset.name)
         assert asset.exists(), f"Failed to load asset at path '{asset}'"
-        return DataAsset(path=asset, config=config)
+        return DataAsset(key=key, path=asset, config=config, owner=owner)
 
     # TODO: dict -> better typehint via typeddict
     def load_data_asset(self, data_asset_config: dict, root_dir: Path, name: str):
@@ -172,21 +176,27 @@ class Dataset:
         match owner:
             case "dataset":
                 unloaded_asset = Path(str(location_template).format(dataset=self.name))
-                asset = self._create_asset(unloaded_asset, config=data_asset_config)
+                asset = self._create_asset(
+                    unloaded_asset, key=name, config=data_asset_config, owner=self
+                )
                 self.data_assets[name] = asset
             case "group":
                 for group in self.groups:
                     unloaded_asset = Path(
                         str(location_template).format(dataset=self.name, group=group)
                     )
-                    asset = self._create_asset(unloaded_asset, config=data_asset_config)
+                    asset = self._create_asset(
+                        unloaded_asset, key=name, config=data_asset_config, owner=group
+                    )
                     self.groups[group].data_assets[name] = asset
             case "sample":
                 for sample in self.samples:
                     unloaded_asset = Path(
                         str(location_template).format(dataset=self.name, sample=sample)
                     )
-                    asset = self._create_asset(unloaded_asset, config=data_asset_config)
+                    asset = self._create_asset(
+                        unloaded_asset, key=name, config=data_asset_config, owner=sample
+                    )
                     self.samples[sample].data_assets[name] = asset
 
 
