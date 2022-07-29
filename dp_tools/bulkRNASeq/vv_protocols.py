@@ -480,9 +480,9 @@ def validate_bulkRNASeq(
                 with vp.payload(payloads=[
                     {
                     'organism': lambda: dataset.metadata['organism'],
-                    'samples': lambda: set(pd.read_csv(dataset.normalizedGeneCounts.erccSampleTableCSV.path, index_col=0).index),
-                    'dge_table': lambda: dataset.differentialGeneExpressionERCC.visualizationTableCSV.path,
-                    'runsheet': lambda: dataset.metadata.runsheet.path
+                    'samples': lambda: set(pd.read_csv(dataset.data_assets["ERCC sample table"], index_col=0).index),
+                    'dge_table': lambda: dataset.data_assets['ERCC normalized DESeq2 annotated DGE extended for viz table'],
+                    'runsheet': lambda: dataset.data_assets['runsheet'],
                     }
                 ]):
                     vp.add(check_dge_table_annotation_columns_exist)
@@ -500,8 +500,8 @@ def validate_bulkRNASeq(
 
                 with vp.payload(payloads=[
                     {
-                    'samples': lambda: set(pd.read_csv(dataset.normalizedGeneCounts.erccSampleTableCSV.path, index_col=0).index),
-                    'pca_table': lambda: dataset.differentialGeneExpressionERCC.visualizationPCATableCSV.path,
+                    'samples': lambda: set(pd.read_csv(dataset.data_assets["ERCC sample table"], index_col=0).index),
+                    'pca_table': lambda: dataset.data_assets['ERCC normalized DESeq2 viz PCA table'],
                     }
                 ]):
                     vp.add(check_viz_pca_table_index_and_columns_exist)
@@ -516,75 +516,19 @@ def validate_bulkRNASeq(
                     with vp.payload(
                         payloads=(
                             [
-                                {"file": lambda: sample.rawForwardReads.fastqGZ.path},
-                                {"file": lambda: sample.rawReverseReads.fastqGZ.path},
+                                {"file": lambda: sample.data_assets["raw forward reads fastq GZ"]},
+                                {"file": lambda: sample.data_assets["raw reverse reads fastq GZ"]},                                
                             ]
                             if dataset.metadata['paired_end']
-                            else [{"file": lambda: sample.rawReads.fastqGZ.path}]
+                            else [{"file": lambda: sample.data_assets["raw reads fastq GZ"]},]
                         )
                     ):
-                        vp.add(check_file_exists, description="Check reads files exist")
                         vp.add(
                             check_fastqgz_file_contents,
                             config=config[
                                 "Raw Reads By Sample-check_fastqgz_file_contents"
                             ],
                         )
-
-                    with vp.payload(
-                        payloads=[
-                            {
-                                "fwd_reads": lambda: sample.rawForwardReads,
-                                "rev_reads": lambda: sample.rawReverseReads,
-                            },
-                        ],
-                    ):
-                        vp.add(
-                            check_forward_and_reverse_reads_counts_match,
-                            skip=(not dataset.metadata['paired_end']),
-                        )
-
-                    with vp.component_start(
-                        name="multiQC", description="MultiQC checks"
-                    ):
-                        with vp.payload(
-                            payloads=(
-                                [
-                                    {
-                                        "file": lambda: sample.rawForwardReads.fastQCmultiQCDirZIP.path
-                                    },
-                                    {
-                                        "file": lambda: sample.rawForwardReads.fastqcReportHTML.path
-                                    },
-                                    {
-                                        "file": lambda: sample.rawForwardReads.fastqcReportZIP.path
-                                    },
-                                    {
-                                        "file": lambda: sample.rawReverseReads.fastQCmultiQCDirZIP.path
-                                    },
-                                    {
-                                        "file": lambda: sample.rawReverseReads.fastqcReportHTML.path
-                                    },
-                                    {
-                                        "file": lambda: sample.rawReverseReads.fastqcReportZIP.path
-                                    },
-                                ]
-                                if dataset.metadata['paired_end']
-                                else [
-                                    {
-                                        "file": lambda: sample.rawReads.fastQCmultiQCDirZIP.path
-                                    },
-                                    {
-                                        "file": lambda: sample.rawReads.fastqcReportHTML.path
-                                    },
-                                    {
-                                        "file": lambda: sample.rawReads.fastqcReportZIP.path
-                                    },
-                                ]
-                            )
-                        ):
-                            vp.add(check_file_exists)
-
                 with vp.component_start(
                     name="Trimmed Reads By Sample", description="Trimmed reads"
                 ):
@@ -623,105 +567,26 @@ def validate_bulkRNASeq(
                     with vp.component_start(
                         name="multiQC", description="MultiQC checks"
                     ):
-                        with vp.payload(
-                            payloads=(
-                                [
-                                    {
-                                        "file": lambda: sample.trimForwardReads.fastQCmultiQCDirZIP.path
-                                    },
-                                    {
-                                        "file": lambda: sample.trimForwardReads.fastqcReportHTML.path
-                                    },
-                                    {
-                                        "file": lambda: sample.trimForwardReads.fastqcReportZIP.path
-                                    },
-                                    {
-                                        "file": lambda: sample.trimReverseReads.fastQCmultiQCDirZIP.path
-                                    },
-                                    {
-                                        "file": lambda: sample.trimReverseReads.fastqcReportHTML.path
-                                    },
-                                    {
-                                        "file": lambda: sample.trimReverseReads.fastqcReportZIP.path
-                                    },
-                                ]
-                                if dataset.metadata['paired_end']
-                                else [
-                                    {
-                                        "file": lambda: sample.trimReads.fastQCmultiQCDirZIP.path
-                                    },
-                                    {
-                                        "file": lambda: sample.trimReads.fastqcReportHTML.path
-                                    },
-                                    {
-                                        "file": lambda: sample.trimReads.fastqcReportZIP.path
-                                    },
-                                ]
-                            )
-                        ):
-                            vp.add(check_file_exists)
-
-                    with vp.component_start(
-                        name="Trimming Reports",
-                        description="Trimming Reports as output by Trim Galore!",
-                    ):
-                        with vp.payload(
-                            payloads=(
-                                [
-                                    {
-                                        "file": lambda: sample.trimForwardReads.trimmingReportTXT.path
-                                    },
-                                    {
-                                        "file": lambda: sample.trimReverseReads.trimmingReportTXT.path
-                                    },
-                                ]
-                                if dataset.metadata['paired_end']
-                                else [
-                                    {
-                                        "file": lambda: sample.trimReads.trimmingReportTXT.path
-                                    },
-                                ]
-                            )
-                        ):
-                            vp.add(
-                                check_file_exists,
-                                description="Check that Trim Galore reports exist",
-                            )
+                        # TODO: replace existence checks with sample presence checks
+                        ...
 
                 with vp.component_start(
                     name="STAR Alignments By Sample",
                     description="STAR Alignment outputs",
                 ):
-                    with vp.payload(
-                        payloads=[
-                            {
-                                "file": lambda: sample.genomeAlignments.alignedToTranscriptomeBam.path
-                            },
-                            {
-                                "file": lambda: sample.genomeAlignments.alignedSortedByCoordBam.path
-                            },
-                            {"file": lambda: sample.genomeAlignments.logFinal.path},
-                            {"file": lambda: sample.genomeAlignments.logProgress.path},
-                            {"file": lambda: sample.genomeAlignments.logFull.path},
-                            {"file": lambda: sample.genomeAlignments.sjTab.path},
-                        ]
-                    ):
-                        vp.add(
-                            check_file_exists,
-                            description="Check that all expected output from STAR is generated",
-                        )
+                    # TODO: replace existence checks with sample presence checks
+                    ...
 
                     with vp.payload(
                         payloads=[
                             {
-                                "file": lambda: sample.genomeAlignments.alignedToTranscriptomeBam.path
+                                "file": lambda: sample.data_assets['aligned ToTranscriptome Bam'],
                             },
                             {
-                                "file": lambda: sample.genomeAlignments.alignedSortedByCoordBam.path
+                                "file": lambda: sample.data_assets['aligned SortedByCoord Bam'],
                             },
                         ]
                     ):
-                        # vp.add(check_bam_file_integrity, config={"samtools_bin":#TODO: fill with private config file})
                         vp.add(
                             check_bam_file_integrity,
                             config={"samtools_bin": 'samtools'}, # assumes accessible on path already
@@ -730,7 +595,7 @@ def validate_bulkRNASeq(
                     with vp.payload(
                         payloads=[
                             {
-                                "component": lambda: sample.genomeAlignments,
+                                "component": lambda: sample.data_assets["aligned log Final"],
                             },
                         ]
                     ):
@@ -760,36 +625,11 @@ def validate_bulkRNASeq(
                         with vp.payload(
                             payloads=[
                                 {
-                                    "file": lambda: sample.rSeQCAnalysis.geneBodyCoverageMultiQCDirZIP.path
-                                },
-                            ]
-                        ):
-                            vp.add(check_file_exists)
-                        with vp.payload(
-                            payloads=[
-                                {
-                                    "input_dir": lambda: sample.rSeQCAnalysis.geneBodyCoverageOut.path
+                                    "input_dir": lambda: sample.data_assets['genebody coverage out']
                                 },
                             ]
                         ):
                             vp.add(check_genebody_coverage_output)
-
-                    with vp.component_start(
-                        name="infer_experiment",
-                        description="Assess strandedness of transcripts based on gene annotations",
-                    ):
-                        with vp.payload(
-                            payloads=[
-                                {
-                                    "file": lambda: sample.rSeQCAnalysis.inferExperimentMultiQCDirZIP.path
-                                },
-                                {
-                                    "file": lambda: sample.rSeQCAnalysis.inferExperimentOut.path
-                                },
-                            ]
-                        ):
-                            vp.add(check_file_exists)
-
                     with vp.component_start(
                         name="inner_distance",
                         description="Reports on distance between mate reads based on gene annotations",
@@ -798,35 +638,11 @@ def validate_bulkRNASeq(
                         with vp.payload(
                             payloads=[
                                 {
-                                    "file": lambda: sample.rSeQCAnalysis.innerDistanceMultiQCDirZIP.path
-                                },
-                            ]
-                        ):
-                            vp.add(check_file_exists)
-                        with vp.payload(
-                            payloads=[
-                                {
-                                    "input_dir": lambda: sample.rSeQCAnalysis.innerDistanceOut.path
+                                    "input_dir": lambda: sample.data_assets['inner distance out']
                                 },
                             ]
                         ):
                             vp.add(check_inner_distance_output)
-
-                    with vp.component_start(
-                        name="read_distribution",
-                        description="Assess average element makeup of transcript",
-                    ):
-                        with vp.payload(
-                            payloads=[
-                                {
-                                    "file": lambda: sample.rSeQCAnalysis.readDistributionMultiQCDirZIP.path
-                                },
-                                {
-                                    "file": lambda: sample.rSeQCAnalysis.readDistributionOut.path
-                                },
-                            ]
-                        ):
-                            vp.add(check_file_exists)
     # return protocol object without running or generating a report
     if defer_run:
         return vp
