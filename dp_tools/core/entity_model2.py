@@ -18,6 +18,9 @@ def get_id():
 #########################################################################
 # DATAFILE
 #########################################################################
+ExperimentalEntity = Union["Dataset", "Group", "Sample"]
+
+
 @dataclass
 class DataAsset:
     key: str
