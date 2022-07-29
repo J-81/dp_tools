@@ -29,6 +29,8 @@ class DataAsset:
     """ Path object for the data asset """
     config: dict
     """ Configuration dict directly from yaml file """
+    owner: ExperimentalEntity
+    """ The owner of the data asset, an experimental entity """
 
 
 DataAssetDict = dict[str, DataAsset]
