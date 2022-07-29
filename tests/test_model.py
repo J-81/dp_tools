@@ -4,6 +4,8 @@ from dp_tools.core import entity_model
 import pytest
 from unittest import mock
 
+import pandas as pd
+
 
 def test_abc_init_fails():
     with pytest.raises(TypeError):
@@ -160,24 +162,27 @@ def test_dataset_accessors(glds194_dataSystem_STAGE04):
 def test_bulkRNASeq_mqc_api_2(glds194_dataSystem_STAGE04):
     # check plot name retrieval
     ds = glds194_dataSystem_STAGE04.dataset
-    plots = ds.getMQCPlots("rawForwardReads", "FastQC")
+    data = ds.compile_multiqc_data(
+        data_asset_keys=[
+            "raw reads fastQC ZIP",
+            "raw forward reads fastQC ZIP",
+            "raw reverse reads fastQC ZIP",
+        ]
+    )
+    data = ds.compile_multiqc_data()
+    plots = data["plots"]["FastQC"]
     assert set(plots) == set(
         [
             "Overrepresented sequences",
             "Per Sequence GC Content",
             "Per Base N Content",
-            "general_stats",
             "Adapter Content:Subplot::illumina_universal_adapter",
             "Sequence Counts",
             "Mean Quality Scores",
             "Per Sequence Quality Scores",
+            "Sequence Length Distribution",
             "Sequence Duplication Levels",
         ]
     )
 
-    # check plot dataframe extraction
-    assert ds.getMQCDataFrame(
-        "rawForwardReads", "FastQC", "Overrepresented sequences"
-    ).shape == (13, 2)
-
-    1 / 0
+    assert isinstance(data["general_stats"]["FastQC"], pd.DataFrame)
