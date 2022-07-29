@@ -199,6 +199,28 @@ class Dataset:
                     )
                     self.samples[sample].data_assets[name] = asset
 
+    ################################
+    # Data Assets Accessors
+    ################################
+
+    def get_assets(self, filter_to: list[str] = None) -> list[DataAsset]:
+        # extract assets at dataset level
+        assets_found: list[DataAsset] = list(self.data_assets.values())
+
+        # extract assets at group level
+        for group in self.groups.values():
+            assets_found.extend(list(group.data_assets.values()))
+
+        # extract assets at sample level
+        for sample in self.samples.values():
+            assets_found.extend(list(sample.data_assets.values()))
+
+        if filter_to is not None:
+            # TODO: Revisit the ignore here once this issue is resolved. ref: https://github.com/python/mypy/issues/12682
+            assets_found = list(filter(lambda x: x.key in filter_to, assets_found))  # type: ignore
+
+        return assets_found
+
 
 @dataclass
 class Sample:
