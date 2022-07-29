@@ -331,8 +331,8 @@ def validate_bulkRNASeq(
                 ):
                 with vp.payload(payloads=[
                     {
-                    'runsheet': lambda: dataset.data_assets['runsheet'],
-                    'sampleTable': lambda: dataset.data_assets['sample table']
+                    'runsheet': lambda: dataset.data_assets['runsheet'].path,
+                    'sampleTable': lambda: dataset.data_assets['sample table'].path
                     }
                 ]):
                     vp.add(check_sample_table_against_runsheet, config={"all_samples_required": True})
@@ -344,8 +344,8 @@ def validate_bulkRNASeq(
                 ):
                 with vp.payload(payloads=[
                     {
-                    'runsheet': lambda: dataset.data_assets['runsheet'],
-                    'contrasts_table': lambda: dataset.data_assets['DESeq2 contrasts table']
+                    'runsheet': lambda: dataset.data_assets['runsheet'].path,
+                    'contrasts_table': lambda: dataset.data_assets['DESeq2 contrasts table'].path
                     }
                 ]):
                     vp.add(check_contrasts_table_headers)
@@ -363,8 +363,8 @@ def validate_bulkRNASeq(
                 ):
                 with vp.payload(payloads=[
                     {
-                    'runsheet': lambda: dataset.data_assets['runsheet'],
-                    'sampleTable': lambda: dataset.data_assets['ERCC sample table']
+                    'runsheet': lambda: dataset.data_assets['runsheet'].path,
+                    'sampleTable': lambda: dataset.data_assets['ERCC sample table'].path
                     }
                 ]):
                     vp.add(check_sample_table_against_runsheet, config={"all_samples_required": False})
@@ -376,8 +376,8 @@ def validate_bulkRNASeq(
                 ):
                 with vp.payload(payloads=[
                     {
-                    'runsheet': lambda: dataset.data_assets['runsheet'],
-                    'contrasts_table': lambda: dataset.data_assets['ERCC normalized DESeq2 contrasts table']
+                    'runsheet': lambda: dataset.data_assets['runsheet'].path,
+                    'contrasts_table': lambda: dataset.data_assets['ERCC normalized DESeq2 contrasts table'].path
                     }
                 ]):
                     vp.add(check_contrasts_table_headers)
@@ -390,8 +390,8 @@ def validate_bulkRNASeq(
             with vp.payload(
                 payloads=[
                     {
-                        "rsem_table_path": lambda: dataset.data_assets['rsem unnormalized counts table'],
-                        "deseq2_table_path": lambda: dataset.data_assets['DESeq2 unnormalized counts table'],
+                        "rsem_table_path": lambda: dataset.data_assets['rsem unnormalized counts table'].path,
+                        "deseq2_table_path": lambda: dataset.data_assets['DESeq2 unnormalized counts table'].path,
                     }
                 ]
             ):
@@ -401,8 +401,8 @@ def validate_bulkRNASeq(
                 {
                 'organism': lambda: dataset.metadata['organism'],
                 'samples': lambda: set(dataset.samples),
-                'dge_table': lambda: dataset.data_assets['DESeq2 annotated DGE table'],
-                'runsheet': lambda: dataset.data_assets['runsheet'],
+                'dge_table': lambda: dataset.data_assets['DESeq2 annotated DGE table'].path,
+                'runsheet': lambda: dataset.data_assets['runsheet'].path,
                 }
             ]):
                 vp.add(check_dge_table_annotation_columns_exist)
@@ -424,8 +424,8 @@ def validate_bulkRNASeq(
                     {
                     'organism': lambda: dataset.metadata['organism'],
                     'samples': lambda: set(dataset.samples),
-                    'dge_table': lambda: dataset.data_assets['DESeq2 annotated DGE extended for viz table'],
-                    'runsheet': lambda: dataset.data_assets['runsheet'],
+                    'dge_table': lambda: dataset.data_assets['DESeq2 annotated DGE extended for viz table'].path,
+                    'runsheet': lambda: dataset.data_assets['runsheet'].path,
                     }
                 ]):
                     vp.add(check_dge_table_annotation_columns_exist)
@@ -444,7 +444,7 @@ def validate_bulkRNASeq(
                 with vp.payload(payloads=[
                     {
                     'samples': lambda: set(dataset.samples),
-                    'pca_table': lambda: dataset.data_assets['DESeq2 viz PCA table'],
+                    'pca_table': lambda: dataset.data_assets['DESeq2 viz PCA table'].path,
                     }
                 ]):
                     vp.add(check_viz_pca_table_index_and_columns_exist)
@@ -457,9 +457,9 @@ def validate_bulkRNASeq(
             with vp.payload(payloads=[
                 {
                 'organism': lambda: dataset.metadata['organism'],
-                'samples': lambda: set(pd.read_csv(dataset.data_assets['ERCC sample table'], index_col=0).index),
-                'dge_table': lambda: dataset.data_assets['ERCC normalized DESeq2 annotated DGE table'],
-                'runsheet': lambda: dataset.data_assets['runsheet'],
+                'samples': lambda: set(pd.read_csv(dataset.data_assets['ERCC sample table'].path, index_col=0).index),
+                'dge_table': lambda: dataset.data_assets['ERCC normalized DESeq2 annotated DGE table'].path,
+                'runsheet': lambda: dataset.data_assets['runsheet'].path,
                 }
             ]):
                 vp.add(check_dge_table_annotation_columns_exist)
@@ -480,9 +480,9 @@ def validate_bulkRNASeq(
                 with vp.payload(payloads=[
                     {
                     'organism': lambda: dataset.metadata['organism'],
-                    'samples': lambda: set(pd.read_csv(dataset.data_assets["ERCC sample table"], index_col=0).index),
-                    'dge_table': lambda: dataset.data_assets['ERCC normalized DESeq2 annotated DGE extended for viz table'],
-                    'runsheet': lambda: dataset.data_assets['runsheet'],
+                    'samples': lambda: set(pd.read_csv(dataset.data_assets["ERCC sample table"].path, index_col=0).index),
+                    'dge_table': lambda: dataset.data_assets['ERCC normalized DESeq2 annotated DGE extended for viz table'].path,
+                    'runsheet': lambda: dataset.data_assets['runsheet'].path,
                     }
                 ]):
                     vp.add(check_dge_table_annotation_columns_exist)
@@ -500,8 +500,8 @@ def validate_bulkRNASeq(
 
                 with vp.payload(payloads=[
                     {
-                    'samples': lambda: set(pd.read_csv(dataset.data_assets["ERCC sample table"], index_col=0).index),
-                    'pca_table': lambda: dataset.data_assets['ERCC normalized DESeq2 viz PCA table'],
+                    'samples': lambda: set(pd.read_csv(dataset.data_assets["ERCC sample table"].path, index_col=0).index),
+                    'pca_table': lambda: dataset.data_assets['ERCC normalized DESeq2 viz PCA table'].path,
                     }
                 ]):
                     vp.add(check_viz_pca_table_index_and_columns_exist)
@@ -516,11 +516,11 @@ def validate_bulkRNASeq(
                     with vp.payload(
                         payloads=(
                             [
-                                {"file": lambda: sample.data_assets["raw forward reads fastq GZ"]},
-                                {"file": lambda: sample.data_assets["raw reverse reads fastq GZ"]},                                
+                                {"file": lambda: sample.data_assets["raw forward reads fastq GZ"].path},
+                                {"file": lambda: sample.data_assets["raw reverse reads fastq GZ"].path},                                
                             ]
                             if dataset.metadata['paired_end']
-                            else [{"file": lambda: sample.data_assets["raw reads fastq GZ"]},]
+                            else [{"file": lambda: sample.data_assets["raw reads fastq GZ"].path},]
                         )
                     ):
                         vp.add(
@@ -535,11 +535,11 @@ def validate_bulkRNASeq(
                     with vp.payload(
                         payloads=(
                             [
-                                {"file": lambda: sample.data_assets.get("trimmed forward reads fastq GZ")},
-                                {"file": lambda:  sample.data_assets.get("trimmed reverse reads fastq GZ")},
+                                {"file": lambda: sample.data_assets["trimmed forward reads fastq GZ"].path},
+                                {"file": lambda:  sample.data_assets["trimmed reverse reads fastq GZ"].path},
                             ]
                             if dataset.metadata['paired_end']
-                            else [{"file": lambda:  sample.data_assets.get("trimmed reads fastq GZ")}]
+                            else [{"file": lambda:  sample.data_assets["trimmed reads fastq GZ"].path}]
                         )
                     ):
                         vp.add(check_file_exists, description="Check reads files exist")
@@ -580,10 +580,10 @@ def validate_bulkRNASeq(
                     with vp.payload(
                         payloads=[
                             {
-                                "file": lambda: sample.data_assets['aligned ToTranscriptome Bam'],
+                                "file": lambda: sample.data_assets['aligned ToTranscriptome Bam'].path,
                             },
                             {
-                                "file": lambda: sample.data_assets['aligned SortedByCoord Bam'],
+                                "file": lambda: sample.data_assets['aligned SortedByCoord Bam'].path,
                             },
                         ]
                     ):
@@ -595,7 +595,7 @@ def validate_bulkRNASeq(
                     with vp.payload(
                         payloads=[
                             {
-                                "component": lambda: sample.data_assets["aligned log Final"],
+                                "component": lambda: sample.data_assets["aligned log Final"].path,
                             },
                         ]
                     ):
@@ -625,7 +625,7 @@ def validate_bulkRNASeq(
                         with vp.payload(
                             payloads=[
                                 {
-                                    "input_dir": lambda: sample.data_assets['genebody coverage out']
+                                    "input_dir": lambda: sample.data_assets['genebody coverage out'].path
                                 },
                             ]
                         ):
@@ -638,7 +638,7 @@ def validate_bulkRNASeq(
                         with vp.payload(
                             payloads=[
                                 {
-                                    "input_dir": lambda: sample.data_assets['inner distance out']
+                                    "input_dir": lambda: sample.data_assets['inner distance out'].path
                                 },
                             ]
                         ):
