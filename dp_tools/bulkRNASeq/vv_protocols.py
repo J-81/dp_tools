@@ -198,11 +198,26 @@ def validate_bulkRNASeq(
             name="Raw Reads", description="Raw Reads Outliers Detection"
         ):
             with vp.payload(
-                payloads=[{"dataset": dataset, "sample_component": "rawReads"}]
-                if not dataset.metadata['paired_end']
+                payloads=[
+                    {
+                        "dataset": dataset,
+                        "data_asset_keys": ["raw reads fastQC ZIP"],
+                    }
+                ]
+                if not dataset.metadata["paired_end"]
                 else [
-                    {"dataset": dataset, "sample_component": "rawForwardReads"},
-                    {"dataset": dataset, "sample_component": "rawReverseReads"},
+                    {
+                        "dataset": dataset,
+                        "data_asset_keys": [
+                            "raw forward reads fastQC ZIP",
+                        ],
+                    },
+                    {
+                        "dataset": dataset,
+                        "data_asset_keys": [
+                            "raw reverse reads fastQC ZIP",
+                        ],
+                    },
                 ]
             ):
                 vp.add(
