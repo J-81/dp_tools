@@ -197,7 +197,9 @@ def check_fastqgz_file_contents(file: Path, count_lines_to_check: int) -> FlagEn
     return {"code": code, "message": message}
 
 
-def check_bam_file_integrity(file: Path, samtools_bin: Path = Path("samtools")) -> FlagEntry:
+def check_bam_file_integrity(
+    file: Path, samtools_bin: Path = Path("samtools")
+) -> FlagEntry:
     """Uses http://www.htslib.org/doc/samtools-quickcheck.html"""
     # data specific preprocess
 
@@ -805,7 +807,7 @@ def check_contrasts_table_rows(contrasts_table: Path, **_) -> FlagEntry:
         if not expected_values == set(col_series):
             bad_columns[col_name] = {
                 "expected": expected_values,
-                "actual": set(col_series)
+                "actual": set(col_series),
             }
 
     # check logic
