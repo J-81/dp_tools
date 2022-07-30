@@ -6,6 +6,8 @@ import uuid
 from typing import TypedDict, Union
 import logging
 
+from dp_tools.core.check_model import FlagCode
+
 log = logging.getLogger(__name__)
 
 import pandas as pd
@@ -146,15 +148,31 @@ class Dataset:
     ALLOWED_FORMAT_KEYS: tuple[str, str, str] = field(
         default=("dataset", "sample", "group"), repr=False
     )
+    loaded_assets_dicts: list[dict] = field(default_factory=list, repr=False)
 
-    @staticmethod
-    def _create_asset(
-        asset: Path, key: str, config: dict, owner: ExperimentalEntity
+    def _load_asset(
+        self, asset: Path, key: str, config: dict, owner: ExperimentalEntity
     ) -> DataAsset:
         if "*" in asset.name:
             [asset] = asset.parent.glob(asset.name)
         assert asset.exists(), f"Failed to load asset at path '{asset}'"
+        self.loaded_assets_dicts.append(
+            {
+                "index": (owner.name, "Data Assets", key),
+                "desription": f"Check data asset for key '{key}' exists",
+                "function": self._load_asset.__name__,
+                "code": FlagCode.GREEN,
+                "message": f"Data asset located: {asset.name}",
+                "code_level": FlagCode.GREEN.value,
+                "kwargs": {"asset": asset, "config": config},
+                "config": {},
+            }
+        )
         return DataAsset(key=key, path=asset, config=config, owner=owner)
+
+    @property
+    def loaded_assets_report(self) -> pd.DataFrame:
+        return pd.DataFrame(self.loaded_assets_dicts).set_index(keys="index")
 
     # TODO: dict -> better typehint via typeddict
     def load_data_asset(self, data_asset_config: dict, root_dir: Path, name: str):
@@ -189,28 +207,32 @@ class Dataset:
         match owner:
             case "dataset":
                 unloaded_asset = Path(str(location_template).format(dataset=self.name))
-                asset = self._create_asset(
+                asset = self._load_asset(
                     unloaded_asset, key=name, config=data_asset_config, owner=self
                 )
                 self.data_assets[name] = asset
             case "group":
-                for group in self.groups:
+                for group in self.groups.values():
                     unloaded_asset = Path(
-                        str(location_template).format(dataset=self.name, group=group)
+                        str(location_template).format(
+                            dataset=self.name, group=group.name
+                        )
                     )
-                    asset = self._create_asset(
+                    asset = self._load_asset(
                         unloaded_asset, key=name, config=data_asset_config, owner=group
                     )
-                    self.groups[group].data_assets[name] = asset
+                    self.groups[group.name].data_assets[name] = asset
             case "sample":
-                for sample in self.samples:
+                for sample in self.samples.values():
                     unloaded_asset = Path(
-                        str(location_template).format(dataset=self.name, sample=sample)
+                        str(location_template).format(
+                            dataset=self.name, sample=sample.name
+                        )
                     )
-                    asset = self._create_asset(
+                    asset = self._load_asset(
                         unloaded_asset, key=name, config=data_asset_config, owner=sample
                     )
-                    self.samples[sample].data_assets[name] = asset
+                    self.samples[sample.name].data_assets[name] = asset
 
     ################################
     # Data Assets Accessors
