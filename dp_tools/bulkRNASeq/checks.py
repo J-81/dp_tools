@@ -21,6 +21,7 @@ from dp_tools.core.entity_model import (
     TemplateComponent,
     TemplateDataset,
 )
+from dp_tools.core.entity_model2 import Dataset
 
 log = logging.getLogger(__name__)
 
@@ -270,8 +271,8 @@ def check_metadata_attributes_exist(
 
 
 def check_for_outliers(
-    dataset: TemplateDataset,
-    sample_component: str,
+    dataset: Dataset,
+    data_asset_keys: list[str],
     mqc_module: str,
     mqc_plot: str,
     mqc_keys: list[str],
@@ -280,9 +281,12 @@ def check_for_outliers(
     # assume code is GREEN until outliers detected
     code = FlagCode.GREEN
     # dataframe extraction
-    df: pd.DataFrame = dataset.getMQCDataFrame(
-        sample_component=sample_component, mqc_module=mqc_module, mqc_plot=mqc_plot
-    )
+    compiled_mqc_data = dataset.compile_multiqc_data(data_asset_keys=data_asset_keys)
+
+    if mqc_plot == "general_stats":
+        df = compiled_mqc_data["general_stats"][mqc_module]
+    else:
+        df = compiled_mqc_data["plots"][mqc_module]
 
     def default_to_regular(d):
         if isinstance(d, defaultdict):
@@ -329,6 +333,9 @@ def check_for_outliers(
                     # elevate code if current code is lower severity
                     if code < FlagCode[threshold["code"]]:
                         code = FlagCode[threshold["code"]]
+
+    # convert defaultdict to regular for all reporting
+    outliers = default_to_regular(outliers)
     # check logic
     if code == FlagCode.GREEN:
         message = f"No outliers found for {mqc_keys} in {mqc_plot} part of {mqc_module} multiQC module"
@@ -336,7 +343,7 @@ def check_for_outliers(
         message = (
             f"Outliers found in {mqc_module} multiQC module as follows: {outliers}"
         )
-    return {"code": code, "message": message, "outliers": default_to_regular(outliers)}
+    return {"code": code, "message": message, "outliers": outliers}
 
 
 def _check_expected_files_exist(
