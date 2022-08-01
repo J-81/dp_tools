@@ -228,16 +228,30 @@ def validate_bulkRNASeq(
             name="Trim Reads", description="Trimmed Reads Outliers Detection"
         ):
             with vp.payload(
-                payloads=[{"dataset": dataset, "sample_component": "trimReads"}]
+                payloads=[
+                    {
+                        "dataset": dataset,
+                        "data_asset_keys": ["trimmed reads fastQC ZIP"],
+                    }
+                ]
                 if not dataset.metadata["paired_end"]
                 else [
-                    {"dataset": dataset, "sample_component": "trimForwardReads"},
-                    {"dataset": dataset, "sample_component": "trimReverseReads"},
+                    {
+                        "dataset": dataset,
+                        "data_asset_keys": [
+                            "trimmed forward reads fastQC ZIP",
+                        ],
+                    },
+                    {
+                        "dataset": dataset,
+                        "data_asset_keys": [
+                            "trimmed reverse reads fastQC ZIP",
+                        ],
+                    },
                 ]
             ):
                 vp.add(
-                    check_for_outliers,
-                    config=config["Trim Reads-check_for_outliers"],
+                    check_for_outliers, config=config["Trim Reads-check_for_outliers"]
                 )
 
         with vp.component_start(
@@ -245,7 +259,12 @@ def validate_bulkRNASeq(
             description="Dataset wide checks including outliers detection",
         ):
             with vp.payload(
-                payloads=[{"dataset": dataset, "sample_component": "genomeAlignments"}]
+                payloads=[
+                    {
+                        "dataset": dataset,
+                        "data_asset_keys": ["aligned log Final"],
+                    }
+                ]
             ):
                 vp.add(
                     check_for_outliers,
@@ -257,24 +276,53 @@ def validate_bulkRNASeq(
             description="RSeQC submodule outliers checking and other submodule specific dataset wide checks",
         ):
             with vp.payload(
-                payloads=[{"dataset": dataset, "sample_component": "rSeQCAnalysis"}]
+                payloads=[
+                    {
+                        "dataset": dataset,
+                        "data_asset_keys": ["genebody coverage out"],
+                    }
+                ]
             ):
                 vp.add(
                     check_for_outliers,
                     description="Check for outliers in geneBody Coverage",
                     config=config["RSeQC-check_for_outliers-geneBody_coverage"],
                 )
+            with vp.payload(
+                payloads=[
+                    {
+                        "dataset": dataset,
+                        "data_asset_keys": ["infer experiment out"],
+                    }
+                ]
+            ):
                 vp.add(
                     check_for_outliers,
                     description="Check for outliers in infer experiment",
                     config=config["RSeQC-check_for_outliers-infer_experiment"],
                 )
+            with vp.payload(
+                payloads=[
+                    {
+                        "dataset": dataset,
+                        "data_asset_keys": ["inner distance out"],
+                    }
+                ]
+            ):
                 vp.add(
                     check_for_outliers,
                     description="Check for outliers in inner distance",
                     config=config["RSeQC-check_for_outliers-inner_distance"],
                     skip=(not dataset.metadata["paired_end"]),
                 )
+            with vp.payload(
+                payloads=[
+                    {
+                        "dataset": dataset,
+                        "data_asset_keys": ["read distribution out"],
+                    }
+                ]
+            ):
                 vp.add(
                     check_for_outliers,
                     description="Check for outliers in read distribution",
@@ -294,7 +342,12 @@ def validate_bulkRNASeq(
             description="Dataset wide checks including outliers detection",
         ):
             with vp.payload(
-                payloads=[{"dataset": dataset, "sample_component": "geneCounts"}]
+                payloads=[
+                    {
+                        "dataset": dataset,
+                        "data_asset_keys": ["sample counts stats directory"],
+                    }
+                ]
             ):
                 vp.add(
                     check_for_outliers, config=config["RSEM Counts-check_for_outliers"]
@@ -308,9 +361,9 @@ def validate_bulkRNASeq(
             with vp.payload(
                 payloads=[
                     {
-                        "unnormalizedCountTable": lambda: dataset.starGeneCounts.unnormalizedCounts.path,
+                        "unnormalizedCountTable": lambda: dataset.data_assets['star unnormalized counts table'].path,
                         "samplewise_tables": lambda: {
-                            s.name: s.genomeAlignments.readsPerGeneTable.path
+                            s.name: s.data_assets['sample reads per gene table'].path
                             for s in dataset.samples.values()
                         },
                     },
@@ -322,9 +375,9 @@ def validate_bulkRNASeq(
             with vp.payload(
                 payloads=[
                     {
-                        "unnormalizedCountTable": lambda: dataset.rsemGeneCounts.unnormalizedCounts.path,
+                        "unnormalizedCountTable": lambda: dataset.data_assets['rsem unnormalized counts table'].path,
                         "samplewise_tables": lambda: {
-                            s.name: s.geneCounts.genesResults.path
+                            s.name: s.data_assets['sample gene counts table'].path
                             for s in dataset.samples.values()
                         },
                     },
@@ -718,9 +771,9 @@ def validate_bulkRNASeq(
                     with vp.payload(
                         payloads=[
                             {
-                                "component": lambda: sample.data_assets[
-                                    "aligned log Final"
-                                ].path,
+                                "multiqc_inputs": lambda: [
+                                    sample.data_assets["aligned log Final"].path
+                                ],
                             },
                         ]
                     ):
