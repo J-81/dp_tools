@@ -40,9 +40,9 @@ log = logging.getLogger(__name__)
         pytest.param(
             ["demuliplexed paired end raw data", "qc reports for paired end raw data"],
             ["Metadata", "Raw Reads By Sample", "Raw Reads"],
-            (110, 7),
+            (123, 7),
             (4, 1),
-            3070.7272727272725,
+            3421.650406504065,
             id="Raw Reads Checks Only",
         ),
         pytest.param(
@@ -51,9 +51,9 @@ log = logging.getLogger(__name__)
                 "qc reports for paired end trimmed reads data",
             ],
             ["Trimmed Reads By Sample", "Trim Reads"],
-            (159, 7),
+            (172, 7),
             (9, 1),
-            4333.125786163522,
+            4684.116279069767,
             id="Trimmed Reads Checks Only",
         ),
         pytest.param(
@@ -141,61 +141,94 @@ def test_updated_protocol_model_paired_end(
 
 
 @pytest.mark.parametrize(
-    "components,expected_flag_table_shape,expected_outlier_table_shape,expected_flag_table_fingerprint",
+    "data_asset_keys,components,expected_flag_table_shape,expected_outlier_table_shape,expected_flag_table_fingerprint",
     [
         pytest.param(
-            ["Raw Reads By Sample", "Raw Reads"],
-            (71, 7),
+            ["demuliplexed single end raw data", "qc reports for single end raw data"],
+            ["Metadata", "Raw Reads By Sample", "Raw Reads"],
+            (61, 7),
             (1, 1),
-            1947.1408450704225,
+            1738.1475409836066,
             id="Raw Reads Checks Only",
         ),
         pytest.param(
+            [
+                "single end trimmed reads",
+                "qc reports for single end trimmed reads data",
+            ],
             ["Trimmed Reads By Sample", "Trim Reads"],
-            (85, 7),
+            (86, 7),
             (2, 1),
-            2325.1176470588234,
+            2352.116279069767,
             id="Trimmed Reads Checks Only",
         ),
         pytest.param(
+            ["STAR alignments"],
             ["STAR Alignments", "STAR Alignments By Sample"],
-            (141, 7),
-            (9, 1),
-            3837.0709219858154,
+            (187, 7),
+            (7, 1),
+            5923.545454545455,
             id="STAR Alignments Checks Only",
         ),
         pytest.param(
+            ["RSeQC output for single end data"],
             ["RSeQC", "RSeQC By Sample"],
-            (88, 7),
-            (11, 1),
-            2426.340909090909,
+            (66, 7),
+            (12, 1),
+            1862.909090909091,
             id="RSeQC Checks Only",
         ),
         pytest.param(
-            ["RSEM Counts", "Unnormalized Gene Counts"],
-            (3, 7),
+            ["RSEM counts"],
+            ["RSEM Counts"],
+            (47, 7),
             (1, 1),
-            194.33333333333334,
+            1299.2127659574467,
             id="RSEM Counts Checks Only",
         ),
         pytest.param(
-            ["DGE Metadata", "DGE Metadata ERCC", "DGE Output", "DGE Output ERCC"],
-            (28, 7),
+            ["RSEM counts", "STAR alignments"],
+            ["Unnormalized Gene Counts"],
+            (178, 7),
             (0, 0),
-            838.1428571428571,
+            4886.337078651685,
+            id="Unnormalized Gene Counts Checks Only",
+        ),
+        pytest.param(
+            ["DGE Output", "RSEM Output"],
+            ["DGE Metadata", "DGE Metadata ERCC", "DGE Output", "DGE Output ERCC"],
+            (39, 7),
+            (0, 0),
+            1134.5384615384614,
             id="DGE Checks Only",
+        ),
+        pytest.param(
+            ["is single end full"],
+            None,  # This evaluates to meaning running all components
+            (487, 7),
+            (21, 5),
+            14291.29979466119,
+            id="Run all checks",
         ),
     ],
 )
 def test_updated_protocol_model_single_end(
-    glds48_dataSystem_STAGE04,
+    glds48_test_dir,
     components,
+    data_asset_keys,
     expected_flag_table_shape,
     expected_outlier_table_shape,
     expected_flag_table_fingerprint,
 ):
+    datasystem = load_data(
+        key_sets=data_asset_keys,
+        config=("bulkRNASeq", "Latest"),
+        root_path=(glds48_test_dir),
+        runsheet_path=(glds48_test_dir / "Metadata/GLDS-48_bulkRNASeq_v1_runsheet.csv"),
+    )
+
     report = validate_bulkRNASeq(
-        glds48_dataSystem_STAGE04.dataset,
+        datasystem.dataset,
         report_args={"include_skipped": False},
         protocol_args={"run_components": components},
     )
