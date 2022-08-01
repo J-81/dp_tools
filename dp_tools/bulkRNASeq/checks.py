@@ -407,20 +407,17 @@ def check_inner_distance_output(input_dir: Path):
 
 
 def check_strandedness_assessable_from_infer_experiment(
-    dataset: BulkRNASeqDataset,
+    dataset: Dataset,
     stranded_assessment_range: dict[str, float],
     unstranded_assessment_range: dict[str, float],
     valid_dominant_strandedness_assessments: list[str],
 ) -> FlagEntry:
     # data specific preprocess
     def get_median_strandedness(
-        dataset: TemplateDataset,
+        dataset: Dataset,
     ) -> dict[str, float]:
-        df = dataset.getMQCDataFrame(
-            sample_component="rSeQCAnalysis",
-            mqc_module="RSeQC",
-            mqc_plot="Infer experiment",
-        ).fillna(
+
+        df = dataset.compile_multiqc_data(["infer experiment out"])['plots']['RSeQC']['Infer experiment'].fillna(
             0
         )  # Nan is a zero for this MultiQC table
 
