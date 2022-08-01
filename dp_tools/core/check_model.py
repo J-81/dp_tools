@@ -648,7 +648,8 @@ class ValidationProtocol:
 
     def report(
         self,
-        include_skipped: bool = True
+        include_skipped: bool = True,
+        combine_with_flags: list[dict] = None,
     ) -> "ValidationProtocol.Report":
         """Tabulates the results of the executed protocol.
 
@@ -678,6 +679,11 @@ class ValidationProtocol:
                         "index": index,
                     } | flag
                     df_data.append(entry)
+
+        # Add additiona flags if supplied
+        # Most immediately useful for ingesting data asset loading logs
+        if combine_with_flags is not None:
+            df_data.extend(combine_with_flags)
 
         df = pd.DataFrame(df_data).set_index("index")
 
@@ -713,12 +719,16 @@ class ValidationProtocol:
         :return: Same dataframe object after modification
         :rtype: pd.DataFrame
         """
+
         def includes_sample(samples: list[str], multiIndex: tuple[str]):
             included_explicit_samples = set(multiIndex).intersection(set(samples))
             if included_explicit_samples:
                 return included_explicit_samples
             else:
                 return "All samples"
-        df_flag.insert(1,"sample(s)",[includes_sample(samples, i) for i in df_flag.index])
-        
+
+        df_flag.insert(
+            1, "sample(s)", [includes_sample(samples, i) for i in df_flag.index]
+        )
+
         return df_flag
