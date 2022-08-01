@@ -1100,6 +1100,21 @@ data asset sets:
     - "trimming MultiQC directory"
     - "forward reads trimming report"
     - "reverse reads trimming report"
+  demuliplexed single end raw data:
+    - "runsheet"
+    - "raw reads fastq GZ"
+  qc reports for single end raw data:
+    - "raw reads fastQC HTML"
+    - "raw reads fastQC ZIP"
+    - "raw MultiQC directory"
+    - "raw MultiQC directory ZIP"
+  single end trimmed reads:
+    - "trimmed reads fastq GZ"
+  qc reports for single end trimmed reads data:
+    - "trimmed reads fastQC HTML"
+    - "trimmed reads fastQC ZIP"
+    - "trimming MultiQC directory"
+    - "reads trimming report"
   STAR alignments:
     - "aligned MultiQC directory"
     - "aligned MultiQC directory ZIP"
