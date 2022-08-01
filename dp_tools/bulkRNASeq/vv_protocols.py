@@ -439,7 +439,13 @@ def validate_bulkRNASeq(
                     }
                 ]
             ):
-                vp.add(check_rsem_counts_and_unnormalized_tables_parity)
+                vp.add(
+                    check_rsem_counts_and_unnormalized_tables_parity,
+                    skip=(
+                        "rsem unnormalized counts table" not in dataset.data_assets
+                        or "DESeq2 unnormalized counts table" not in dataset.data_assets
+                    ),
+                )
 
             with vp.payload(
                 payloads=[
