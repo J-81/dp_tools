@@ -275,9 +275,7 @@ def multiqc_run_to_dataframes(paths: list[Path]) -> dict:
             # ],  # module names here are always lowercase
         )
     except SystemExit:
-        log.warning(
-            "MultiQC tried to sys.exit, exit was caught and avoided, this often means the mulitqc.run call had an issue"
-        )
+        raise ValueError(f"MultiQC tried to sys.exit. This was given a multiqc.run using these paths: {paths}")
 
     # extract and set general stats
     general_stats_data = get_general_stats(mqc_ret)
