@@ -290,7 +290,7 @@ def check_for_outliers(
     if mqc_plot == "general_stats":
         df = compiled_mqc_data["general_stats"][mqc_module]
     else:
-        df = compiled_mqc_data["plots"][mqc_module]
+        df = compiled_mqc_data["plots"][mqc_module][mqc_plot]
 
     def default_to_regular(d):
         if isinstance(d, defaultdict):
