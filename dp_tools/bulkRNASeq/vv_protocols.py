@@ -779,4 +779,4 @@ def validate_bulkRNASeq(
     vp.run(**run_args)
 
     # return report
-    return vp.report(**report_args)
+    return vp.report(**report_args, combine_with_flags=dataset.loaded_assets_dicts)
