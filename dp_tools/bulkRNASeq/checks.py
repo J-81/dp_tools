@@ -21,7 +21,7 @@ from dp_tools.core.entity_model import (
     TemplateComponent,
     TemplateDataset,
 )
-from dp_tools.core.entity_model2 import Dataset
+from dp_tools.core.entity_model2 import Dataset, multiqc_run_to_dataframes
 
 log = logging.getLogger(__name__)
 
@@ -78,14 +78,15 @@ def convert_nan_to_zero(input: Dict[str, Union[float, int]]) -> Dict:
 
 ## Functions that use the following syntax to merge values from general stats:
 # "stat1 + stat2" should search and sum the stats
-def stat_string_to_value(stat_string: str, mqcData: ModuleLevelMQC) -> float:
+# TODO: refine dict typehint
+def stat_string_to_value(stat_string: str, mqcData: dict) -> float:
     """ "stat1 + stat2" should search and sum the stats"""
     sum = float(0)
     direct_keys = stat_string.split(" + ")
     for direct_key in direct_keys:
         print(direct_key)
-        sum += mqcData["General_Stats"][direct_key]
-    return sum
+        sum += mqcData[direct_key]
+    return float(sum)
 
 
 ## Dataframe and Series specific helper functions
@@ -220,10 +221,11 @@ def check_bam_file_integrity(
 
 
 def check_thresholds(
-    component: TemplateComponent, mqc_key: str, stat_string: str, thresholds: list[dict]
+    multiqc_inputs: list[Path], mqc_key: str, stat_string: str, thresholds: list[dict]
 ) -> FlagEntry:
     # data specific preprocess
-    value = stat_string_to_value(stat_string, component.mqcData[mqc_key])
+    data = multiqc_run_to_dataframes(multiqc_inputs)
+    value = stat_string_to_value(stat_string, data["general_stats"][mqc_key])
 
     # check logic
     # Assuming GREEN unless reassigned
