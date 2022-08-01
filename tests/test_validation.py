@@ -8,6 +8,7 @@ from dp_tools.bulkRNASeq.vv_protocols import (
     validate_bulkRNASeq,
 )
 from dp_tools.core.check_model import ValidationProtocol
+from dp_tools.core.loaders import load_data
 
 
 @pytest.fixture(autouse=True)
@@ -34,16 +35,18 @@ log = logging.getLogger(__name__)
 
 
 @pytest.mark.parametrize(
-    "components,expected_flag_table_shape,expected_outlier_table_shape,expected_flag_table_fingerprint",
+    "data_asset_keys,components,expected_flag_table_shape,expected_outlier_table_shape,expected_flag_table_fingerprint",
     [
         pytest.param(
-            ["Raw Reads By Sample", "Raw Reads"],
-            (145, 7),
-            (2, 1),
-            3945.0689655172414,
+            ["demuliplexed paired end raw data", "qc reports for paired end raw data"],
+            ["Metadata", "Raw Reads By Sample", "Raw Reads"],
+            (110, 7),
+            (4, 1),
+            3070.7272727272725,
             id="Raw Reads Checks Only",
         ),
         pytest.param(
+            ["DGE Output", "ERCC DGE Output", "RSEM Output"],
             ["Trimmed Reads By Sample", "Trim Reads"],
             (171, 7),
             (4, 1),
@@ -51,6 +54,7 @@ log = logging.getLogger(__name__)
             id="Trimmed Reads Checks Only",
         ),
         pytest.param(
+            ["DGE Output", "ERCC DGE Output", "RSEM Output"],
             ["STAR Alignments", "STAR Alignments By Sample"],
             (131, 7),
             (6, 1),
@@ -58,6 +62,7 @@ log = logging.getLogger(__name__)
             id="STAR Alignments Checks Only",
         ),
         pytest.param(
+            ["DGE Output", "ERCC DGE Output", "RSEM Output"],
             ["RSeQC", "RSeQC By Sample"],
             (109, 7),
             (13, 1),
@@ -65,6 +70,7 @@ log = logging.getLogger(__name__)
             id="RSeQC Checks Only",
         ),
         pytest.param(
+            ["DGE Output", "ERCC DGE Output", "RSEM Output"],
             ["RSEM Counts", "Unnormalized Gene Counts"],
             (4, 7),
             (2, 1),
@@ -72,6 +78,7 @@ log = logging.getLogger(__name__)
             id="RSEM Counts Checks Only",
         ),
         pytest.param(
+            ["DGE Output", "ERCC DGE Output", "RSEM Output"],
             ["DGE Metadata", "DGE Metadata ERCC", "DGE Output", "DGE Output ERCC"],
             (55, 7),
             (0, 0),
@@ -81,14 +88,24 @@ log = logging.getLogger(__name__)
     ],
 )
 def test_updated_protocol_model_paired_end(
-    glds194_dataSystem_STAGE04,
+    glds194_test_dir,
+    data_asset_keys,
     components,
     expected_flag_table_shape,
     expected_outlier_table_shape,
     expected_flag_table_fingerprint,
 ):
+    datasystem = load_data(
+        key_sets=data_asset_keys,
+        config=("bulkRNASeq", "Latest"),
+        root_path=(glds194_test_dir),
+        runsheet_path=(
+            glds194_test_dir / "Metadata/GLDS-194_bulkRNASeq_v1_runsheet.csv"
+        ),
+    )
+
     report = validate_bulkRNASeq(
-        glds194_dataSystem_STAGE04.dataset,
+        datasystem.dataset,
         report_args={"include_skipped": False},
         protocol_args={"run_components": components},
     )
@@ -215,47 +232,40 @@ def test_updated_protocol_model_skipping(glds48_dataSystem_STAGE00):
     assert pseudo_fingerprint(report["flag_table"]) == 5397.745019920319
 
 
-def test_updated_protcol_model_printouts_single(
-    glds48_dataSystem_STAGE04
-):
-    vp = validate_bulkRNASeq(
-        glds48_dataSystem_STAGE04.dataset,  defer_run=True
-    )
+def test_updated_protcol_model_printouts_single(glds48_dataSystem_STAGE04):
+    vp = validate_bulkRNASeq(glds48_dataSystem_STAGE04.dataset, defer_run=True)
 
     print(vp.queued_checks(include_individual_checks=False))
     print(vp.queued_checks())
     # 1 / 0  # Manually Validated by inspecting print statement
 
 
-def test_updated_protcol_model_printouts_paired(
-    glds194_dataSystem_STAGE04
-):
-    vp = validate_bulkRNASeq(
-        glds194_dataSystem_STAGE04.dataset,  defer_run=True
-    )
+def test_updated_protcol_model_printouts_paired(glds194_dataSystem_STAGE04):
+    vp = validate_bulkRNASeq(glds194_dataSystem_STAGE04.dataset, defer_run=True)
 
     print(vp.queued_checks(include_individual_checks=False))
     print(vp.queued_checks())
     # 1 / 0  # Manually Validated by inspecting print statement
+
 
 def test_report_modification_add_sample_column(glds48_dataSystem_STAGE00):
     report = validate_bulkRNASeq(
         glds48_dataSystem_STAGE00.dataset,
         report_args={"include_skipped": False},
         protocol_args={
-                "run_components": [
-                    "Raw Reads By Sample",
-                    # "Trimmed Reads By Sample",
-                    # "STAR Alignments By Sample",
-                    "Metadata",
-                    "Raw Reads",
-                    # "Trim Reads",
-                ]
-            },
-        )
+            "run_components": [
+                "Raw Reads By Sample",
+                # "Trimmed Reads By Sample",
+                # "STAR Alignments By Sample",
+                "Metadata",
+                "Raw Reads",
+                # "Trim Reads",
+            ]
+        },
+    )
     samples = [s for s in glds48_dataSystem_STAGE00.dataset.samples]
     ValidationProtocol.append_sample_column(report["flag_table"], samples=samples)
 
     assert report["flag_table"].shape == (72, 8)
     assert report["outliers"].shape == (1, 1)
-    assert pseudo_fingerprint(report["flag_table"]) == 2046.138888888889 
+    assert pseudo_fingerprint(report["flag_table"]) == 2046.138888888889
