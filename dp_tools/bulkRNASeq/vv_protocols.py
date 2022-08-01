@@ -361,9 +361,11 @@ def validate_bulkRNASeq(
             with vp.payload(
                 payloads=[
                     {
-                        "unnormalizedCountTable": lambda: dataset.data_assets['star unnormalized counts table'].path,
+                        "unnormalizedCountTable": lambda: dataset.data_assets[
+                            "star unnormalized counts table"
+                        ].path,
                         "samplewise_tables": lambda: {
-                            s.name: s.data_assets['sample reads per gene table'].path
+                            s.name: s.data_assets["sample reads per gene table"].path
                             for s in dataset.samples.values()
                         },
                     },
@@ -375,9 +377,11 @@ def validate_bulkRNASeq(
             with vp.payload(
                 payloads=[
                     {
-                        "unnormalizedCountTable": lambda: dataset.data_assets['rsem unnormalized counts table'].path,
+                        "unnormalizedCountTable": lambda: dataset.data_assets[
+                            "rsem unnormalized counts table"
+                        ].path,
                         "samplewise_tables": lambda: {
-                            s.name: s.data_assets['sample gene counts table'].path
+                            s.name: s.data_assets["sample gene counts table"].path
                             for s in dataset.samples.values()
                         },
                     },
@@ -685,6 +689,19 @@ def validate_bulkRNASeq(
                                 "Raw Reads By Sample-check_fastqgz_file_contents"
                             ],
                         )
+                    with vp.payload(
+                        payloads=[
+                            {
+                                "sample": sample,
+                                "reads_key_1": "raw forward reads fastQC ZIP",
+                                "reads_key_2": "raw reverse reads fastQC ZIP",
+                            },
+                        ],
+                    ):
+                        vp.add(
+                            check_forward_and_reverse_reads_counts_match,
+                            skip=(not dataset.metadata["paired_end"]),
+                        )
                 with vp.component_start(
                     name="Trimmed Reads By Sample", description="Trimmed reads"
                 ):
@@ -723,29 +740,21 @@ def validate_bulkRNASeq(
                     with vp.payload(
                         payloads=[
                             {
-                                "fwd_reads": lambda: sample.trimForwardReads,
-                                "rev_reads": lambda: sample.trimReverseReads,
+                                "sample": sample,
+                                "reads_key_1": "trimmed forward reads fastQC ZIP",
+                                "reads_key_2": "trimmed reverse reads fastQC ZIP",
                             },
                         ],
                     ):
-                        # vp.add(
-                        #     check_forward_and_reverse_reads_counts_match,
-                        #     skip=(not dataset.metadata['paired_end']),
-                        # )
-                        ...  # TODO: reimplement
-
-                    with vp.component_start(
-                        name="multiQC", description="MultiQC checks"
-                    ):
-                        # TODO: replace existence checks with sample presence checks
-                        ...
+                        vp.add(
+                            check_forward_and_reverse_reads_counts_match,
+                            skip=(not dataset.metadata["paired_end"]),
+                        )
 
                 with vp.component_start(
                     name="STAR Alignments By Sample",
                     description="STAR Alignment outputs",
                 ):
-                    # TODO: replace existence checks with sample presence checks
-                    ...
 
                     with vp.payload(
                         payloads=[
