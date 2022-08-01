@@ -159,7 +159,7 @@ class Dataset:
         self.loaded_assets_dicts.append(
             {
                 "index": (owner.name, "Data Assets", key),
-                "desription": f"Check data asset for key '{key}' exists",
+                "description": f"Check data asset for key '{key}' exists",
                 "function": self._load_asset.__name__,
                 "code": FlagCode.GREEN,
                 "message": f"Data asset located: {asset.name}",
