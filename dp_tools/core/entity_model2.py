@@ -275,7 +275,9 @@ def multiqc_run_to_dataframes(paths: list[Path]) -> dict:
             # ],  # module names here are always lowercase
         )
     except SystemExit:
-        raise ValueError(f"MultiQC tried to sys.exit. This was given a multiqc.run using these paths: {paths}")
+        raise ValueError(
+            f"MultiQC tried to sys.exit. This was given a multiqc.run using these paths: {paths}"
+        )
 
     # extract and set general stats
     general_stats_data = get_general_stats(mqc_ret)
@@ -320,6 +322,9 @@ def multiqc_run_to_dataframes(paths: list[Path]) -> dict:
 class Sample:
     name: str
     data_assets: DataAssetDict = field(default_factory=dict, repr=False)
+
+    def compile_multiqc_data(self, data_asset_keys: list[str] = None):
+        return multiqc_run_to_dataframes([asset.path for asset in self.data_assets.values() if asset.key in data_asset_keys])
 
 
 @dataclass
