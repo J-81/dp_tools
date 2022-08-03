@@ -35,14 +35,15 @@ log = logging.getLogger(__name__)
 
 
 @pytest.mark.parametrize(
-    "data_asset_keys,components,expected_flag_table_shape,expected_outlier_table_shape,expected_flag_table_fingerprint",
+    "data_asset_keys,components,expected_flag_table_shape,expected_outlier_table_shape,expected_flag_table_fingerprint,expected_halt_flag_count",
     [
         pytest.param(
             ["demuliplexed paired end raw data", "qc reports for paired end raw data"],
             ["Metadata", "Raw Reads By Sample", "Raw Reads"],
             (124, 7),
             (4, 1),
-            3478.8870967741937,
+            3418.4032258064517,
+            0,
             id="Raw Reads Checks Only",
         ),
         pytest.param(
@@ -54,6 +55,7 @@ log = logging.getLogger(__name__)
             (173, 7),
             (9, 1),
             4741.289017341041,
+            0,
             id="Trimmed Reads Checks Only",
         ),
         pytest.param(
@@ -62,6 +64,7 @@ log = logging.getLogger(__name__)
             (175, 7),
             (7, 1),
             5569.685714285714,
+            0,
             id="STAR Alignments Checks Only",
         ),
         pytest.param(
@@ -70,6 +73,7 @@ log = logging.getLogger(__name__)
             (92, 7),
             (13, 1),
             2635.413043478261,
+            0,
             id="RSeQC Checks Only",
         ),
         pytest.param(
@@ -78,6 +82,7 @@ log = logging.getLogger(__name__)
             (45, 7),
             (3, 1),
             1275.888888888889,
+            0,
             id="RSEM Counts Checks Only",
         ),
         pytest.param(
@@ -86,6 +91,7 @@ log = logging.getLogger(__name__)
             (168, 7),
             (0, 0),
             4616.357142857143,
+            0,
             id="Unnormalized Gene Counts Checks Only",
         ),
         pytest.param(
@@ -94,6 +100,7 @@ log = logging.getLogger(__name__)
             (73, 7),
             (0, 0),
             2082.232876712329,
+            0,
             id="DGE Checks Only",
         ),
         pytest.param(
@@ -102,6 +109,7 @@ log = logging.getLogger(__name__)
             (679, 7),
             (34, 5),
             19474.649484536083,
+            0,
             id="Run all checks",
         ),
     ],
@@ -113,6 +121,7 @@ def test_updated_protocol_model_paired_end(
     expected_flag_table_shape,
     expected_outlier_table_shape,
     expected_flag_table_fingerprint,
+    expected_halt_flag_count,
 ):
     datasystem = load_data(
         key_sets=data_asset_keys,
@@ -128,6 +137,10 @@ def test_updated_protocol_model_paired_end(
         report_args={"include_skipped": False},
         protocol_args={"run_components": components},
     )
+
+    assert (
+        sum(report["flag_table"]["code_level"] >= 80) == expected_halt_flag_count
+    ), f"Found more than expected HALT+ flags: {report['flag_table'].loc[report['flag_table']['code_level'] >= 80].to_dict()}"
 
     assert (
         report["flag_table"].shape,
