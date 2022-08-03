@@ -98,10 +98,20 @@ def onlyAllowedValues(df: pd.DataFrame, allowed_values: list) -> bool:
     return ((df.isin(allowed_values)) | (df.isnull())).all(axis=None)
 
 
-def check_forward_and_reverse_reads_counts_match(sample: Sample, reads_key_1: str, reads_key_2: str) -> FlagEntry:
+def check_forward_and_reverse_reads_counts_match(
+    sample: Sample, reads_key_1: str, reads_key_2: str
+) -> FlagEntry:
     # data specific preprocess
-    count_fwd_reads = float(sample.compile_multiqc_data([reads_key_1])['general_stats']['FastQC']['total_sequences'])
-    count_rev_reads = float(sample.compile_multiqc_data([reads_key_2])['general_stats']['FastQC']['total_sequences'])
+    count_fwd_reads = float(
+        sample.compile_multiqc_data([reads_key_1])["general_stats"]["FastQC"][
+            "total_sequences"
+        ]
+    )
+    count_rev_reads = float(
+        sample.compile_multiqc_data([reads_key_2])["general_stats"]["FastQC"][
+            "total_sequences"
+        ]
+    )
 
     # check logic
     if count_fwd_reads == count_rev_reads:
