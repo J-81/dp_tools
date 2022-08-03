@@ -251,24 +251,13 @@ def check_thresholds(
 def check_metadata_attributes_exist(
     dataset: Dataset, expected_attrs: list[str]
 ) -> FlagEntry:
-    # data specific preprocess
-    # set up tracker for expected attributes values
-    tracked_metadata = dict()
-    # and a tracker for missing attributes
-    missing_metadata_fields = list()
-
-    for attr in expected_attrs:
-        attr_value = getattr(dataset.metadata, attr, None)
-        if attr_value != None:
-            tracked_metadata[attr] = attr_value
-        else:
-            missing_metadata_fields.append(attr)
+    missing_metadata_fields = list(set(expected_attrs) - set(dataset.metadata))
 
     # check if any missing_metadata_fields are present
     # check logic
     if not missing_metadata_fields:
         code = FlagCode.GREEN
-        message = f"All expected metadata values found: {tracked_metadata}"
+        message = f"All expected metadata keys found: Expected {expected_attrs}, Found {set(dataset.metadata)}"
     else:
         code = FlagCode.HALT
         message = f"Missing dataset metadata (source from Runsheet): {missing_metadata_fields}"
