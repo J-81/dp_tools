@@ -1,12 +1,9 @@
-from collections import defaultdict
-import enum
-import os
 from pathlib import Path
-from typing import Dict, List, Set, Tuple, Union
+from typing import Union
 import yaml
 import logging
 
-from dp_tools.core.entity_model2 import Dataset
+from dp_tools.core.entity_model import Dataset
 
 log = logging.getLogger(__name__)
 

@@ -40,9 +40,9 @@ log = logging.getLogger(__name__)
         pytest.param(
             ["demuliplexed paired end raw data", "qc reports for paired end raw data"],
             ["Metadata", "Raw Reads By Sample", "Raw Reads"],
-            (123, 7),
+            (124, 7),
             (4, 1),
-            3421.650406504065,
+            3478.8870967741937,
             id="Raw Reads Checks Only",
         ),
         pytest.param(
@@ -51,57 +51,57 @@ log = logging.getLogger(__name__)
                 "qc reports for paired end trimmed reads data",
             ],
             ["Trimmed Reads By Sample", "Trim Reads"],
-            (172, 7),
+            (173, 7),
             (9, 1),
-            4684.116279069767,
+            4741.289017341041,
             id="Trimmed Reads Checks Only",
         ),
         pytest.param(
             ["STAR alignments"],
             ["STAR Alignments", "STAR Alignments By Sample"],
-            (159, 7),
+            (175, 7),
             (7, 1),
-            5107.968553459119,
+            5569.685714285714,
             id="STAR Alignments Checks Only",
         ),
         pytest.param(
             ["RSeQC output for paired end data"],
             ["RSeQC", "RSeQC By Sample"],
-            (91, 7),
+            (92, 7),
             (13, 1),
-            2578.098901098901,
+            2635.413043478261,
             id="RSeQC Checks Only",
         ),
         pytest.param(
             ["RSEM counts"],
             ["RSEM Counts"],
-            (44, 7),
+            (45, 7),
             (3, 1),
-            1218.2272727272727,
+            1275.888888888889,
             id="RSEM Counts Checks Only",
         ),
         pytest.param(
             ["RSEM counts", "STAR alignments"],
             ["Unnormalized Gene Counts"],
-            (167, 7),
+            (168, 7),
             (0, 0),
-            4559.179640718563,
+            4616.357142857143,
             id="Unnormalized Gene Counts Checks Only",
         ),
         pytest.param(
             ["DGE Output", "ERCC DGE Output", "RSEM Output"],
             ["DGE Metadata", "DGE Metadata ERCC", "DGE Output", "DGE Output ERCC"],
-            (72, 7),
+            (73, 7),
             (0, 0),
-            2024.8333333333333,
+            2082.232876712329,
             id="DGE Checks Only",
         ),
         pytest.param(
             ["is paired end full", "ERCC DGE Output"],
             None,  # This evaluates to meaning running all components
-            (650, 7),
+            (679, 7),
             (34, 5),
-            18661.67692307692,
+            19474.649484536083,
             id="Run all checks",
         ),
     ],
@@ -244,9 +244,9 @@ def test_updated_protocol_model_single_end(
     )
 
 
-def test_updated_protocol_model_skipping(glds48_dataSystem_STAGE00):
+def test_updated_protocol_model_skipping(glds48_dataSystem):
     report = validate_bulkRNASeq(
-        glds48_dataSystem_STAGE00.dataset,
+        glds48_dataSystem.dataset,
         report_args={"include_skipped": False},
         protocol_args={
             "run_components": [
@@ -260,14 +260,14 @@ def test_updated_protocol_model_skipping(glds48_dataSystem_STAGE00):
         },
     )
 
-    assert report["flag_table"].shape == (72, 7)
+    assert report["flag_table"].shape == (353, 7)
     assert report["outliers"].shape == (1, 1)
-    assert pseudo_fingerprint(report["flag_table"]) == 1974.138888888889
+    assert pseudo_fingerprint(report["flag_table"]) == 9621.198300283286
 
     # NOW INCLUDING SKIPPED FLAG TABLE ENTRIES
     # SHOULD MATCH, running all components and not including skips
     report = validate_bulkRNASeq(
-        glds48_dataSystem_STAGE00.dataset,
+        glds48_dataSystem.dataset,
         report_args={"include_skipped": True},
         protocol_args={
             "run_components": [
@@ -279,30 +279,28 @@ def test_updated_protocol_model_skipping(glds48_dataSystem_STAGE00):
         },
     )
 
-    assert report["flag_table"].shape == (502, 7)
+    assert report["flag_table"].shape == (559, 7)
     assert report["outliers"].shape == (1, 1)
-    assert pseudo_fingerprint(report["flag_table"]) == 5397.745019920319
+    assert pseudo_fingerprint(report["flag_table"]) == 11262.12343470483
 
 
-def test_updated_protcol_model_printouts_single(glds48_dataSystem_STAGE04):
-    vp = validate_bulkRNASeq(glds48_dataSystem_STAGE04.dataset, defer_run=True)
-
-    print(vp.queued_checks(include_individual_checks=False))
-    print(vp.queued_checks())
-    # 1 / 0  # Manually Validated by inspecting print statement
-
-
-def test_updated_protcol_model_printouts_paired(glds194_dataSystem_STAGE04):
-    vp = validate_bulkRNASeq(glds194_dataSystem_STAGE04.dataset, defer_run=True)
+def test_updated_protcol_model_printouts_single(glds48_dataSystem):
+    vp = validate_bulkRNASeq(glds48_dataSystem.dataset, defer_run=True)
 
     print(vp.queued_checks(include_individual_checks=False))
     print(vp.queued_checks())
-    # 1 / 0  # Manually Validated by inspecting print statement
 
 
-def test_report_modification_add_sample_column(glds48_dataSystem_STAGE00):
+def test_updated_protcol_model_printouts_paired(glds194_dataSystem):
+    vp = validate_bulkRNASeq(glds194_dataSystem.dataset, defer_run=True)
+
+    print(vp.queued_checks(include_individual_checks=False))
+    print(vp.queued_checks())
+
+
+def test_report_modification_add_sample_column(glds48_dataSystem):
     report = validate_bulkRNASeq(
-        glds48_dataSystem_STAGE00.dataset,
+        glds48_dataSystem.dataset,
         report_args={"include_skipped": False},
         protocol_args={
             "run_components": [
@@ -315,9 +313,9 @@ def test_report_modification_add_sample_column(glds48_dataSystem_STAGE00):
             ]
         },
     )
-    samples = [s for s in glds48_dataSystem_STAGE00.dataset.samples]
+    samples = list(glds48_dataSystem.dataset.samples)
     ValidationProtocol.append_sample_column(report["flag_table"], samples=samples)
 
-    assert report["flag_table"].shape == (72, 8)
+    assert report["flag_table"].shape == (353, 8)
     assert report["outliers"].shape == (1, 1)
-    assert pseudo_fingerprint(report["flag_table"]) == 2046.138888888889
+    assert pseudo_fingerprint(report["flag_table"]) == 9974.198300283286

@@ -1038,6 +1038,9 @@ data assets:
 
     tags:
       - processed
+
+    conditional on dataset:
+      - has_ERCC: [True]
             
     resource categories:
       subcategory: ERCC Analyses
@@ -1070,6 +1073,11 @@ Archived Data Assets:
 
 
 data asset sets:
+  # These assets are not generated in the workflow, but are generated after the workflow
+  PUTATIVE:
+    - "ERCC analysis HTML"
+  glds metadata:
+    - "ISA Archive"
   has ercc:
     - "ERCC normalized DESeq2 normalized counts table"
     - "ERCC sample table"
@@ -1222,6 +1230,8 @@ data asset sets:
     - "raw reverse reads fastQC HTML"
     - "raw forward reads fastQC ZIP"
     - "raw reverse reads fastQC ZIP"
+    - "trimmed fastQC MultiQC directory"
+    - "trimmed fastQC MultiQC directory ZIP"
     - "trimmed forward reads fastq GZ"
     - "trimmed reverse reads fastq GZ"
     - "trimmed forward reads fastQC HTML"

@@ -10,18 +10,11 @@ from statistics import mean
 import string
 import subprocess
 from typing import Dict, Union
-from dp_tools.bulkRNASeq.entity import BulkRNASeqDataset
 from importlib.metadata import files
 
 import pandas as pd
-from dp_tools.components.components import RawReadsComponent
-from dp_tools.core.entity_model import (
-    BaseComponent,
-    ModuleLevelMQC,
-    TemplateComponent,
-    TemplateDataset,
-)
-from dp_tools.core.entity_model2 import Dataset, Sample, multiqc_run_to_dataframes
+
+from dp_tools.core.entity_model import Dataset, Sample, multiqc_run_to_dataframes
 
 log = logging.getLogger(__name__)
 
@@ -246,7 +239,7 @@ def check_thresholds(
 
 
 def check_metadata_attributes_exist(
-    dataset: BulkRNASeqDataset, expected_attrs: list[str]
+    dataset: Dataset, expected_attrs: list[str]
 ) -> FlagEntry:
     # data specific preprocess
     # set up tracker for expected attributes values

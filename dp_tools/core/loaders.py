@@ -4,7 +4,7 @@ import logging
 log = logging.getLogger(__name__)
 
 from dp_tools.core.configuration import load_config
-from dp_tools.core.entity_model2 import DataSystem, dataSystem_from_runsheet
+from dp_tools.core.entity_model import DataSystem, dataSystem_from_runsheet
 
 
 def load_data(
@@ -41,10 +41,18 @@ def load_data(
         set(conf_data_assets)
     ), f"Could not find {set(keys) - set(conf_data_assets)} in data asset keys"
 
-    # Load Metadata from runsheet
+    # Load data assets
     for key in keys:
         dataset.load_data_asset(
             data_asset_config=conf_data_assets[key], name=key, root_dir=root_path
+        )
+    # Load putative data assets
+    for key in conf["data asset sets"]["PUTATIVE"]:
+        dataset.load_data_asset(
+            data_asset_config=conf_data_assets[key],
+            name=key,
+            root_dir=root_path,
+            putative=True,
         )
 
     return dataSystem

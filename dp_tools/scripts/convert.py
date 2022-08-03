@@ -4,14 +4,19 @@ import re
 from typing import List, Union
 from dp_tools.config import schemas
 from dp_tools.core.configuration import load_config
-from dp_tools.components.components import BulkRNASeqMetadataComponent
 from dp_tools.glds_api.files import get_urls
+from dp_tools.core.files import isa_archive
 
 import pandas as pd
 
 import logging
 
 log = logging.getLogger(__name__)
+
+
+class BulkRNASeqMetadataComponent:
+    pass
+
 
 # TODO: refactor this with the analogous metadata component method
 def isa_investigation_subtables(ISAarchive: Path) -> dict[str, pd.DataFrame]:
@@ -24,7 +29,7 @@ def isa_investigation_subtables(ISAarchive: Path) -> dict[str, pd.DataFrame]:
     try:
         [i_file] = (
             f
-            for f in BulkRNASeqMetadataComponent.fetch_isa_files_external(ISAarchive)
+            for f in isa_archive.fetch_isa_files(ISAarchive)
             if f.name.startswith("i_")
         )
     except ValueError:
@@ -34,7 +39,7 @@ def isa_investigation_subtables(ISAarchive: Path) -> dict[str, pd.DataFrame]:
     with open(i_file, "r") as f:
         for line in [l.rstrip() for l in f.readlines()]:
             # search for header
-            if line in BulkRNASeqMetadataComponent._ISA_INVESTIGATION_HEADERS:
+            if line in isa_archive.ISA_INVESTIGATION_HEADERS:
                 if key != None:
                     tables[key] = pd.DataFrame(
                         table_lines
@@ -68,7 +73,7 @@ def isa_investigation_subtables(ISAarchive: Path) -> dict[str, pd.DataFrame]:
         )
 
     # ensure all expected subtables present
-    assert set(tables.keys()) == BulkRNASeqMetadataComponent._ISA_INVESTIGATION_HEADERS
+    assert set(tables.keys()) == isa_archive.ISA_INVESTIGATION_HEADERS
 
     return tables
 
@@ -120,7 +125,7 @@ def get_assay_table_path(
     assay_file_path = matches[0]
     [assay_path] = [
         f
-        for f in BulkRNASeqMetadataComponent.fetch_isa_files_external(ISAarchive)
+        for f in isa_archive.fetch_isa_files(ISAarchive)
         if f.name == assay_file_path.name
     ]
 
@@ -201,7 +206,7 @@ def get_column_name(df: pd.DataFrame, target: Union[str, list]) -> str:
 
 
 # TODO: Needs heavy refactoring and log messaging
-def isa_to_runsheet(accession: str, isa_archive: Path, config: tuple[str, str]):
+def isa_to_runsheet(accession: str, isaArchive: Path, config: tuple[str, str]):
     ################################################################
     ################################################################
     # SETUP CONFIG AND INPUT TABLES
@@ -210,18 +215,16 @@ def isa_to_runsheet(accession: str, isa_archive: Path, config: tuple[str, str]):
     log.info("Setting up to generate runsheet dataframe")
     configuration = load_config(config=config)
     runsheet_schema = schemas.runsheet[config[0]]
-    i_tables = isa_investigation_subtables(isa_archive)
+    i_tables = isa_investigation_subtables(isaArchive)
     a_table = pd.read_csv(
-        get_assay_table_path(ISAarchive=isa_archive, configuration=configuration),
+        get_assay_table_path(ISAarchive=isaArchive, configuration=configuration),
         sep="\t",
     )
     a_study_assays_index = get_assay_table_path(
-        ISAarchive=isa_archive, configuration=configuration, return_index=True
+        ISAarchive=isaArchive, configuration=configuration, return_index=True
     )
     [s_file] = (
-        f
-        for f in BulkRNASeqMetadataComponent.fetch_isa_files_external(isa_archive)
-        if f.name.startswith("s_")
+        f for f in isa_archive.fetch_isa_files(isaArchive) if f.name.startswith("s_")
     )
     s_table = pd.read_csv(s_file, sep="\t")
     df_merged = s_table.merge(a_table, on="Sample Name").set_index(

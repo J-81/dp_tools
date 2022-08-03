@@ -1,41 +1,21 @@
 #########################################################################
 # FLAG (A validation report message)
 #########################################################################
-import abc
 from collections import Counter, defaultdict
 from contextlib import contextmanager
-from dataclasses import dataclass, field
 import enum
-import json
-import os
-from pathlib import Path
-import re
-import traceback
+
 from typing import (
     Callable,
-    ClassVar,
-    Dict,
-    List,
-    Optional,
-    Set,
-    Tuple,
     TypedDict,
     Union,
 )
 import logging
-from dp_tools.core.entity_model import (
-    TemplateComponent,
-    TemplateDataset,
-    TemplateSample,
-)
+
 import pandas as pd
-import pkg_resources
-from schema import Schema, SchemaMissingKeyError, And, Or
-import yaml
 
 log = logging.getLogger(__name__)
 
-from dp_tools.core.model_commons import strict_type_checks
 
 ALLOWED_DEV_EXCEPTIONS = (
     Exception  # Hooking into this with monkeypatch can be handy for testing
@@ -290,10 +270,10 @@ class ValidationProtocol:
     class _QueuedCheck(TypedDict):
         """A queued check including checks that will be skipped"""
 
-        check_fcn: Union[str, Callable[..., FlagEntry]]
+        check_fcn: Callable[..., Union[FlagEntry,FlagEntryWithOutliers]]
         """ A callable function that returns a flag entry or a string placeholder"""
 
-        fcn_name: str
+        function: str
         """ Denotes the function or placeholder name """
 
         description: str
@@ -472,6 +452,7 @@ class ValidationProtocol:
             self._check_queue.append(
                 {
                     "check_fcn": fcn,
+                    "function": fcn.__name__,
                     "description": description
                     if description is not None
                     else fcn.__name__,
@@ -593,7 +574,8 @@ class ValidationProtocol:
 
                     # peel off outlier data and keep track
                     # using current component name as the top level key
-                    if fcn_outliers := result.pop("outliers", None):
+                    # Type ignored since FlagEntry dicts will return None as desired for this conditional
+                    if fcn_outliers := result.pop("outliers", None): # type: ignore
                         self.outliers[queued["component"].name] = (
                             self.outliers[queued["component"].name] | fcn_outliers
                         )

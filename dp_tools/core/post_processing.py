@@ -7,16 +7,18 @@ import os
 from pathlib import Path
 import re
 from typing import Optional, TypedDict, Union
-from dp_tools.core.entity_model import DataDir, DataFile, TemplateDataset
 from dp_tools.core.configuration import load_config
 import pkg_resources
 
 
 import logging
 
+from dp_tools.core.entity_model import Dataset, Group, Sample
+from dp_tools.core.files import isa_archive
+
 log = logging.getLogger(__name__)
 
-from schema import Schema, Or, And
+from schema import Schema
 import yaml
 import pandas as pd
 
@@ -45,17 +47,18 @@ def _load_config(
     log.debug("Loaded the following validation config: {conf_validation}")
 
     # validate with schema
-    config_schema = Schema(
-        {
-            "Valid Study Assay Technology And Measurement Types": [
-                {"measurement": str, "technology": str}
-            ],
-            "Global file prefix": str,
-            "Post Processing Add Study Protocol": str,
-        }
-    )
+    if subsection == "ISA Meta":
+        config_schema = Schema(
+            {
+                "Valid Study Assay Technology And Measurement Types": [
+                    {"measurement": str, "technology": str}
+                ],
+                "Global file prefix": str,
+                "Post Processing Add Study Protocol": str,
+            }
+        )
 
-    config_schema.validate(sub_configuration)
+        config_schema.validate(sub_configuration)
 
     return sub_configuration
 
@@ -94,7 +97,7 @@ def unmangle_columns(columns: list[str]) -> list[str]:
     return new_cols
 
 
-def get_assay_table_path(dataset: TemplateDataset, configuration: dict) -> Path:
+def get_assay_table_path(isaArchive: Path, configuration: dict) -> Path:
     """Retrieve the assay table file name that determined as a valid assay based on configuration.
     Specifically, defined in subsection 'ISA meta'
 
@@ -106,7 +109,7 @@ def get_assay_table_path(dataset: TemplateDataset, configuration: dict) -> Path:
     :rtype: Path
     """
     # retrieve study assay subtable from I_file
-    df = dataset.metadata.isa_investigation_subtables["STUDY ASSAYS"]
+    df = isa_archive.isa_investigation_subtables(isaArchive)["STUDY ASSAYS"]
 
     # get valid tuples of measurement and technology types from configuration
     valid_measurements_and_technology_types: list[tuple[str, str]] = [
@@ -137,7 +140,9 @@ def get_assay_table_path(dataset: TemplateDataset, configuration: dict) -> Path:
     # load assay table
     assay_file_path = matches[0]
     [assay_path] = [
-        f for f in dataset.metadata.fetch_isa_files() if f.name == assay_file_path.name
+        f
+        for f in isa_archive.fetch_isa_files(isaArchive)
+        if f.name == assay_file_path.name
     ]
 
     return assay_path
@@ -174,7 +179,7 @@ def get_repolike_category_string(data_asset_metadata: ResourceCategory) -> str:
 
 
 def generate_new_column_dicts(
-    dataset: TemplateDataset, configuration: dict
+    dataset: Dataset, configuration: dict
 ) -> tuple[dict, dict]:
     """Based on data assets in the dataset and configuration, generates dictionaries for dataframe extension.
     Specifically, the "data assets" configuration subsection is used.
@@ -189,39 +194,39 @@ def generate_new_column_dicts(
     # e.g.
     # {"Parameter Value[New1/subnew1]" : {"sample1":"asset",...}}
 
-    # generate table of sample wise files
-    # associating all non-samplewise files to ALL samples
-    all_samples = list(dataset.samples.keys())
-
     new_cols: dict[str, dict[str, str],] = defaultdict(
         lambda: defaultdict(set)  # type: ignore
     )
 
     column_order: dict = dict()
 
-    for asset in dataset.all_data_assets:
-        if not asset.metadata["resource categories"]["publish to repo"]:
+    for asset in dataset.get_assets():
+        if not asset.config["resource categories"]["publish to repo"]:
             continue
 
         # format header
         category_string = get_repolike_category_string(
-            asset.metadata["resource categories"]
+            asset.config["resource categories"]
         )
         header = (
             _PARAMETER_VALUE_COL_PREFIX + category_string + _PARAMETER_VALUE_COL_SUFFIX
         )
 
         # sample names here are based on processing sample names!
-        associated_samples = (
-            [asset.metadata["template_kwargs"].get("sample", None)]
-            if asset.metadata["template_kwargs"].get("sample", None)
-            else all_samples
-        )
+        match asset.owner:
+            case Sample():
+                associated_samples = [asset.owner.name]  # Must be a list
+            case Dataset():
+                associated_samples = list(dataset.samples.keys())
+            case Group():
+                raise NotImplementedError(
+                    "Group ownership is not implemented in current data model"
+                )
 
         # now remap those processing sample names to their orignal names,
         # required for joining to orignal assay table
         processing_to_orignal_mapping = pd.read_csv(
-            dataset.metadata.runsheet.path, index_col="Sample Name"
+            dataset.data_assets["runsheet"].path, index_col="Sample Name"
         )["Original Sample Name"].to_dict()
         # TODO: ineffecient, should only iterate once
         remapped_samples = [
@@ -239,15 +244,13 @@ def generate_new_column_dicts(
 
         # TODO: this likely will be better placed elsewhere but for now this is fine
         # Track column order here as a dict
-        column_order[header] = asset.metadata["resource categories"]["table order"]
+        column_order[header] = asset.config["resource categories"]["table order"]
 
         # associate file names to each sample
         for sample in associated_samples:
             # format file names
             table_filename = (
-                configuration["Global file prefix"].format(
-                    datasystem=dataset.dataSystem.name
-                )
+                configuration["Global file prefix"].format(datasystem=dataset.name)
                 + asset.path.name
             )
 
@@ -392,7 +395,7 @@ def setup_output_target(
 
 
 def update_curation_tables(
-    dataset: TemplateDataset,
+    dataset: Dataset,
     config: Union[tuple[str, str], Path],
     output_file: str = None,
     investigation_table: bool = False,
@@ -402,7 +405,7 @@ def update_curation_tables(
     The naming and order of the new columns is configured in the data assets config section.
 
     :param dataset: A loaded dataset object
-    :type dataset: TemplateDataset
+    :type dataset: Dataset
     :param config: A assay type configuration file specifier formatted as follows: ('assay','version') or local path to configuration file
     :type config: Union[tuple[str, str], Path]
     :param output_file: The name of the updated output tables, defaults to using the same name as the original tables
@@ -414,7 +417,8 @@ def update_curation_tables(
 
     # first extend the assay table
     # load assay dataframe
-    assay_path = get_assay_table_path(dataset, configuration)
+    isaArchive = dataset.data_assets["ISA Archive"].path
+    assay_path = get_assay_table_path(isaArchive, configuration)
     df_assay = pd.read_csv(assay_path, sep="\t").set_index(keys="Sample Name")
 
     column_contents, column_order = generate_new_column_dicts(dataset, configuration)
@@ -422,7 +426,7 @@ def update_curation_tables(
     df_assay_extended = extend_assay_dataframe(df_assay, column_contents, column_order)
 
     # now modify investigation table accordingly
-    assay_path = get_assay_table_path(dataset, configuration)
+    assay_path = get_assay_table_path(isaArchive, configuration)
 
     if investigation_table:
         raise NotImplementedError(
@@ -499,7 +503,7 @@ ALLOWED_MISSING_KEYS_FOR_NON_ERCC = {
 
 
 def generate_md5sum_table(
-    dataset: TemplateDataset,
+    dataset: Dataset,
     config: Union[tuple[str, str], Path],
     allowed_unused_keys: set[str] = None,
     include_tags: bool = False,
@@ -513,59 +517,55 @@ def generate_md5sum_table(
     # generate all md5sums for all data assets that will be published
     # table columns: resource_category, filename, md5sum
     data: Union[list[Md5sum_row_with_tags], list[Md5sum_row]] = list()
-    for asset in dataset.all_data_assets:
-        if not asset.metadata["resource categories"]["publish to repo"]:
+    for asset in dataset.get_assets():
+        if not asset.config["resource categories"]["publish to repo"]:
             continue
 
         # catch rare cases where a data asset is 'psuedo loaded'
         # this occurs when a data asset is loaded without verifying
         # the asset exists. Used when a data asset is part of the repo publish assets
         # but not generated during automated processing and rather added after the fact
-        if not asset.check_exists:
+        if asset.putative:
             data.append(
                 {
                     "resource_category": get_repolike_category_string(
-                        asset.metadata["resource categories"]
+                        asset.config["resource categories"]
                     ),
                     "filename": asset.path.name,
                     "md5sum": "USER MUST ADD MANUALLY!",
                 }
-                | ({"tags": asset.metadata["tags"]} if include_tags else {})
+                | ({"tags": asset.config["tags"]} if include_tags else {})
             )
             continue  # to next data asset
 
-        match asset:
-            # branch for data files
-            case DataFile():
+        # branch for data asset files
+        if asset.path.is_file():
+            data.append(
+                {
+                    "resource_category": get_repolike_category_string(
+                        asset.config["resource categories"]
+                    ),
+                    "filename": asset.path.name,
+                    "md5sum": compute_md5sum(asset.path),
+                }
+                | ({"tags": asset.config["tags"]} if include_tags else {})
+            )
+        # branch for data asset dirs
+        elif asset.path.is_dir():
+            for sub_asset in asset.path.iterdir():
                 data.append(
                     {
                         "resource_category": get_repolike_category_string(
-                            asset.metadata["resource categories"]
+                            asset.config["resource categories"]
                         ),
-                        "filename": asset.path.name,
-                        "md5sum": compute_md5sum(asset.path),
+                        "filename": sub_asset.name,
+                        "md5sum": compute_md5sum(sub_asset),
                     }
-                    | ({"tags": asset.metadata["tags"]} if include_tags else {})
+                    | ({"tags": asset.config["tags"]} if include_tags else {})
                 )
 
-            # branch for data dirs
-            case DataDir():
-                for sub_asset in asset.path.iterdir():
-                    data.append(
-                        {
-                            "resource_category": get_repolike_category_string(
-                                asset.metadata["resource categories"]
-                            ),
-                            "filename": sub_asset.name,
-                            "md5sum": compute_md5sum(sub_asset),
-                        }
-                        | ({"tags": asset.metadata["tags"]} if include_tags else {})
-                    )
-
     # compare all data assets against configuration
-    asset_keys_in_dataset: set[str] = {
-        asset.metadata["data asset key"] for asset in dataset.all_data_assets
-    }
+    asset_keys_in_dataset: set[str] = {asset.key for asset in dataset.get_assets()}
     publishable_asset_keys_in_config: set[str] = {
         key
         for key, value in loaded_config["data assets"].items()
