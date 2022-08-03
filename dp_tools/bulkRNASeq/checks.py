@@ -548,6 +548,7 @@ def check_aggregate_star_unnormalized_counts_table_values_against_samplewise_tab
         # check if the values match for any of the count modes
         #   unstranded, sense, antisense
         # for remaining samples, only check the match for the first count mode
+        # TODO: Fix rare false postive related to zero counts, in those cases the strand_assessment can be prematurely determined which causes other samples to be compared with an inappropriate assessment
         for count_mode in STAR_COUNT_MODES:
             # make sure to sort indicies
             if df_agg[sample].sort_index().equals(df_samp[count_mode].sort_index()):
