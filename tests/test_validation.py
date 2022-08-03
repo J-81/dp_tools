@@ -210,7 +210,7 @@ def test_updated_protocol_model_paired_end(
             (178, 7),
             (0, 0),
             4886.337078651685,
-            0,
+            1,  # Encounters rare false positive for check_aggregate_star_unnormalized_counts_table_values_against_samplewise_tables that should only occur when gene counts are zero for multiple strand assessment types
             id="Unnormalized Gene Counts Checks Only",
         ),
         pytest.param(
@@ -287,7 +287,7 @@ def test_updated_protocol_model_skipping(glds48_dataSystem):
 
     assert report["flag_table"].shape == (353, 7)
     assert report["outliers"].shape == (1, 1)
-    assert pseudo_fingerprint(report["flag_table"]) == 9621.198300283286
+    assert pseudo_fingerprint(report["flag_table"]) == 9561.028328611897
 
     # NOW INCLUDING SKIPPED FLAG TABLE ENTRIES
     # SHOULD MATCH, running all components and not including skips
@@ -306,7 +306,7 @@ def test_updated_protocol_model_skipping(glds48_dataSystem):
 
     assert report["flag_table"].shape == (559, 7)
     assert report["outliers"].shape == (1, 1)
-    assert pseudo_fingerprint(report["flag_table"]) == 11262.12343470483
+    assert pseudo_fingerprint(report["flag_table"]) == 11202.016100178891
 
 
 def test_updated_protcol_model_printouts_single(glds48_dataSystem):
@@ -343,4 +343,4 @@ def test_report_modification_add_sample_column(glds48_dataSystem):
 
     assert report["flag_table"].shape == (353, 8)
     assert report["outliers"].shape == (1, 1)
-    assert pseudo_fingerprint(report["flag_table"]) == 9974.198300283286
+    assert pseudo_fingerprint(report["flag_table"]) == 9914.028328611897
