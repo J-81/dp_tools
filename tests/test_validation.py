@@ -73,7 +73,7 @@ log = logging.getLogger(__name__)
             (92, 7),
             (13, 1),
             2635.413043478261,
-            0,
+            1,  # RSeQC strandedness is ambiguous
             id="RSeQC Checks Only",
         ),
         pytest.param(
@@ -100,7 +100,7 @@ log = logging.getLogger(__name__)
             (73, 7),
             (0, 0),
             2082.232876712329,
-            0,
+            1,  # RSEM and DGE parity won't match due to dummy counts in DGE output test data
             id="DGE Checks Only",
         ),
         pytest.param(
@@ -108,8 +108,8 @@ log = logging.getLogger(__name__)
             None,  # This evaluates to meaning running all components
             (679, 7),
             (34, 5),
-            19474.649484536083,
-            0,
+            19414.561119293077,
+            2,  # RSEM and DGE parity won't match due to dummy counts in DGE output test data / RSeQC strandedness is ambiguous
             id="Run all checks",
         ),
     ],
@@ -154,14 +154,15 @@ def test_updated_protocol_model_paired_end(
 
 
 @pytest.mark.parametrize(
-    "data_asset_keys,components,expected_flag_table_shape,expected_outlier_table_shape,expected_flag_table_fingerprint",
+    "data_asset_keys,components,expected_flag_table_shape,expected_outlier_table_shape,expected_flag_table_fingerprint,expected_halt_flag_count",
     [
         pytest.param(
             ["demuliplexed single end raw data", "qc reports for single end raw data"],
             ["Metadata", "Raw Reads By Sample", "Raw Reads"],
             (61, 7),
             (1, 1),
-            1738.1475409836066,
+            1677.1639344262296,
+            0,
             id="Raw Reads Checks Only",
         ),
         pytest.param(
@@ -173,6 +174,7 @@ def test_updated_protocol_model_paired_end(
             (86, 7),
             (2, 1),
             2352.116279069767,
+            0,
             id="Trimmed Reads Checks Only",
         ),
         pytest.param(
@@ -181,6 +183,7 @@ def test_updated_protocol_model_paired_end(
             (187, 7),
             (7, 1),
             5923.545454545455,
+            0,
             id="STAR Alignments Checks Only",
         ),
         pytest.param(
@@ -189,6 +192,7 @@ def test_updated_protocol_model_paired_end(
             (66, 7),
             (12, 1),
             1862.909090909091,
+            0,
             id="RSeQC Checks Only",
         ),
         pytest.param(
@@ -197,6 +201,7 @@ def test_updated_protocol_model_paired_end(
             (47, 7),
             (1, 1),
             1299.2127659574467,
+            0,
             id="RSEM Counts Checks Only",
         ),
         pytest.param(
@@ -205,6 +210,7 @@ def test_updated_protocol_model_paired_end(
             (178, 7),
             (0, 0),
             4886.337078651685,
+            0,
             id="Unnormalized Gene Counts Checks Only",
         ),
         pytest.param(
@@ -213,6 +219,7 @@ def test_updated_protocol_model_paired_end(
             (39, 7),
             (0, 0),
             1134.5384615384614,
+            1,  # test data does not have parity between DGE counts and RSEM counts
             id="DGE Checks Only",
         ),
         pytest.param(
@@ -220,7 +227,8 @@ def test_updated_protocol_model_paired_end(
             None,  # This evaluates to meaning running all components
             (487, 7),
             (21, 5),
-            14291.29979466119,
+            14231.17659137577,
+            2,  # test data does not have parity between DGE counts and RSEM counts / Encounters rare false positive for check_aggregate_star_unnormalized_counts_table_values_against_samplewise_tables that should only occur when gene counts are zero for multiple strand assessment types
             id="Run all checks",
         ),
     ],
@@ -232,6 +240,7 @@ def test_updated_protocol_model_single_end(
     expected_flag_table_shape,
     expected_outlier_table_shape,
     expected_flag_table_fingerprint,
+    expected_halt_flag_count,
 ):
     datasystem = load_data(
         key_sets=data_asset_keys,
@@ -245,6 +254,9 @@ def test_updated_protocol_model_single_end(
         report_args={"include_skipped": False},
         protocol_args={"run_components": components},
     )
+    assert (
+        sum(report["flag_table"]["code_level"] >= 80) == expected_halt_flag_count
+    ), f"Found more than expected HALT+ flags: {report['flag_table'].loc[report['flag_table']['code_level'] >= 80].to_dict()}"
 
     assert (
         report["flag_table"].shape,
