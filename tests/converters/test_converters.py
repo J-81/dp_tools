@@ -6,12 +6,12 @@ import pandas as pd
 from dp_tools.scripts.convert import isa_to_runsheet
 
 # Updated to microarray development version api
-def test_paired_isa_to_runsheet(glds194_dataSystem_STAGE00, tmpdir):
+def test_paired_isa_to_runsheet(glds194_test_dir, tmpdir):
     """This tests validation as it would be run on dataset after demultiplexing"""
     os.chdir(tmpdir)
-    ds = glds194_dataSystem_STAGE00
+    isaPath = glds194_test_dir / "Metadata" / "GLDS-194_metadata_GLDS-194-ISA.zip"
     df_runsheet = isa_to_runsheet(
-        ds.name, ds.dataset.metadata.ISAarchive.path, config=("bulkRNASeq", "0")
+        "GLDS-194", isaPath, config=("bulkRNASeq", "0")
     )
 
     assert df_runsheet.shape == (13, 7)
@@ -21,12 +21,12 @@ def test_paired_isa_to_runsheet(glds194_dataSystem_STAGE00, tmpdir):
     ), "Hash did not match, the means the contents changed. Manually validation and reset of test hash is in order"
 
 
-def test_single_isa_to_runsheet(glds48_dataSystem_STAGE00, tmpdir):
+def test_single_isa_to_runsheet(glds48_test_dir, tmpdir):
     """This tests validation as it would be run on dataset after demultiplexing"""
     os.chdir(tmpdir)
-    ds = glds48_dataSystem_STAGE00
+    isaPath = glds48_test_dir / "Metadata" / "GLDS-48_metadata_RR1-NASA-ISA.zip"
     df_runsheet = isa_to_runsheet(
-        ds.name, ds.dataset.metadata.ISAarchive.path, config=("bulkRNASeq", "0")
+        "GLDS-48", isaPath, config=("bulkRNASeq", "0")
     )
 
     assert df_runsheet.shape == (14, 7)
@@ -36,6 +36,7 @@ def test_single_isa_to_runsheet(glds48_dataSystem_STAGE00, tmpdir):
     ), "Hash did not match, the means the contents changed. Manually validation and reset of test hash is in order"
 
 
+# TODO: Enable once microarray test data is included in test repo
 # def test_microarray_glds205_isa_to_runsheet(glds205_isazip_path):
 #     """This tests validation as it would be run on dataset after demultiplexing"""
 #     df_runsheet = isa_to_runsheet(
