@@ -10,17 +10,11 @@ from statistics import mean
 import string
 import subprocess
 from typing import Dict, Union
-from dp_tools.bulkRNASeq.entity import BulkRNASeqDataset
 from importlib.metadata import files
 
 import pandas as pd
-from dp_tools.components.components import RawReadsComponent
-from dp_tools.core.entity_model import (
-    BaseComponent,
-    ModuleLevelMQC,
-    TemplateComponent,
-    TemplateDataset,
-)
+
+from dp_tools.core.entity_model import Dataset, Sample, multiqc_run_to_dataframes
 
 log = logging.getLogger(__name__)
 
@@ -77,14 +71,15 @@ def convert_nan_to_zero(input: Dict[str, Union[float, int]]) -> Dict:
 
 ## Functions that use the following syntax to merge values from general stats:
 # "stat1 + stat2" should search and sum the stats
-def stat_string_to_value(stat_string: str, mqcData: ModuleLevelMQC) -> float:
+# TODO: refine dict typehint
+def stat_string_to_value(stat_string: str, mqcData: dict) -> float:
     """ "stat1 + stat2" should search and sum the stats"""
     sum = float(0)
     direct_keys = stat_string.split(" + ")
     for direct_key in direct_keys:
         print(direct_key)
-        sum += mqcData["General_Stats"][direct_key]
-    return sum
+        sum += mqcData[direct_key]
+    return float(sum)
 
 
 ## Dataframe and Series specific helper functions
@@ -103,12 +98,10 @@ def onlyAllowedValues(df: pd.DataFrame, allowed_values: list) -> bool:
     return ((df.isin(allowed_values)) | (df.isnull())).all(axis=None)
 
 
-def check_forward_and_reverse_reads_counts_match(
-    fwd_reads: RawReadsComponent, rev_reads: RawReadsComponent
-) -> FlagEntry:
+def check_forward_and_reverse_reads_counts_match(sample: Sample, reads_key_1: str, reads_key_2: str) -> FlagEntry:
     # data specific preprocess
-    count_fwd_reads = fwd_reads.mqcData["FastQC"]["General_Stats"]["total_sequences"]
-    count_rev_reads = rev_reads.mqcData["FastQC"]["General_Stats"]["total_sequences"]
+    count_fwd_reads = float(sample.compile_multiqc_data([reads_key_1])['general_stats']['FastQC']['total_sequences'])
+    count_rev_reads = float(sample.compile_multiqc_data([reads_key_2])['general_stats']['FastQC']['total_sequences'])
 
     # check logic
     if count_fwd_reads == count_rev_reads:
@@ -196,7 +189,9 @@ def check_fastqgz_file_contents(file: Path, count_lines_to_check: int) -> FlagEn
     return {"code": code, "message": message}
 
 
-def check_bam_file_integrity(file: Path, samtools_bin: Path = Path("samtools")) -> FlagEntry:
+def check_bam_file_integrity(
+    file: Path, samtools_bin: Path = Path("samtools")
+) -> FlagEntry:
     """Uses http://www.htslib.org/doc/samtools-quickcheck.html"""
     # data specific preprocess
 
@@ -217,10 +212,11 @@ def check_bam_file_integrity(file: Path, samtools_bin: Path = Path("samtools")) 
 
 
 def check_thresholds(
-    component: TemplateComponent, mqc_key: str, stat_string: str, thresholds: list[dict]
+    multiqc_inputs: list[Path], mqc_key: str, stat_string: str, thresholds: list[dict]
 ) -> FlagEntry:
     # data specific preprocess
-    value = stat_string_to_value(stat_string, component.mqcData[mqc_key])
+    data = multiqc_run_to_dataframes(multiqc_inputs)
+    value = stat_string_to_value(stat_string, data["general_stats"][mqc_key])
 
     # check logic
     # Assuming GREEN unless reassigned
@@ -243,7 +239,7 @@ def check_thresholds(
 
 
 def check_metadata_attributes_exist(
-    dataset: BulkRNASeqDataset, expected_attrs: list[str]
+    dataset: Dataset, expected_attrs: list[str]
 ) -> FlagEntry:
     # data specific preprocess
     # set up tracker for expected attributes values
@@ -270,8 +266,8 @@ def check_metadata_attributes_exist(
 
 
 def check_for_outliers(
-    dataset: TemplateDataset,
-    sample_component: str,
+    dataset: Dataset,
+    data_asset_keys: list[str],
     mqc_module: str,
     mqc_plot: str,
     mqc_keys: list[str],
@@ -280,9 +276,12 @@ def check_for_outliers(
     # assume code is GREEN until outliers detected
     code = FlagCode.GREEN
     # dataframe extraction
-    df: pd.DataFrame = dataset.getMQCDataFrame(
-        sample_component=sample_component, mqc_module=mqc_module, mqc_plot=mqc_plot
-    )
+    compiled_mqc_data = dataset.compile_multiqc_data(data_asset_keys=data_asset_keys)
+
+    if mqc_plot == "general_stats":
+        df = compiled_mqc_data["general_stats"][mqc_module]
+    else:
+        df = compiled_mqc_data["plots"][mqc_module][mqc_plot]
 
     def default_to_regular(d):
         if isinstance(d, defaultdict):
@@ -329,6 +328,9 @@ def check_for_outliers(
                     # elevate code if current code is lower severity
                     if code < FlagCode[threshold["code"]]:
                         code = FlagCode[threshold["code"]]
+
+    # convert defaultdict to regular for all reporting
+    outliers = default_to_regular(outliers)
     # check logic
     if code == FlagCode.GREEN:
         message = f"No outliers found for {mqc_keys} in {mqc_plot} part of {mqc_module} multiQC module"
@@ -336,7 +338,7 @@ def check_for_outliers(
         message = (
             f"Outliers found in {mqc_module} multiQC module as follows: {outliers}"
         )
-    return {"code": code, "message": message, "outliers": default_to_regular(outliers)}
+    return {"code": code, "message": message, "outliers": outliers}
 
 
 def _check_expected_files_exist(
@@ -396,20 +398,19 @@ def check_inner_distance_output(input_dir: Path):
 
 
 def check_strandedness_assessable_from_infer_experiment(
-    dataset: BulkRNASeqDataset,
+    dataset: Dataset,
     stranded_assessment_range: dict[str, float],
     unstranded_assessment_range: dict[str, float],
     valid_dominant_strandedness_assessments: list[str],
 ) -> FlagEntry:
     # data specific preprocess
     def get_median_strandedness(
-        dataset: TemplateDataset,
+        dataset: Dataset,
     ) -> dict[str, float]:
-        df = dataset.getMQCDataFrame(
-            sample_component="rSeQCAnalysis",
-            mqc_module="RSeQC",
-            mqc_plot="Infer experiment",
-        ).fillna(
+
+        df = dataset.compile_multiqc_data(["infer experiment out"])["plots"]["RSeQC"][
+            "Infer experiment"
+        ].fillna(
             0
         )  # Nan is a zero for this MultiQC table
 
@@ -439,13 +440,11 @@ def check_strandedness_assessable_from_infer_experiment(
     )
 
     def determine_samples_outside_range(
-        dataset: TemplateDataset, min: float, max: float
+        dataset: Dataset, min: float, max: float
     ) -> list[str]:
-        df = dataset.getMQCDataFrame(
-            sample_component="rSeQCAnalysis",
-            mqc_module="RSeQC",
-            mqc_plot="Infer experiment",
-        ).fillna(
+        df = dataset.compile_multiqc_data(["infer experiment out"])["plots"]["RSeQC"][
+            "Infer experiment"
+        ].fillna(
             0
         )  # Nan is a zero for this MultiQC table
 
@@ -798,7 +797,7 @@ def check_contrasts_table_rows(contrasts_table: Path, **_) -> FlagEntry:
         if not expected_values == set(col_series):
             bad_columns[col_name] = {
                 "expected": expected_values,
-                "actual": set(col_series)
+                "actual": set(col_series),
             }
 
     # check logic

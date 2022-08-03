@@ -170,7 +170,7 @@ class MQCRunDict(TypedDict):
 def get_general_stats(mqc_run_output: MQCRunDict) -> dict[str, dict]:
     returnDict = dict()
     report = mqc_run_output["report"]
-    mqc_modules = [module.name for module in report.modules_output]
+    mqc_modules = [list(header_entry.values())[0]['namespace'] for header_entry in report.general_stats_headers]
     for mqc_module, single_module_data in zip(mqc_modules, report.general_stats_data):
         returnDict[mqc_module] = single_module_data
     return returnDict

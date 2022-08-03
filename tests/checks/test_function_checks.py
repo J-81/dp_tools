@@ -1,79 +1,84 @@
 import os
 from pathlib import Path
 from dp_tools.bulkRNASeq.checks import *
-from dp_tools.bulkRNASeq.entity import BulkRNASeqDataset
 from dp_tools.core.check_model import FlagCode
 
 
-def test_check_rsem_counts_and_unnormalized_tables_parity(glds48_dataSystem_STAGE04):
-    dataset = glds48_dataSystem_STAGE04.dataset
+def test_check_rsem_counts_and_unnormalized_tables_parity(glds48_dataSystem):
+    dataset = glds48_dataSystem.dataset
     res = check_rsem_counts_and_unnormalized_tables_parity(
-        rsem_table_path=dataset.rsemGeneCounts.unnormalizedCounts.path,
-        deseq2_table_path=dataset.normalizedGeneCounts.unnormalizedCountsCSV.path,
+        rsem_table_path=dataset.data_assets["rsem unnormalized counts table"].path,
+        deseq2_table_path=dataset.data_assets["DESeq2 unnormalized counts table"].path,
     )
 
-    assert res["code"]
+    assert (
+        res["code"] == FlagCode.HALT
+    )  # The test data was truncate processed and counts won't match
     assert res["message"]
 
 
-def test_check_forward_and_reverse_reads_counts_match(glds194_dataSystem_STAGE00):
-    dataset = glds194_dataSystem_STAGE00.dataset
+def test_check_forward_and_reverse_reads_counts_match(glds194_dataSystem):
+    dataset = glds194_dataSystem.dataset
 
     for sample in dataset.samples.values():
         res = check_forward_and_reverse_reads_counts_match(
-            fwd_reads=sample.rawForwardReads, rev_reads=sample.rawReverseReads
+            sample=sample,
+            reads_key_1="raw forward reads fastQC ZIP",
+            reads_key_2="raw reverse reads fastQC ZIP",
         )
-        assert res["code"]
+        assert res["code"] == FlagCode.GREEN
         assert res["message"]
 
 
-def test_check_bam_file_integrity(glds48_dataSystem_STAGE04):
-    dataset = glds48_dataSystem_STAGE04.dataset
+def test_check_bam_file_integrity(glds48_dataSystem):
+    dataset = glds48_dataSystem.dataset
 
     for sample in dataset.samples.values():
         res = check_bam_file_integrity(
-            file=sample.genomeAlignments.alignedToTranscriptomeBam.path,
+            file=sample.data_assets["aligned SortedByCoord Bam"].path,
         )
         assert res["code"] == FlagCode.GREEN
         assert res["message"]
 
         res = check_bam_file_integrity(
-            file=sample.genomeAlignments.logFinal.path,
+            file=sample.data_assets["aligned log Full"].path,
         )
 
         assert res["code"] == FlagCode.HALT
         assert res["message"]
 
 
-def test_check_ERCC_group_represention(glds194_dataSystem_STAGE04):
-    dataset: BulkRNASeqDataset = glds194_dataSystem_STAGE04.dataset
+def test_check_ERCC_group_represention(glds194_dataSystem):
+    dataset = glds194_dataSystem.dataset
 
     res = check_ERCC_subgroup_representation(
-        unnormalizedCountTable=dataset.rsemGeneCounts.unnormalizedCounts.path
+        unnormalizedCountTable=dataset.data_assets[
+            "rsem unnormalized counts table"
+        ].path
     )
 
     assert res["code"] == FlagCode.RED
-    assert res["message"]
+    assert res["message"]  # TODO: Fix message
 
 
-def test_check_dge_table_log2fc_within_reason(glds194_dataSystem_STAGE04):
-    dataset: BulkRNASeqDataset = glds194_dataSystem_STAGE04.dataset
+def test_check_dge_table_log2fc_within_reason(glds194_dataSystem):
+    dataset = glds194_dataSystem.dataset
 
     res = check_dge_table_log2fc_within_reason(
-        dge_table=dataset.differentialGeneExpression.annotatedTableCSV.path,
-        runsheet=dataset.metadata.runsheet.path,
+        dge_table=dataset.data_assets["DESeq2 annotated DGE table"].path,
+        runsheet=dataset.data_assets["runsheet"].path,
     )
 
     assert res["code"] == FlagCode.GREEN
     assert res["message"]
 
 
-def test_check_sample_table_against_runsheet(glds194_dataSystem_STAGE04):
-    dataset: BulkRNASeqDataset = glds194_dataSystem_STAGE04.dataset
+def test_check_sample_table_against_runsheet(glds194_dataSystem):
+    dataset = glds194_dataSystem.dataset
 
     res = check_sample_table_against_runsheet(
-        runsheet=dataset.metadata.runsheet.path,
-        sampleTable=dataset.normalizedGeneCounts.sampleTableCSV.path,
+        runsheet=dataset.data_assets["runsheet"].path,
+        sampleTable=dataset.data_assets["sample table"].path,
         all_samples_required=True,
     )
 
@@ -81,8 +86,8 @@ def test_check_sample_table_against_runsheet(glds194_dataSystem_STAGE04):
     assert res["message"]
 
     res = check_sample_table_against_runsheet(
-        runsheet=dataset.metadata.runsheet.path,
-        sampleTable=dataset.normalizedGeneCounts.erccSampleTableCSV.path,
+        runsheet=dataset.data_assets["runsheet"].path,
+        sampleTable=dataset.data_assets["ERCC sample table"].path,
         all_samples_required=False,
     )
 
@@ -90,45 +95,45 @@ def test_check_sample_table_against_runsheet(glds194_dataSystem_STAGE04):
     assert res["message"]
 
 
-def test_check_contrasts_table_rows(glds48_dataSystem_STAGE04):
-    dataset: BulkRNASeqDataset = glds48_dataSystem_STAGE04.dataset
+def test_check_contrasts_table_rows(glds48_dataSystem):
+    dataset = glds48_dataSystem.dataset
 
     res = check_contrasts_table_rows(
-        contrasts_table=dataset.differentialGeneExpression.contrastsCSV.path
+        contrasts_table=dataset.data_assets["DESeq2 contrasts table"].path
     )
 
     assert res["code"] == FlagCode.GREEN
     assert res["message"]
 
 
-def test_check_sample_table_for_correct_group_assignments(glds194_dataSystem_STAGE04):
-    dataset: BulkRNASeqDataset = glds194_dataSystem_STAGE04.dataset
+def test_check_sample_table_for_correct_group_assignments(glds194_dataSystem):
+    dataset = glds194_dataSystem.dataset
 
     res = check_sample_table_for_correct_group_assignments(
-        runsheet=dataset.metadata.runsheet.path,
-        sampleTable=dataset.normalizedGeneCounts.sampleTableCSV.path,
+        runsheet=dataset.data_assets["runsheet"].path,
+        sampleTable=dataset.data_assets["sample table"].path,
     )
 
     assert res["code"] == FlagCode.GREEN
     assert res["message"]
 
     res = check_sample_table_for_correct_group_assignments(
-        runsheet=dataset.metadata.runsheet.path,
-        sampleTable=dataset.normalizedGeneCounts.erccSampleTableCSV.path,
+        runsheet=dataset.data_assets["runsheet"].path,
+        sampleTable=dataset.data_assets["ERCC sample table"].path,
     )
 
     assert res["code"] == FlagCode.GREEN
     assert res["message"]
 
 
-def test_check_dge_table_group_columns_constraints(glds194_dataSystem_STAGE04):
-    dataset: BulkRNASeqDataset = glds194_dataSystem_STAGE04.dataset
+def test_check_dge_table_group_columns_constraints(glds194_dataSystem):
+    dataset = glds194_dataSystem.dataset
 
     payload = {
-        "organism": dataset.metadata.organism,
+        "organism": dataset.metadata["organism"],
         "samples": set(dataset.samples),
-        "dge_table": dataset.differentialGeneExpression.annotatedTableCSV.path,
-        "runsheet": dataset.metadata.runsheet.path,
+        "dge_table": dataset.data_assets["DESeq2 annotated DGE table"].path,
+        "runsheet": dataset.data_assets["runsheet"].path,
     }
 
     res = check_dge_table_group_columns_constraints(**payload)
@@ -137,14 +142,14 @@ def test_check_dge_table_group_columns_constraints(glds194_dataSystem_STAGE04):
     assert res["message"]
 
     payload = {
-        "organism": dataset.metadata.organism,
+        "organism": dataset.metadata["organism"],
         "samples": set(
             pd.read_csv(
-                dataset.normalizedGeneCounts.erccSampleTableCSV.path, index_col=0
+                dataset.data_assets["ERCC sample table"].path, index_col=0
             ).index
         ),
-        "dge_table": dataset.differentialGeneExpressionERCC.annotatedTableCSV.path,
-        "runsheet": dataset.metadata.runsheet.path,
+        "dge_table": dataset.data_assets["DESeq2 annotated DGE table"].path,
+        "runsheet": dataset.data_assets['runsheet'].path,
     }
 
     res = check_dge_table_group_columns_constraints(**payload)

@@ -164,10 +164,7 @@ class BulkRNASeqMetadataComponent(TemplateComponent):
 
             # format with two rows for each column
             row1s = [_make_names_like_R(permute[0]) for permute in permutations]
-            row2s = [
-                _make_names_like_R(permute[1])
-                for permute in permutations
-            ]
+            row2s = [_make_names_like_R(permute[1]) for permute in permutations]
 
             # format as dataframe
             self._contrasts = pd.DataFrame(
@@ -383,11 +380,10 @@ class DifferentialGeneExpression(TemplateComponent):
     visualizationTableCSV: Union[DataFile, None] = field(default=None)
     visualizationPCATableCSV: Union[DataFile, None] = field(default=None)
 
+
 @dataclass(eq=False)
 class ERCCAnalysis(TemplateComponent):
-    """Component containing all ERCC analysis notebook related data assets.
-
-    """
+    """Component containing all ERCC analysis notebook related data assets."""
 
     base: BaseComponent = field(repr=False)
     notebookHTML: Union[DataFile, None] = field(default=None)

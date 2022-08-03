@@ -63,3 +63,7 @@ def load_config(config: Union[tuple[str, str], Path]) -> dict:
     log.debug(f"Final config loaded: {conf_full}")
 
     return conf_full
+
+
+def available_data_asset_keys(config: Union[tuple[str, str], Path]) -> set[str]:
+    return set(load_config(config)["data assets"])

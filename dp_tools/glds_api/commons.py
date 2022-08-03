@@ -19,7 +19,7 @@ def read_json(url):
 
 
 @functools.cache
-def get_glds_filelisting_json(accession: str) -> tuple[dict, str]:
+def get_glds_filelisting_json(accession: str) -> list[dict]:
     """Return filelisting json accession number"""
     log.debug(f"Fetching filelisting JSON for '{accession}'")
     # extract file urls

@@ -1,16 +1,8 @@
-import copy
 import os
 from pathlib import Path
 import pytest
 
-from dp_tools.bulkRNASeq.loaders import (
-    load_BulkRNASeq_STAGE_00,
-    load_BulkRNASeq_STAGE_01,
-    load_BulkRNASeq_STAGE_02,
-    load_BulkRNASeq_STAGE_0201,
-    load_BulkRNASeq_STAGE_03,
-    load_BulkRNASeq_STAGE_04,
-)
+from dp_tools.core.loaders import load_data
 
 # set for testing
 @pytest.fixture
@@ -105,247 +97,20 @@ def glds48_test_dir(root_test_dir):
 def typo_test_dir(root_test_dir):
     return root_test_dir / "GLDS-48_BUTWITHTYPOS"
 
-
 @pytest.fixture
-def glds194_dataSystem_STAGE00(glds194_test_dir):
-    return copy.deepcopy(
-        load_BulkRNASeq_STAGE_00(
-            glds194_test_dir, config="Latest", dataSystem_name="GLDS-194"
-        )
+def glds48_dataSystem(glds48_test_dir):
+    return load_data(
+        key_sets=["is single end full", "glds metadata"],
+        config=("bulkRNASeq", "Latest"),
+        root_path=(glds48_test_dir),
+        runsheet_path=(glds48_test_dir / "Metadata/GLDS-48_bulkRNASeq_v1_runsheet.csv"),
     )
 
-
 @pytest.fixture
-def glds194_dataSystem_STAGE01(glds194_test_dir):
-    return copy.deepcopy(
-        load_BulkRNASeq_STAGE_01(
-            *load_BulkRNASeq_STAGE_00(
-                glds194_test_dir,
-                config="Latest",
-                dataSystem_name="GLDS-194",
-                stack=True,
-            ),
-            config="Latest"
-        )
-    )
-
-
-@pytest.fixture
-def glds194_dataSystem_STAGE02(glds194_test_dir):
-    return copy.deepcopy(
-        load_BulkRNASeq_STAGE_02(
-            *load_BulkRNASeq_STAGE_01(
-                *load_BulkRNASeq_STAGE_00(
-                    glds194_test_dir,
-                    config="Latest",
-                    dataSystem_name="GLDS-194",
-                    stack=True,
-                ),
-                config="Latest",
-                stack=True
-            ),
-            config="Latest"
-        )
-    )
-
-
-@pytest.fixture
-def glds194_dataSystem_STAGE0201(glds194_test_dir):
-    return copy.deepcopy(
-        load_BulkRNASeq_STAGE_0201(
-            *load_BulkRNASeq_STAGE_02(
-                *load_BulkRNASeq_STAGE_01(
-                    *load_BulkRNASeq_STAGE_00(
-                        glds194_test_dir,
-                        config="Latest",
-                        dataSystem_name="GLDS-194",
-                        stack=True,
-                    ),
-                    config="Latest",
-                    stack=True
-                ),
-                config="Latest",
-                stack=True
-            ),
-            config="Latest"
-        )
-    )
-
-
-@pytest.fixture
-def glds194_dataSystem_STAGE03(glds194_test_dir):
-    return copy.deepcopy(
-        load_BulkRNASeq_STAGE_03(
-            *load_BulkRNASeq_STAGE_0201(
-                *load_BulkRNASeq_STAGE_02(
-                    *load_BulkRNASeq_STAGE_01(
-                        *load_BulkRNASeq_STAGE_00(
-                            glds194_test_dir,
-                            config="Latest",
-                            dataSystem_name="GLDS-194",
-                            stack=True,
-                        ),
-                        config="Latest",
-                        stack=True
-                    ),
-                    config="Latest",
-                    stack=True
-                ),
-                config="Latest",
-                stack=True
-            ),
-            config="Latest"
-        )
-    )
-
-
-@pytest.fixture
-def glds194_dataSystem_STAGE04(glds194_test_dir):
-    return copy.deepcopy(
-        load_BulkRNASeq_STAGE_04(
-            *load_BulkRNASeq_STAGE_03(
-                *load_BulkRNASeq_STAGE_0201(
-                    *load_BulkRNASeq_STAGE_02(
-                        *load_BulkRNASeq_STAGE_01(
-                            *load_BulkRNASeq_STAGE_00(
-                                glds194_test_dir,
-                                config="Latest",
-                                dataSystem_name="GLDS-194",
-                                stack=True,
-                            ),
-                            config="Latest",
-                            stack=True
-                        ),
-                        config="Latest",
-                        stack=True
-                    ),
-                    config="Latest",
-                    stack=True
-                ),
-                config="Latest",
-                stack=True
-            ),
-            config="Latest"
-        )
-    )
-
-
-@pytest.fixture
-def glds48_dataSystem_STAGE00(glds48_test_dir):
-    return copy.deepcopy(
-        load_BulkRNASeq_STAGE_00(
-            glds48_test_dir, config="Latest", dataSystem_name="GLDS-48"
-        )
-    )
-
-
-@pytest.fixture
-def glds48_dataSystem_STAGE01(glds48_test_dir):
-    return copy.deepcopy(
-        load_BulkRNASeq_STAGE_01(
-            *load_BulkRNASeq_STAGE_00(
-                glds48_test_dir, config="Latest", dataSystem_name="GLDS-48", stack=True
-            ),
-            config="Latest"
-        )
-    )
-
-
-@pytest.fixture
-def glds48_dataSystem_STAGE02(glds48_test_dir):
-    return copy.deepcopy(
-        load_BulkRNASeq_STAGE_02(
-            *load_BulkRNASeq_STAGE_01(
-                *load_BulkRNASeq_STAGE_00(
-                    glds48_test_dir,
-                    config="Latest",
-                    dataSystem_name="GLDS-48",
-                    stack=True,
-                ),
-                config="Latest",
-                stack=True
-            ),
-            config="Latest"
-        )
-    )
-
-
-@pytest.fixture
-def glds48_dataSystem_STAGE0201(glds48_test_dir):
-    return copy.deepcopy(
-        load_BulkRNASeq_STAGE_0201(
-            *load_BulkRNASeq_STAGE_02(
-                *load_BulkRNASeq_STAGE_01(
-                    *load_BulkRNASeq_STAGE_00(
-                        glds48_test_dir,
-                        config="Latest",
-                        dataSystem_name="GLDS-48",
-                        stack=True,
-                    ),
-                    config="Latest",
-                    stack=True
-                ),
-                config="Latest",
-                stack=True
-            ),
-            config="Latest"
-        )
-    )
-
-
-@pytest.fixture
-def glds48_dataSystem_STAGE03(glds48_test_dir):
-    return copy.deepcopy(
-        load_BulkRNASeq_STAGE_03(
-            *load_BulkRNASeq_STAGE_0201(
-                *load_BulkRNASeq_STAGE_02(
-                    *load_BulkRNASeq_STAGE_01(
-                        *load_BulkRNASeq_STAGE_00(
-                            glds48_test_dir,
-                            config="Latest",
-                            dataSystem_name="GLDS-48",
-                            stack=True,
-                        ),
-                        config="Latest",
-                        stack=True
-                    ),
-                    config="Latest",
-                    stack=True
-                ),
-                config="Latest",
-                stack=True
-            ),
-            config="Latest"
-        )
-    )
-
-
-@pytest.fixture
-def glds48_dataSystem_STAGE04(glds48_test_dir):
-    return copy.deepcopy(
-        load_BulkRNASeq_STAGE_04(
-            *load_BulkRNASeq_STAGE_03(
-                *load_BulkRNASeq_STAGE_0201(
-                    *load_BulkRNASeq_STAGE_02(
-                        *load_BulkRNASeq_STAGE_01(
-                            *load_BulkRNASeq_STAGE_00(
-                                glds48_test_dir,
-                                config="Latest",
-                                dataSystem_name="GLDS-48",
-                                stack=True,
-                            ),
-                            config="Latest",
-                            stack=True
-                        ),
-                        config="Latest",
-                        stack=True
-                    ),
-                    config="Latest",
-                    stack=True
-                ),
-                config="Latest",
-                stack=True
-            ),
-            config="Latest"
-        )
+def glds194_dataSystem(glds194_test_dir):
+    return load_data(
+        key_sets=["is paired end full", "ERCC DGE Output", "glds metadata"],
+        config=("bulkRNASeq", "Latest"),
+        root_path=(glds194_test_dir),
+        runsheet_path=(glds194_test_dir / "Metadata/GLDS-194_bulkRNASeq_v1_runsheet.csv"),
     )

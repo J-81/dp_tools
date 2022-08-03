@@ -1038,6 +1038,9 @@ data assets:
 
     tags:
       - processed
+
+    conditional on dataset:
+      - has_ERCC: [True]
             
     resource categories:
       subcategory: ERCC Analyses
@@ -1069,61 +1072,232 @@ Archived Data Assets:
     resource categories: *neverPublished
 
 
-Validation Protocols:
-  dry run all:
-    dry run: true
-    skip checks: []
-    stage: "DGE"
-
-  full: &full
-    dry run: false
-    skip checks: []
-    stage: "DGE"
-
-  only processed:
-    dry run: false
-    skip checks: []
-    stage:
-      - Reads_PreProcessed
-      - GenomeAligned
-      - RSeQCAnalysis
-      - GeneCounted
-      - DGE
-
-  only trimmed reads:
-    dry run: false
-    skip checks: []
-    stage:
-      - Reads_PreProcessed
-
-  only genome aligned:
-    dry run: false
-    skip checks: []
-    stage:
-      - GenomeAligned
-
-  only rseqc:
-    dry run: false
-    skip checks: []
-    stage:
-      - RSeQCAnalysis
-
-  only gene counted:
-    dry run: false
-    skip checks: []
-    stage:
-      - GeneCounted
-
-  only dge:
-    dry run: false
-    skip checks: []
-    stage:
-      - DGE
-
-  only raw:
-    dry run: false
-    skip checks: []
-    stage:
-      - Demultiplexed
-
-  DEFAULT: *full
+data asset sets:
+  # These assets are not generated in the workflow, but are generated after the workflow
+  PUTATIVE:
+    - "ERCC analysis HTML"
+  glds metadata:
+    - "ISA Archive"
+  has ercc:
+    - "ERCC normalized DESeq2 normalized counts table"
+    - "ERCC sample table"
+    - "ERCC normalized DESeq2 contrasts table"
+    - "ERCC normalized DESeq2 annotated DGE table"
+    - "ERCC normalized DESeq2 annotated DGE extended for viz table"
+    - "ERCC normalized DESeq2 viz PCA table"
+    # NOTE: Not part of NF_WF yet - "ERCC analysis HTML"
+  demuliplexed paired end raw data:
+    - "runsheet"
+    - "raw forward reads fastq GZ"
+    - "raw reverse reads fastq GZ"
+  qc reports for paired end raw data:
+    - "raw forward reads fastQC HTML"
+    - "raw reverse reads fastQC HTML"
+    - "raw forward reads fastQC ZIP"
+    - "raw reverse reads fastQC ZIP"
+    - "raw MultiQC directory"
+    - "raw MultiQC directory ZIP"
+  paired end trimmed reads:
+    - "trimmed forward reads fastq GZ"
+    - "trimmed reverse reads fastq GZ"
+  qc reports for paired end trimmed reads data:
+    - "trimmed forward reads fastQC HTML"
+    - "trimmed reverse reads fastQC HTML"
+    - "trimmed forward reads fastQC ZIP"
+    - "trimmed reverse reads fastQC ZIP"
+    - "trimming MultiQC directory"
+    - "forward reads trimming report"
+    - "reverse reads trimming report"
+  demuliplexed single end raw data:
+    - "runsheet"
+    - "raw reads fastq GZ"
+  qc reports for single end raw data:
+    - "raw reads fastQC HTML"
+    - "raw reads fastQC ZIP"
+    - "raw MultiQC directory"
+    - "raw MultiQC directory ZIP"
+  single end trimmed reads:
+    - "trimmed reads fastq GZ"
+  qc reports for single end trimmed reads data:
+    - "trimmed reads fastQC HTML"
+    - "trimmed reads fastQC ZIP"
+    - "trimming MultiQC directory"
+    - "reads trimming report"
+  STAR alignments:
+    - "aligned MultiQC directory"
+    - "aligned MultiQC directory ZIP"
+    - "aligned ToTranscriptome Bam"
+    - "aligned SortedByCoord Bam"
+    - "aligned SortedByCoord ResortedBam"
+    - "aligned SortedByCoord ResortedBamIndex"
+    - "aligned log Final"
+    - "aligned log Progress"
+    - "aligned log Full"
+    - "aligned sjTab"
+    - "sample reads per gene table"
+    - "star number non-zero count genes table"
+    - "star unnormalized counts table"
+  RSeQC output for paired end data:
+    - "genebody coverage MultiQC directory"
+    - "genebody coverage MultiQC directory ZIP"
+    - "infer experiment MultiQC directory"
+    - "infer experiment MultiQC directory ZIP"
+    - "inner distance MultiQC directory"
+    - "inner distance MultiQC directory ZIP"
+    - "read distribution MultiQC directory"
+    - "read distribution MultiQC directory ZIP"
+    - "genebody coverage out"
+    - "infer experiment out"
+    - "inner distance out"
+    - "read distribution out"
+  RSeQC output for single end data:
+    - "genebody coverage MultiQC directory"
+    - "genebody coverage MultiQC directory ZIP"
+    - "infer experiment MultiQC directory"
+    - "infer experiment MultiQC directory ZIP"
+    - "read distribution MultiQC directory"
+    - "read distribution MultiQC directory ZIP"
+    - "genebody coverage out"
+    - "infer experiment out"
+    - "read distribution out"
+  RSEM counts:
+    - "RSEM counts MultiQC directory"
+    - "RSEM counts MultiQC directory ZIP"
+    - "rsem number non-zero count genes table"
+    - "rsem unnormalized counts table"
+    - "sample gene counts table"
+    - "sample isoform counts table"
+    - "sample counts stats directory"
+  is single end full:
+    - "runsheet"
+    - "ISA Archive"
+    - "raw MultiQC directory"
+    - "raw MultiQC directory ZIP"
+    - "raw reads fastq GZ"
+    - "raw reads fastQC HTML"
+    - "raw reads fastQC ZIP"
+    - "trimmed fastQC MultiQC directory"
+    - "trimmed fastQC MultiQC directory ZIP"
+    - "trimmed reads fastq GZ"
+    - "trimmed reads fastQC HTML"
+    - "trimmed reads fastQC ZIP"
+    - "trimming MultiQC directory"
+    - "reads trimming report"
+    - "aligned MultiQC directory"
+    - "aligned MultiQC directory ZIP"
+    - "aligned ToTranscriptome Bam"
+    - "aligned SortedByCoord Bam"
+    - "aligned SortedByCoord ResortedBam"
+    - "aligned SortedByCoord ResortedBamIndex"
+    - "aligned log Final"
+    - "aligned log Progress"
+    - "aligned log Full"
+    - "aligned sjTab"
+    - "genebody coverage MultiQC directory"
+    - "genebody coverage MultiQC directory ZIP"
+    - "infer experiment MultiQC directory"
+    - "infer experiment MultiQC directory ZIP"
+    - "read distribution MultiQC directory"
+    - "read distribution MultiQC directory ZIP"
+    - "genebody coverage out"
+    - "infer experiment out"
+    - "read distribution out"
+    - "RSEM counts MultiQC directory"
+    - "RSEM counts MultiQC directory ZIP"
+    - "star number non-zero count genes table"
+    - "star unnormalized counts table"
+    - "rsem number non-zero count genes table"
+    - "rsem unnormalized counts table"
+    - "sample reads per gene table"
+    - "sample gene counts table"
+    - "sample isoform counts table"
+    - "sample counts stats directory"
+    - "DESeq2 normalized counts table"
+    - "sample table"
+    - "DESeq2 unnormalized counts table"
+    - "DESeq2 contrasts table"
+    - "DESeq2 annotated DGE table"
+    - "DESeq2 annotated DGE extended for viz table"
+    - "DESeq2 viz PCA table"
+  is paired end full:
+    - "runsheet"
+    - "ISA Archive"
+    - "raw MultiQC directory"
+    - "raw MultiQC directory ZIP"
+    - "raw forward reads fastq GZ"
+    - "raw reverse reads fastq GZ"
+    - "raw forward reads fastQC HTML"
+    - "raw reverse reads fastQC HTML"
+    - "raw forward reads fastQC ZIP"
+    - "raw reverse reads fastQC ZIP"
+    - "trimmed fastQC MultiQC directory"
+    - "trimmed fastQC MultiQC directory ZIP"
+    - "trimmed forward reads fastq GZ"
+    - "trimmed reverse reads fastq GZ"
+    - "trimmed forward reads fastQC HTML"
+    - "trimmed reverse reads fastQC HTML"
+    - "trimmed forward reads fastQC ZIP"
+    - "trimmed reverse reads fastQC ZIP"
+    - "trimming MultiQC directory"
+    - "forward reads trimming report"
+    - "reverse reads trimming report"
+    - "aligned MultiQC directory"
+    - "aligned MultiQC directory ZIP"
+    - "aligned ToTranscriptome Bam"
+    - "aligned SortedByCoord Bam"
+    - "aligned SortedByCoord ResortedBam"
+    - "aligned SortedByCoord ResortedBamIndex"
+    - "aligned log Final"
+    - "aligned log Progress"
+    - "aligned log Full"
+    - "aligned sjTab"
+    - "genebody coverage MultiQC directory"
+    - "genebody coverage MultiQC directory ZIP"
+    - "infer experiment MultiQC directory"
+    - "infer experiment MultiQC directory ZIP"
+    - "inner distance MultiQC directory"
+    - "inner distance MultiQC directory ZIP"
+    - "read distribution MultiQC directory"
+    - "read distribution MultiQC directory ZIP"
+    - "genebody coverage out"
+    - "infer experiment out"
+    - "inner distance out"
+    - "read distribution out"
+    - "RSEM counts MultiQC directory"
+    - "RSEM counts MultiQC directory ZIP"
+    - "star number non-zero count genes table"
+    - "star unnormalized counts table"
+    - "rsem number non-zero count genes table"
+    - "rsem unnormalized counts table"
+    - "sample reads per gene table"
+    - "sample gene counts table"
+    - "sample isoform counts table"
+    - "sample counts stats directory"
+    - "DESeq2 normalized counts table"
+    - "sample table"
+    - "DESeq2 unnormalized counts table"
+    - "DESeq2 contrasts table"
+    - "DESeq2 annotated DGE table"
+    - "DESeq2 annotated DGE extended for viz table"
+    - "DESeq2 viz PCA table"
+  DGE Output:
+    - "DESeq2 normalized counts table"
+    - "sample table"
+    - "DESeq2 unnormalized counts table"
+    - "DESeq2 contrasts table"
+    - "DESeq2 annotated DGE table"
+    - "DESeq2 annotated DGE extended for viz table"
+    - "DESeq2 viz PCA table"
+  ERCC DGE Output:
+    - "ERCC normalized DESeq2 normalized counts table"
+    - "ERCC sample table"
+    - "ERCC normalized DESeq2 contrasts table"
+    - "ERCC normalized DESeq2 annotated DGE table"
+    - "ERCC normalized DESeq2 annotated DGE extended for viz table"
+    - "ERCC normalized DESeq2 viz PCA table"
+    # NOTE: Not part of NF_WF yet - "ERCC analysis HTML"
+  RSEM Output:
+    - "RSEM counts MultiQC directory"
+    - "RSEM counts MultiQC directory ZIP"
+    - "rsem number non-zero count genes table"
+    - "rsem unnormalized counts table"
