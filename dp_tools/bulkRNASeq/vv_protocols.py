@@ -12,7 +12,7 @@ from dp_tools.bulkRNASeq.checks import *  # normally this isn't ideal, however, 
 
 CONFIG = {
     "Metadata-check_metadata_attributes_exist": {
-        "expected_attrs": ["paired_end", "has_ercc"]
+        "expected_attrs": ["paired_end", "has_ERCC", "organism"]
     },
     "Raw Reads-check_for_outliers": {
         "mqc_module": "FastQC",
