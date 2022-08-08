@@ -10,6 +10,7 @@ This module currently provides the following major features:
 1. [General Validation and Verification (V&V) Framework](dp_tools/core/check_model.html)
 2. General Data Model Framework ([base data model](dp_tools/core/entity_model.html), [data model loading functions](dp_tools/core/loaders.html))
 3. [Yaml Configuration Interface](dp_tools/config/interface.html)
+4. [GLDS API Wrapper Functions](dp_tools/glds_api/commons.html) 
 
 Additionally, the following Assay specific functionality is packaged:
 
