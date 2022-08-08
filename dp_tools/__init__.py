@@ -32,7 +32,7 @@ This library is available for usage as prebuilt images located at [quay.io](http
 
 ## CLI Commands
 
-**Note: Most functionality is only available through by using python import.**
+**Note: Most library functionality is only available through using python import.**
 
 The following command line scripts are also available once installed and are defined here:
 
