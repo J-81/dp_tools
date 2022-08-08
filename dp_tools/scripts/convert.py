@@ -4,12 +4,14 @@ import re
 from typing import List, Union
 from dp_tools.config import schemas
 from dp_tools.core.configuration import load_config
-from dp_tools.glds_api.files import get_urls
 from dp_tools.core.files import isa_archive
+from dp_tools.glds_api.commons import retrieve_file_url
+
 
 import pandas as pd
 
 import logging
+
 
 log = logging.getLogger(__name__)
 
@@ -301,18 +303,10 @@ def isa_to_runsheet(accession: str, isaArchive: Path, config: tuple[str, str]):
                             )
 
                 if entry.get("GLDS URL Mapping"):
-                    urls = get_urls(accession=accession)
-
-                    def map_url_to_filename(fn: str) -> str:
-                        try:
-                            return urls.get(fn, dict())["url"]
-                        except KeyError:
-                            raise ValueError(
-                                f"{fn} does not have an associated url in {urls}"
-                            )
-
                     values2 = values.applymap(
-                        map_url_to_filename
+                        lambda filename: retrieve_file_url(
+                            accession=accession, filename=filename
+                        )
                     )  # inplace operation doesn't seem to work
                 else:
                     values2 = values

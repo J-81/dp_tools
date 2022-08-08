@@ -10,14 +10,12 @@ def test_paired_isa_to_runsheet(glds194_test_dir, tmpdir):
     """This tests validation as it would be run on dataset after demultiplexing"""
     os.chdir(tmpdir)
     isaPath = glds194_test_dir / "Metadata" / "GLDS-194_metadata_GLDS-194-ISA.zip"
-    df_runsheet = isa_to_runsheet(
-        "GLDS-194", isaPath, config=("bulkRNASeq", "0")
-    )
+    df_runsheet = isa_to_runsheet("GLDS-194", isaPath, config=("bulkRNASeq", "0"))
 
     assert df_runsheet.shape == (13, 7)
     assert (
         hashlib.sha1(pd.util.hash_pandas_object(df_runsheet).values).hexdigest()
-        == "99be45a88523dd07ac17e18ab13838ef7a24e883"
+        == "e9df155d5986b8a2ccc0ec4cd8d10df7765eb201"
     ), "Hash did not match, the means the contents changed. Manually validation and reset of test hash is in order"
 
 
@@ -25,14 +23,12 @@ def test_single_isa_to_runsheet(glds48_test_dir, tmpdir):
     """This tests validation as it would be run on dataset after demultiplexing"""
     os.chdir(tmpdir)
     isaPath = glds48_test_dir / "Metadata" / "GLDS-48_metadata_RR1-NASA-ISA.zip"
-    df_runsheet = isa_to_runsheet(
-        "GLDS-48", isaPath, config=("bulkRNASeq", "0")
-    )
+    df_runsheet = isa_to_runsheet("GLDS-48", isaPath, config=("bulkRNASeq", "0"))
 
     assert df_runsheet.shape == (14, 7)
     assert (
         hashlib.sha1(pd.util.hash_pandas_object(df_runsheet).values).hexdigest()
-        == "0477c47d0b081e5a944d6f343d1737bdfa8dd274"
+        == "fa110c7312656e3e81f36b47bfed9e662168f3f8"
     ), "Hash did not match, the means the contents changed. Manually validation and reset of test hash is in order"
 
 

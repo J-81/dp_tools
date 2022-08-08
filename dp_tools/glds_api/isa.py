@@ -1,14 +1,6 @@
 import argparse
 from pathlib import Path
-from re import search
-from urllib.parse import quote
-from dp_tools.glds_api.commons import (
-    FILELISTINGS_URL_PREFIX,
-    GENELAB_ROOT,
-    GLDS_URL_PREFIX,
-    ISA_ZIP_REGEX,
-    read_json,
-)
+from dp_tools.glds_api.commons import retrieve_filenames_for_datatype, retrieve_file_url
 
 import requests
 import logging
@@ -24,57 +16,12 @@ def _parse_args():
     parser.add_argument(
         "--accession", metavar="GLDS-001", required=True, help="GLDS accession number"
     )
-    parser.add_argument(
-        "--alternate-url",
-        action="store_true",
-        default=False,
-        help="Use alternate url, fetched by api script",
-    )
 
     args = parser.parse_args()
     return args
 
 
-def get_isa(accession: str) -> tuple[str, str, str, str]:
-    """Returns isa filename as well as GeneLab URLS from the associated file listing
-
-    :param accession: GLDS accession ID, e.g. GLDS-194
-    :type accession: str
-    :raises ValueError: "Malformed JSON?" if there is an issue getting the filelisting url 'id'
-    :raises ValueError: "Unexpected: no ISAs found"
-    :raises ValueError: "Unexpected: multiple files match the ISA regex"
-    :return: A tuple as follows: [filename, version_id, url, alternative_url]
-    :rtype: tuple[str, str, str, str]
-    """
-    glds_json = read_json(GLDS_URL_PREFIX + accession)
-    try:
-        _id = glds_json[0]["_id"]
-        log.info(f"File Listing URL: {FILELISTINGS_URL_PREFIX + _id}")
-    except (AssertionError, TypeError, KeyError, IndexError):
-        raise ValueError("Malformed JSON?")
-    isa_entries = [
-        entry
-        for entry in read_json(FILELISTINGS_URL_PREFIX + _id)
-        if search(ISA_ZIP_REGEX, entry["file_name"])
-    ]
-    if len(isa_entries) == 0:
-        raise ValueError("Unexpected: no ISAs found")
-    elif len(isa_entries) > 1:
-        raise ValueError("Unexpected: multiple files match the ISA regex")
-    else:
-        entry = isa_entries[0]
-        version = entry["version"]
-        url = GENELAB_ROOT + entry["remote_url"] + "?version={}".format(version)
-        alt_url = (
-            GENELAB_ROOT
-            + "/genelab/static/media/dataset/"
-            + quote(entry["file_name"])
-            + "?version={}".format(version)
-        )
-        return entry["file_name"], version, url, alt_url
-
-
-def download_isa(accession: str, alternate_url: bool = False) -> str:
+def download_isa(accession: str) -> str:
     """Downloads the ISA archive for the given GLDS accession number.
 
     :param accession: GLDS accession number, e.g. GLDS-194
@@ -86,12 +33,12 @@ def download_isa(accession: str, alternate_url: bool = False) -> str:
     """
 
     log.info(f"Accessing GeneLab API for ISA file. Accession: {accession}")
-    filename, _, url, alt_url = get_isa(accession)
+    [filename] = retrieve_filenames_for_datatype(accession, datatype="isa")
+    url = retrieve_file_url(accession, filename)
     if not Path(filename).is_file():
         log.info(f"Successfully retrieved ISA file location from API.")
-        use_url = url if not alternate_url else alt_url
-        log.info(f"Downloading from {use_url}.")
-        r = requests.get(use_url)
+        log.info(f"Downloading from {url}.")
+        r = requests.get(url)
         # If the response was successful, no Exception will be raised
         r.raise_for_status()
         with open(filename, "wb") as f:
@@ -104,7 +51,7 @@ def download_isa(accession: str, alternate_url: bool = False) -> str:
 
 def main():
     args = _parse_args()
-    download_isa(args.accession, args.alternate_url)
+    download_isa(args.accession)
 
 
 if __name__ == "__main__":
