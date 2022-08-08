@@ -43,6 +43,7 @@ jobs:
       id-token: write
     environment:
       name: github-pages
+      url: j-81.github.io/dp_tools
     steps:
       - id: deployment
         uses: actions/deploy-pages@v1
