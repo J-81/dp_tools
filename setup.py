@@ -12,7 +12,7 @@ long_description = (
 
 setup(
     name="dp_tools",
-    version="1.0.7rc5",
+    version="1.0.8rc1",
     description="Tooling for Data Processing Operations",
     author="Jonathan Oribello",
     author_email="jonathan.d.oribello@nasa.gov",
@@ -23,18 +23,9 @@ setup(
     },
     include_package_data=True,
     python_requires=">=3.10",
-    install_requires=[
-        "requests",
-        "pyyaml",
-        "pandas",
-        "schema",
-        "tabulate",
-        "multiqc"
-    ],
+    install_requires=["requests", "pyyaml", "pandas", "schema", "tabulate", "multiqc"],
     setup_requires=[],
-    tests_require=[
-        "pytest"
-    ],
+    tests_require=["pytest", "pytest-console_scripts"],
     entry_points={
         "console_scripts": [
             "dpt-get-isa-archive=dp_tools.glds_api.isa:main",
