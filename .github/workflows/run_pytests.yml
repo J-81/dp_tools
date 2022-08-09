@@ -37,5 +37,5 @@ jobs:
           export PATH=/usr/share/miniconda/bin:$PATH
           git clone -b  NF_RCP-F  --depth=1 https://github.com/J-81/test-datasets-extended.git --single-branch && rm -rf test-datasets-extended/.git
           export TEST_ASSETS_DIR=$(pwd)/test-datasets-extended/testdata
-          pip install ${GITHUB_WORKSPACE}
+          pip install ${GITHUB_WORKSPACE} pytest-console-scripts
           pytest ${GITHUB_WORKSPACE}
