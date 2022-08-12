@@ -1,26 +1,21 @@
 """
-Python functions the retrieve data from GeneLab. Uses the GeneLab openAPI (https://visualization.genelab.nasa.gov/GLOpenAPI) to retrieve most data
-
-Direct file retrieval is supported using URLs present on the GLDS pages themselves.
+Python functions the retrieve data from GeneLab. Uses the GeneLab public APIs (https://genelab.nasa.gov/genelabAPIs)
 """
 
 import functools
 from urllib.request import urlopen
 import logging
 
+import yaml
 import pandas as pd
 
 log = logging.getLogger(__name__)
 
-GENELAB_DATASET_FILES = "https://visualization.genelab.nasa.gov/GLOpenAPI/samples/?id={accession}&file.datatype&format=csv"
-""" Template URL to access table of filenames for a single GLDS accession ID """
+GENELAB_DATASET_FILES = "https://genelab-data.ndc.nasa.gov/genelab/data/glds/files/{accession_number}"
+""" Template URL to access json of files for a single GLDS accession ID """
 
-FILE_RETRIEVAL_URL = "https://genelab-data.ndc.nasa.gov/geode-py/ws/studies/{accession}/download?file={filename}"
-""" Template URL to download a certain file by filename
-
-Note: This url is not part of the openAPI and will be replaced in the future.
-"""
-
+FILE_RETRIEVAL_URL_PREFIX = "https://genelab-data.ndc.nasa.gov{suffix}"
+""" Used to retrieve files using remote url suffixes listed in the 'Data Query' API """
 
 @functools.cache
 def get_table_of_files(accession: str) -> pd.DataFrame:
@@ -35,14 +30,18 @@ def get_table_of_files(accession: str) -> pd.DataFrame:
     """
     # format url
     log.info(f"Retrieving table of files for {accession}")
-    url = GENELAB_DATASET_FILES.format(accession=accession)
+    url = GENELAB_DATASET_FILES.format(accession_number=accession.split("-")[1])
 
     # fetch data
     log.info(f"URL Source: {url}")
     with urlopen(url) as response:
-        df = pd.read_csv(response, header=1)
+        data = yaml.safe_load(response.read())
+        df = pd.DataFrame(data['studies'][accession]['study_files'])
     return df
 
+def find_matching_filenames(accession: str, filename_pattern: str) -> list[str]:
+    df = get_table_of_files(accession)
+    return df.loc[df['file_name'].str.contains(filename_pattern), 'file_name'].to_list()
 
 def retrieve_file_url(accession: str, filename: str) -> str:
     """Retrieve file URL associated with a GLDS accesion ID
@@ -56,46 +55,9 @@ def retrieve_file_url(accession: str, filename: str) -> str:
     """
     # Check that the filenames exists
     df = get_table_of_files(accession)
-    if filename not in list(df["filename"]):
+    if filename not in list(df["file_name"]):
         raise ValueError(
-            f"Could not find filename: '{filename}'. Here as are found filenames for '{accession}': '{df['filename'].unique()}'"
+            f"Could not find filename: '{filename}'. Here as are found filenames for '{accession}': '{df['file_name'].unique()}'"
         )
 
-    return FILE_RETRIEVAL_URL.format(accession=accession, filename=filename)
-
-
-def retrieve_filenames_for_datatype(accession: str, datatype: str) -> list[str]:
-    """Retrieve filenames for a specific datatype and accession ID
-
-    :param accession: GLDS accession ID, e.g. 'GLDS-194'
-    :type accession: str
-    :param datatype: datatype of the files requested, e.g. 'isa'
-    :type datatype: str
-    :return: URL to fetch the most recent version of the file
-    :rtype: list[str]
-    """
-    df = get_table_of_files(accession)
-
-    # filter to only requested datatype
-    df = df.loc[df["datatype"] == datatype]
-
-    # convert filename column into list of unique filenames
-    filenames = list(df["filename"].unique())
-
-    return filenames
-
-
-def retrieve_datatypes_from_accession(accession: str) -> list[str]:
-    """Retrieve all datatypes for an accession ID
-
-    :param accession: GLDS accession ID, e.g. 'GLDS-194'
-    :type accession: str
-    :return: Data types associated with the accesssion ID
-    :rtype: list[str]
-    """
-    df = get_table_of_files(accession)
-
-    # convert filename column into list of unique filenames
-    datatypes = list(df["datatype"].unique())
-
-    return datatypes
+    return FILE_RETRIEVAL_URL_PREFIX.format(suffix=df.loc[df['file_name'] == filename, 'remote_url'].squeeze())

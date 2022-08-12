@@ -1,6 +1,6 @@
 import argparse
 from pathlib import Path
-from dp_tools.glds_api.commons import retrieve_filenames_for_datatype, retrieve_file_url
+from dp_tools.glds_api.commons import retrieve_file_url, find_matching_filenames
 
 import requests
 import logging
@@ -33,8 +33,8 @@ def download_isa(accession: str) -> str:
     """
 
     log.info(f"Accessing GeneLab API for ISA file. Accession: {accession}")
-    [filename] = retrieve_filenames_for_datatype(accession, datatype="isa")
-    url = retrieve_file_url(accession, filename)
+    [filename] = find_matching_filenames(accession, filename_pattern = ".*-ISA.zip")
+    url = retrieve_file_url(accession, filename = filename)
     if not Path(filename).is_file():
         log.info(f"Successfully retrieved ISA file location from API.")
         log.info(f"Downloading from {url}.")
