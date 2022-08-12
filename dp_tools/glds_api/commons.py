@@ -40,6 +40,15 @@ def get_table_of_files(accession: str) -> pd.DataFrame:
     return df
 
 def find_matching_filenames(accession: str, filename_pattern: str) -> list[str]:
+    """Returns list of file names that match the provided regex pattern.
+
+    :param accession: GLDS accession ID, e.g. 'GLDS-194'
+    :type accession: str
+    :param filename_pattern: Regex pattern to query against file names
+    :type filename_pattern: str
+    :return: List of file names that match the regex
+    :rtype: list[str]
+    """
     df = get_table_of_files(accession)
     return df.loc[df['file_name'].str.contains(filename_pattern), 'file_name'].to_list()
 
