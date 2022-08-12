@@ -15,7 +15,7 @@ def test_paired_isa_to_runsheet(glds194_test_dir, tmpdir):
     assert df_runsheet.shape == (13, 7)
     assert (
         hashlib.sha1(pd.util.hash_pandas_object(df_runsheet).values).hexdigest()
-        == "e9df155d5986b8a2ccc0ec4cd8d10df7765eb201"
+        == "0c5bba6e1194d5840bd801ad629e38d1cab54744"
     ), "Hash did not match, the means the contents changed. Manually validation and reset of test hash is in order"
 
 
@@ -28,7 +28,7 @@ def test_single_isa_to_runsheet(glds48_test_dir, tmpdir):
     assert df_runsheet.shape == (14, 7)
     assert (
         hashlib.sha1(pd.util.hash_pandas_object(df_runsheet).values).hexdigest()
-        == "fa110c7312656e3e81f36b47bfed9e662168f3f8"
+        == "7dcbcd0f7a1253fde7b4c32321ea46752a1bc251"
     ), "Hash did not match, the means the contents changed. Manually validation and reset of test hash is in order"
 
 
