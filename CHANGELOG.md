@@ -7,9 +7,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## 1.0.8rc
 
-#### Changed
+### Changed
 
-- Updated GeneLab filename to url mapping to utilize the GeneLab openAPI (https://visualization.genelab.nasa.gov/GLOpenAPI)
+- Updated GeneLab filename to url mapping to utilize the [GeneLab public API](https://genelab.nasa.gov/genelabAPIs)
   - Addresses removal of prior-used deprecated endpoints
 
 ## 1.0.7rc
