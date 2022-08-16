@@ -1,5 +1,6 @@
 import os
 from pathlib import Path
+import re
 from dp_tools.bulkRNASeq.checks import *
 from dp_tools.core.check_model import FlagCode
 
