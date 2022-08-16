@@ -40,9 +40,9 @@ log = logging.getLogger(__name__)
         pytest.param(
             ["demuliplexed paired end raw data", "qc reports for paired end raw data"],
             ["Metadata", "Raw Reads By Sample", "Raw Reads"],
-            (124, 7),
+            (125, 7),
             (4, 1),
-            3418.4032258064517,
+            3445.4,
             0,
             id="Raw Reads Checks Only",
         ),
@@ -52,36 +52,36 @@ log = logging.getLogger(__name__)
                 "qc reports for paired end trimmed reads data",
             ],
             ["Trimmed Reads By Sample", "Trim Reads"],
-            (173, 7),
+            (176, 7),
             (9, 1),
-            4741.289017341041,
+            4822.284090909091,
             0,
             id="Trimmed Reads Checks Only",
         ),
         pytest.param(
             ["STAR alignments"],
             ["STAR Alignments", "STAR Alignments By Sample"],
-            (175, 7),
+            (176, 7),
             (7, 1),
-            5569.685714285714,
+            5596.659090909091,
             0,
             id="STAR Alignments Checks Only",
         ),
         pytest.param(
             ["RSeQC output for paired end data"],
             ["RSeQC", "RSeQC By Sample"],
-            (92, 7),
+            (96, 7),
             (13, 1),
-            2635.413043478261,
+            2743.3541666666665,
             1,  # RSeQC strandedness is ambiguous
             id="RSeQC Checks Only",
         ),
         pytest.param(
             ["RSEM counts"],
             ["RSEM Counts"],
-            (45, 7),
+            (46, 7),
             (3, 1),
-            1275.888888888889,
+            1302.8695652173913,
             0,
             id="RSEM Counts Checks Only",
         ),
@@ -106,9 +106,9 @@ log = logging.getLogger(__name__)
         pytest.param(
             ["is paired end full", "ERCC DGE Output"],
             None,  # This evaluates to meaning running all components
-            (679, 7),
+            (688, 7),
             (34, 5),
-            19414.561119293077,
+            19657.54069767442,
             2,  # RSEM and DGE parity won't match due to dummy counts in DGE output test data / RSeQC strandedness is ambiguous
             id="Run all checks",
         ),
@@ -159,9 +159,9 @@ def test_updated_protocol_model_paired_end(
         pytest.param(
             ["demuliplexed single end raw data", "qc reports for single end raw data"],
             ["Metadata", "Raw Reads By Sample", "Raw Reads"],
-            (61, 7),
+            (62, 7),
             (1, 1),
-            1677.1639344262296,
+            1704.1612903225807,
             0,
             id="Raw Reads Checks Only",
         ),
@@ -171,36 +171,36 @@ def test_updated_protocol_model_paired_end(
                 "qc reports for single end trimmed reads data",
             ],
             ["Trimmed Reads By Sample", "Trim Reads"],
-            (86, 7),
+            (89, 7),
             (2, 1),
-            2352.116279069767,
+            2433.112359550562,
             0,
             id="Trimmed Reads Checks Only",
         ),
         pytest.param(
             ["STAR alignments"],
             ["STAR Alignments", "STAR Alignments By Sample"],
-            (187, 7),
+            (188, 7),
             (7, 1),
-            5923.545454545455,
+            5950.521276595745,
             0,
             id="STAR Alignments Checks Only",
         ),
         pytest.param(
             ["RSeQC output for single end data"],
             ["RSeQC", "RSeQC By Sample"],
-            (66, 7),
+            (69, 7),
             (12, 1),
-            1862.909090909091,
+            1943.8695652173913,
             0,
             id="RSeQC Checks Only",
         ),
         pytest.param(
             ["RSEM counts"],
             ["RSEM Counts"],
-            (47, 7),
+            (48, 7),
             (1, 1),
-            1299.2127659574467,
+            1326.2083333333335,
             0,
             id="RSEM Counts Checks Only",
         ),
@@ -225,9 +225,9 @@ def test_updated_protocol_model_paired_end(
         pytest.param(
             ["is single end full"],
             None,  # This evaluates to meaning running all components
-            (487, 7),
+            (495, 7),
             (21, 5),
-            14231.17659137577,
+            14447.141414141413,
             2,  # test data does not have parity between DGE counts and RSEM counts / Encounters rare false positive for check_aggregate_star_unnormalized_counts_table_values_against_samplewise_tables that should only occur when gene counts are zero for multiple strand assessment types
             id="Run all checks",
         ),
@@ -285,9 +285,9 @@ def test_updated_protocol_model_skipping(glds48_dataSystem):
         },
     )
 
-    assert report["flag_table"].shape == (353, 7)
+    assert report["flag_table"].shape == (354, 7)
     assert report["outliers"].shape == (1, 1)
-    assert pseudo_fingerprint(report["flag_table"]) == 9561.028328611897
+    assert pseudo_fingerprint(report["flag_table"]) == 9588.02824858757
 
     # NOW INCLUDING SKIPPED FLAG TABLE ENTRIES
     # SHOULD MATCH, running all components and not including skips
@@ -304,9 +304,9 @@ def test_updated_protocol_model_skipping(glds48_dataSystem):
         },
     )
 
-    assert report["flag_table"].shape == (559, 7)
+    assert report["flag_table"].shape == (568, 7)
     assert report["outliers"].shape == (1, 1)
-    assert pseudo_fingerprint(report["flag_table"]) == 11202.016100178891
+    assert pseudo_fingerprint(report["flag_table"]) == 11292.859154929578
 
 
 def test_updated_protcol_model_printouts_single(glds48_dataSystem):
@@ -341,6 +341,6 @@ def test_report_modification_add_sample_column(glds48_dataSystem):
     samples = list(glds48_dataSystem.dataset.samples)
     ValidationProtocol.append_sample_column(report["flag_table"], samples=samples)
 
-    assert report["flag_table"].shape == (353, 8)
+    assert report["flag_table"].shape == (354, 8)
     assert report["outliers"].shape == (1, 1)
-    assert pseudo_fingerprint(report["flag_table"]) == 9914.028328611897
+    assert pseudo_fingerprint(report["flag_table"]) == 9942.02824858757
