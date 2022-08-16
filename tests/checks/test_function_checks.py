@@ -149,10 +149,61 @@ def test_check_dge_table_group_columns_constraints(glds194_dataSystem):
             ).index
         ),
         "dge_table": dataset.data_assets["DESeq2 annotated DGE table"].path,
-        "runsheet": dataset.data_assets['runsheet'].path,
+        "runsheet": dataset.data_assets["runsheet"].path,
     }
 
     res = check_dge_table_group_columns_constraints(**payload)
+
+    assert res["code"] == FlagCode.GREEN
+    assert res["message"]
+
+
+def test_check_dge_table_annotation_columns_exist(
+    glds194_dataSystem, glds251_dataSystem
+):
+    dataset = glds194_dataSystem.dataset
+
+    payload = {
+        "organism": dataset.metadata["organism"],
+        "samples": set(dataset.samples),
+        "dge_table": dataset.data_assets["DESeq2 annotated DGE table"].path,
+        "runsheet": dataset.data_assets["runsheet"].path,
+    }
+
+    res = check_dge_table_annotation_columns_exist(**payload)
+
+    assert res["code"] == FlagCode.GREEN
+    assert res["message"]
+
+    payload = {
+        "organism": dataset.metadata["organism"],
+        "samples": set(
+            pd.read_csv(
+                dataset.data_assets["ERCC sample table"].path, index_col=0
+            ).index
+        ),
+        "dge_table": dataset.data_assets["DESeq2 annotated DGE table"].path,
+        "runsheet": dataset.data_assets["runsheet"].path,
+    }
+
+    res = check_dge_table_annotation_columns_exist(**payload)
+
+    assert res["code"] == FlagCode.GREEN
+    assert res["message"]
+
+    ################################
+    # Now an Arabidopsis dataset, this uses TAIR instead of ENSEMBL as the master key
+    ################################
+    dataset = glds251_dataSystem.dataset
+
+    payload = {
+        "organism": dataset.metadata["organism"],
+        "samples": set(dataset.samples),
+        "dge_table": dataset.data_assets["DESeq2 annotated DGE table"].path,
+        "runsheet": dataset.data_assets["runsheet"].path,
+    }
+
+    res = check_dge_table_annotation_columns_exist(**payload)
 
     assert res["code"] == FlagCode.GREEN
     assert res["message"]

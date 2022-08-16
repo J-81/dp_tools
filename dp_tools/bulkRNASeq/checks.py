@@ -821,7 +821,7 @@ def check_dge_table_annotation_columns_exist(
         "STRING_id",
         "GOSLIM_IDS",
     }
-    MASTER_ANNOTATION_KEY = {"_DEFAULT": "ENSEMBL", "Arabidopsis": "TAIR"}
+    MASTER_ANNOTATION_KEY = {"_DEFAULT": "ENSEMBL", "Arabidopsis thaliana": "TAIR"}
 
     df_dge = pd.read_csv(dge_table)
 

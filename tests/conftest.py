@@ -97,6 +97,7 @@ def glds48_test_dir(root_test_dir):
 def typo_test_dir(root_test_dir):
     return root_test_dir / "GLDS-48_BUTWITHTYPOS"
 
+
 @pytest.fixture
 def glds48_dataSystem(glds48_test_dir):
     return load_data(
@@ -106,11 +107,27 @@ def glds48_dataSystem(glds48_test_dir):
         runsheet_path=(glds48_test_dir / "Metadata/GLDS-48_bulkRNASeq_v1_runsheet.csv"),
     )
 
+
 @pytest.fixture
 def glds194_dataSystem(glds194_test_dir):
     return load_data(
         key_sets=["is paired end full", "ERCC DGE Output", "glds metadata"],
         config=("bulkRNASeq", "Latest"),
         root_path=(glds194_test_dir),
-        runsheet_path=(glds194_test_dir / "Metadata/GLDS-194_bulkRNASeq_v1_runsheet.csv"),
+        runsheet_path=(
+            glds194_test_dir / "Metadata/GLDS-194_bulkRNASeq_v1_runsheet.csv"
+        ),
+    )
+
+
+@pytest.fixture
+def glds251_dataSystem(root_test_dir):
+    glds251_test_dir = root_test_dir / "GLDS-251"
+    return load_data(
+        key_sets=["DGE Output"],
+        config=("bulkRNASeq", "Latest"),
+        root_path=(glds251_test_dir),
+        runsheet_path=(
+            glds251_test_dir / "Metadata/GLDS-251_bulkRNASeq_v1_runsheet.csv"
+        ),
     )
