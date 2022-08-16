@@ -1,4 +1,5 @@
 from pathlib import Path
+import re
 from typing import Union
 import yaml
 import logging
@@ -221,6 +222,24 @@ def validate_bulkRNASeq(
                     check_for_outliers, config=config["Raw Reads-check_for_outliers"]
                 )
 
+            with vp.payload(
+                payloads=[
+                    {
+                        "samples": list(dataset.samples),
+                        "multiqc_report_path": lambda: dataset.data_assets[
+                            "raw MultiQC directory"
+                        ].path,
+                        "name_reformat_func": lambda: lambda s: re.sub(
+                            "_raw|_R1_raw|_R2_raw$", "", s
+                        ),
+                    },
+                ]
+            ):
+                vp.add(
+                    check_sample_in_multiqc_report,
+                    description="Check all samples are present in raw reads multiQC report",
+                )
+
         with vp.component_start(
             name="Trim Reads", description="Trimmed Reads Outliers Detection"
         ):
@@ -250,7 +269,32 @@ def validate_bulkRNASeq(
                 vp.add(
                     check_for_outliers, config=config["Trim Reads-check_for_outliers"]
                 )
-
+            with vp.payload(
+                payloads=[
+                    {
+                        "samples": list(dataset.samples),
+                        "multiqc_report_path": lambda: dataset.data_assets[
+                            "trimmed fastQC MultiQC directory"
+                        ].path,
+                        "name_reformat_func": lambda: lambda s: re.sub(
+                            "_R1|_R2$", "", s
+                        ),
+                    },
+                    {
+                        "samples": list(dataset.samples),
+                        "multiqc_report_path": lambda: dataset.data_assets[
+                            "trimming MultiQC directory"
+                        ].path,
+                        "name_reformat_func": lambda: lambda s: re.sub(
+                            "_raw|_R1_raw|_R2_raw$", "", s
+                        ),
+                    },
+                ]
+            ):
+                vp.add(
+                    check_sample_in_multiqc_report,
+                    description="Check that all samples are present in the trimmed FastQC and trimming report multiQC reports",
+                )
         with vp.component_start(
             name="STAR Alignments",
             description="Dataset wide checks including outliers detection",
@@ -266,6 +310,20 @@ def validate_bulkRNASeq(
                 vp.add(
                     check_for_outliers,
                     config=config["STAR Alignments-check_for_outliers"],
+                )
+            with vp.payload(
+                payloads=[
+                    {
+                        "samples": list(dataset.samples),
+                        "multiqc_report_path": lambda: dataset.data_assets[
+                            "aligned MultiQC directory"
+                        ].path,
+                    },
+                ]
+            ):
+                vp.add(
+                    check_sample_in_multiqc_report,
+                    description="Check all samples are present in STAR multiQC report",
                 )
 
         with vp.component_start(
@@ -333,7 +391,53 @@ def validate_bulkRNASeq(
                         "RSeQC-check_strandedness_assessable_from_infer_experiment"
                     ],
                 )
-
+            with vp.payload(
+                payloads=[
+                    {
+                        "samples": list(dataset.samples),
+                        "multiqc_report_path": lambda: dataset.data_assets[
+                            "genebody coverage MultiQC directory"
+                        ].path,
+                    },
+                    {
+                        "samples": list(dataset.samples),
+                        "multiqc_report_path": lambda: dataset.data_assets[
+                            "infer experiment MultiQC directory"
+                        ].path,
+                        "name_reformat_func": lambda: lambda s: re.sub(
+                            "_infer_expt$", "", s
+                        ),
+                    },
+                    {
+                        "samples": list(dataset.samples),
+                        "multiqc_report_path": lambda: dataset.data_assets[
+                            "read distribution MultiQC directory"
+                        ].path,
+                        "name_reformat_func": lambda: lambda s: re.sub(
+                            "_read_dist$", "", s
+                        ),
+                    },
+                ]
+            ):
+                vp.add(
+                    check_sample_in_multiqc_report,
+                    description="Check all samples are present in RSeQC multiQC reports",
+                )
+            with vp.payload(
+                payloads=[
+                    {
+                        "samples": list(dataset.samples),
+                        "multiqc_report_path": lambda: dataset.data_assets[
+                            "inner distance MultiQC directory"
+                        ].path,
+                    },
+                ]
+            ):
+                vp.add(
+                    check_sample_in_multiqc_report,
+                    description="Check all samples are present in RSeQC inner distance multiQC report (paired end only)",
+                    skip=(not dataset.metadata["paired_end"]),
+                )
         with vp.component_start(
             name="RSEM Counts",
             description="Dataset wide checks including outliers detection",
@@ -349,7 +453,20 @@ def validate_bulkRNASeq(
                 vp.add(
                     check_for_outliers, config=config["RSEM Counts-check_for_outliers"]
                 )
-
+            with vp.payload(
+                payloads=[
+                    {
+                        "samples": list(dataset.samples),
+                        "multiqc_report_path": lambda: dataset.data_assets[
+                            "RSEM counts MultiQC directory"
+                        ].path,
+                    },
+                ]
+            ):
+                vp.add(
+                    check_sample_in_multiqc_report,
+                    description="Check all samples are present in RSEM multiQC report",
+                )
         with vp.component_start(
             name="Unnormalized Gene Counts",
             description="Validate normalization related output",
