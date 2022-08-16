@@ -189,7 +189,7 @@ def check_fastqgz_file_contents(file: Path, count_lines_to_check: int) -> FlagEn
             )
         else:
             code = FlagCode.GREEN
-            message = f"First {count_lines_to_check} lines checked found no issues."
+            message = f"First {count_lines_to_check} lines checked found no issues.  This means headers lines were identifiable and no decompression errors occured."
     except (EOFError, gzip.BadGzipFile):
         code = FlagCode.HALT
         message = (
@@ -647,7 +647,7 @@ def check_sample_table_against_runsheet(
         message = f"Samples mismatched: {[f'{entry}:{v}' for entry, v  in extra_samples.items() if v]}"
     else:
         code = FlagCode.GREEN
-        message = f"All samples accounted for based on runsheet (All samples required?: {all_samples_required}"
+        message = f"All samples accounted for based on runsheet (All samples required?: {all_samples_required})"
     return {"code": code, "message": message}
 
 
@@ -903,14 +903,10 @@ def check_dge_table_group_columns_exist(
     # check logic
     if not missing_cols:
         code = FlagCode.GREEN
-        message = (
-            f"All group summary stat columns present. {sorted(list(expected_columns))}"
-        )
+        message = f"All group summary statistic columns (Prefixes: {GROUP_PREFIXES}) present. {sorted(list(expected_columns))}"
     else:
         code = FlagCode.HALT
-        message = (
-            f"Missing these group summary stat columns: {sorted(list(missing_cols))}"
-        )
+        message = f"Missing these group summary statistic columns (Prefixes: {GROUP_PREFIXES}): {sorted(list(missing_cols))}"
     return {"code": code, "message": message}
 
 
@@ -996,10 +992,10 @@ def check_dge_table_comparison_statistical_columns_exist(
     # check logic
     if not missing_cols:
         code = FlagCode.GREEN
-        message = f"All comparision summary stat columns present. {sorted(list(expected_columns))}"
+        message = f"All comparision summary statistic columns (Prefixes: {COMPARISON_PREFIXES}) present. {sorted(list(expected_columns))}"
     else:
         code = FlagCode.HALT
-        message = f"Missing these comparision summary stat columns: {sorted(list(missing_cols))}"
+        message = f"Missing these comparision summary statistic columns (Prefixes: {COMPARISON_PREFIXES}): {sorted(list(missing_cols))}"
     return {"code": code, "message": message}
 
 
@@ -1443,21 +1439,21 @@ def check_ERCC_subgroup_representation(unnormalizedCountTable: Path, **_) -> Fla
     halt_key = f"halt level subgroups: < {MINIMUM_HALT} ERCC represented"
 
     # classify each representation count
-    representation_category: dict[str, list[str]] = {
-        green_key: list(df_subgroup_counts.loc[df_subgroup_counts > MINIMUM_GREEN]),
-        yellow_key: list(
+    representation_category: dict[str, dict[str,int]] = {
+        green_key: df_subgroup_counts.loc[df_subgroup_counts > MINIMUM_GREEN].to_dict(),
+        yellow_key: 
             df_subgroup_counts.loc[
                 df_subgroup_counts.between(MINIMUM_YELLOW, MINIMUM_GREEN)
-            ].index
-        ),
-        red_key: list(
+            ].to_dict()
+        ,
+        red_key: 
             df_subgroup_counts.loc[
                 df_subgroup_counts.between(
                     MINIMUM_RED, MINIMUM_YELLOW, inclusive="left"
                 )
-            ].index
-        ),
-        halt_key: list(df_subgroup_counts.loc[df_subgroup_counts < MINIMUM_HALT].index),
+            ].to_dict()
+        ,
+        halt_key: df_subgroup_counts.loc[df_subgroup_counts < MINIMUM_HALT].to_dict(),
     }
 
     # check logic
