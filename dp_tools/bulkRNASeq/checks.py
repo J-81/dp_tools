@@ -9,7 +9,7 @@ from pathlib import Path
 from statistics import mean
 import string
 import subprocess
-from typing import Dict, Union
+from typing import Callable, Dict, Union
 from importlib.metadata import files
 
 import pandas as pd
@@ -1481,4 +1481,45 @@ def check_ERCC_subgroup_representation(unnormalizedCountTable: Path, **_) -> Fla
         message = (
             f"Dataset wide ERCC representation is robust: {representation_category}"
         )
+    return {"code": code, "message": message}
+
+
+def check_sample_in_multiqc_report(
+    samples: list[str],
+    multiqc_report_path: Path,
+    name_reformat_func: Callable = lambda s: s,
+) -> FlagEntry:
+    """Determines if the query samples are present in the multiqc report.
+
+    This is achieved by checking the 'multiqc_sources.txt' table, 'Sample Name' column.
+    An optional name_reformat_function can be supplied to address sample name changes that occur in the multiqc report.
+    An example being the renaming of Sample '-' characters to '_' for certain RSeQC modules.
+
+    :param sample: Query sample names to check for presense
+    :type sample: list[str]
+    :param multiqc_report_path: MultiQC report directory
+    :type multiqc_report_path: Path
+    :param name_reformat_func: A function applied to the multiQC sample names before searching against query sample names, defaults to not renaming the multiQC sample names
+    :type name_reformat_func: Callable, optional
+    :return: Flag Entry denoting successful or failing results. Includes description of query sample names and any missing samples
+    :rtype: FlagEntry
+    """
+    # Load multiQC sources table and retrieve set of samples
+    [sources_table] = multiqc_report_path.glob("**/multiqc_sources.txt")
+    multiQC_samples = list(pd.read_csv(sources_table, sep="\t")["Sample Name"])
+
+    # Transform multiQC samples using name_reformat_func
+    reformatted_multiQC_samples = [name_reformat_func(s) for s in multiQC_samples]
+
+    # Check for any missing reformatted sample names.
+    # Also track extra samples, these are not errors but should be reported as well.
+    missing_samples = set(samples) - set(reformatted_multiQC_samples)
+
+    # check logic
+    if len(missing_samples) == 0:
+        code = FlagCode.GREEN
+        message = f"Found all query samples after reformatting multiQC sample names. Details: { {'query samples': samples, 'original multiQC sample names': multiQC_samples, 'reformatted multiQC sample names': reformatted_multiQC_samples} }"
+    else:
+        code = FlagCode.HALT
+        message = f"Missing the following query samples: {missing_samples}. Details: { {'query samples': samples, 'original multiQC sample names': multiQC_samples, 'reformatted multiQC sample names': reformatted_multiQC_samples} }"
     return {"code": code, "message": message}

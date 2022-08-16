@@ -207,3 +207,34 @@ def test_check_dge_table_annotation_columns_exist(
 
     assert res["code"] == FlagCode.GREEN
     assert res["message"]
+
+
+def test_check_sample_in_multiqc_report(glds194_dataSystem):
+    dataset = glds194_dataSystem.dataset
+
+    for asset_key, function in [
+        ("raw MultiQC directory", lambda s: re.sub("_R[12]_raw$", "", s)),
+        ("trimmed fastQC MultiQC directory", lambda s: re.sub("_R[12]$", "", s)),
+        ("trimming MultiQC directory", lambda s: re.sub("_R[12]_raw$", "", s)),
+        ("aligned MultiQC directory", None),
+        ("genebody coverage MultiQC directory", None),
+        ("infer experiment MultiQC directory", lambda s: re.sub("_infer_expt$", "", s)),
+        ("inner distance MultiQC directory", None),
+        ("read distribution MultiQC directory", lambda s: re.sub("_read_dist$", "", s)),
+        ("RSEM counts MultiQC directory", None),
+    ]:
+
+        payload = {
+            "samples": list(dataset.samples),
+            "multiqc_report_path": dataset.data_assets[asset_key].path,
+            "name_reformat_func": function,
+        }
+
+        if function is None:
+            # remove from payload if not required
+            payload.pop("name_reformat_func")
+
+        res = check_sample_in_multiqc_report(**payload)
+
+        assert res["code"] == FlagCode.GREEN
+        assert res["message"]
