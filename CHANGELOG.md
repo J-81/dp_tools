@@ -5,9 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## 1.0.0
+## 1.1.0
 
 ### First Production Release
+- Prior 1.0.0 tagged versions were actually develop style releases
+- Moving ahead only production releases will have tags without 'rc' (release candidate) in the name
 
 ### Quality Updates
 - Various flag messages improved
