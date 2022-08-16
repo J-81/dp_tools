@@ -1105,6 +1105,7 @@ data asset sets:
     - "trimmed reverse reads fastQC HTML"
     - "trimmed forward reads fastQC ZIP"
     - "trimmed reverse reads fastQC ZIP"
+    - "trimmed fastQC MultiQC directory"
     - "trimming MultiQC directory"
     - "forward reads trimming report"
     - "reverse reads trimming report"
@@ -1121,6 +1122,7 @@ data asset sets:
   qc reports for single end trimmed reads data:
     - "trimmed reads fastQC HTML"
     - "trimmed reads fastQC ZIP"
+    - "trimmed fastQC MultiQC directory"
     - "trimming MultiQC directory"
     - "reads trimming report"
   STAR alignments:
