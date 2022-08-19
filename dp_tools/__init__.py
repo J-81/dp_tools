@@ -64,25 +64,28 @@ options:
                         Local location of ISA archive file. Can be downloaded from the GLDS repository with 'dpt-get-isa-archive'
 ```
 
-### Example of two step process to create runsheet from GLDS ISA Archive (using Singularity)
+## Examples
 
+### Two step process to create runsheet from GLDS ISA Archive (using Singularity)
+
+> **Note: At this time, No stdout messages are printed for these scripts**
 
 #### Download ISA Archive
 ``` bash
 # First two lines tell Singularity to run the dp_tools container in the current working directory
-singularity exec --bind $(pwd):$(pwd) \
-  docker://quay.io/j_81/dp_tools:1.1.0 \
+singularity exec --bind $(pwd):$(pwd) \\
+  docker://quay.io/j_81/dp_tools:1.1.0 \\
   dpt-get-isa-archive --accession GLDS-168 # command we want to run
 ```
 
 #### Convert ISA Archive into bulkRNASeq Runsheet
 ``` bash
 # First two lines tell Singularity to run the dp_tools container in the current working directory
-singularity exec --bind $(pwd):$(pwd) \
-  docker://quay.io/j_81/dp_tools:1.1.0 \
-  dpt-isa-to-runsheet --accession GLDS-168 \
-                      --config-type bulkRNASeq \
-                      --config-version Latest \
+singularity exec --bind $(pwd):$(pwd) \\
+  docker://quay.io/j_81/dp_tools:1.1.0 \\
+  dpt-isa-to-runsheet --accession GLDS-168 \\
+                      --config-type bulkRNASeq \\
+                      --config-version Latest \\
                       --isa-archive GLDS-168_metadata_GLDS-168-ISA.zip # command we want to run
 ```
 
