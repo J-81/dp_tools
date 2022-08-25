@@ -251,8 +251,12 @@ def isa_to_runsheet(accession: str, isaArchive: Path, config: tuple[str, str]):
     for entry in investigation_source_entries:
         # handle special cases
         if entry.get("True If Includes At Least One"):
+            # Addressing non-uniformity in ISA field naming
+            # - remove whitespace before comparing
+            # - convert to all lower case as well
+            isa_entries = {item.strip().lower() for item in i_tables[entry["Investigation Subtable"]][entry["ISA Field Name"]]}
             overlap = set(entry["True If Includes At Least One"]).intersection(
-                set(i_tables[entry["Investigation Subtable"]][entry["ISA Field Name"]])
+                isa_entries
             )
             df_final[entry["Runsheet Column Name"]] = bool(overlap)
             continue
