@@ -28,7 +28,7 @@ This library is available for usage as prebuilt images located at [quay.io](http
 
 #### Using pip
 
-> pip install git+https://github.com/J-81/dp_tools.git@development
+> pip install git+https://github.com/J-81/dp_tools.git@1.1.1
 
 ## CLI Commands
 
@@ -90,5 +90,4 @@ singularity exec --bind $(pwd):$(pwd) \\
 ```
 
 """
-
-__version__ = "1.1.0"
+__version__ = "1.1.1"
