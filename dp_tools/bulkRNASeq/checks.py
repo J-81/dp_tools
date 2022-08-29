@@ -32,7 +32,8 @@ def r_style_make_names(s: str) -> str:
     Returns:
         str: A string converted in the same way as R's make.names function
     """
-    VALID_CHARACTERS = string.ascii_letters + string.digits + "."
+    EXTRA_WHITELIST_CHARACTERS = "ΩπϴλθijkuΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡΣΤΥΦΧΨΩαβγδεζηθικλμνξοπρστυφχψω"
+    VALID_CHARACTERS = string.ascii_letters + string.digits + "." + EXTRA_WHITELIST_CHARACTERS
     REPLACEMENT_CHAR = "."
     new_string_chars = list()
     for char in s:
