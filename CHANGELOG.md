@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.3]
+
+### Fixed
+- Fixing false V&V halt flagging: Add in micro sign as whitelisted (better in sync with r make.names function)
+- Expected location of SampleTable.csv and ERCC_SampleTable.csv in 
+## [1.1.2]
+
+### Fixed
+- Fixing false V&V halt flagging: Add in greek characters as whitelisted (better in sync with r make.names function)
+
 ## [1.1.1]
 ### Fixed
 - Incorrect detection of has_ERCC from ISA Archives
@@ -72,3 +82,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - curation tables [GeneLab internal use]
 
 [1.1.1]: https://github.com/j-81/dp_tools/compare/1.1.0...1.1.1
+[1.1.2]: https://github.com/j-81/dp_tools/compare/1.1.1...1.1.2
+[1.1.3]: https://github.com/j-81/dp_tools/compare/1.1.2...1.1.3
