@@ -915,7 +915,7 @@ data assets:
 
   sample table:
     processed location: 
-      - *normCountsDataDir
+      - *DGEDataDir
       - "SampleTable.csv"
 
     tags:
@@ -930,7 +930,7 @@ data assets:
 
   ERCC sample table:
     processed location: 
-      - *normCountsDataDir
+      - *DGEDataDir
       - "ERCC_SampleTable.csv"
 
     tags:
