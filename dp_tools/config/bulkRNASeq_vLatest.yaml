@@ -931,7 +931,7 @@ data assets:
   ERCC sample table:
     processed location: 
       - *DGEDataDir
-      - "ERCC_SampleTable.csv"
+      - "ERCCnorm_SampleTable.csv"
 
     tags:
       - processed
