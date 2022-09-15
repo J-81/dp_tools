@@ -30,21 +30,6 @@ Staging:
         #     Mapping to the appropriate processing pipeline for the assay.
         #   Example: Affymetrix
 
-        - ISA Field Name: Study Protocol Type
-          ISA Table Source: Investigation
-          Investigation Subtable: STUDY PROTOCOLS
-          # will return a boolean indicating if any of the following includes
-          True If Includes At Least One:
-            - spike-in quality control role
-            - spike-in protocol
-            - spike-in control
-            - spike-in control protocol
-          Runsheet Column Name: has_ERCC
-          Processing Usage: >-
-            Indicates is ERCC spike-in has been added. This can be automatically
-            determined from the ISA archive as well based on 'Study Protocol Name' and 'Study Protocol Type'
-          Example: 'TRUE'
-
         - ISA Field Name: 
             - Characteristics[Organism]
             - Characteristics[organism]
