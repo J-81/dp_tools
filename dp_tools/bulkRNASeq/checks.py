@@ -199,6 +199,21 @@ def check_fastqgz_file_contents(file: Path, count_lines_to_check: int) -> FlagEn
 
     return {"code": code, "message": message}
 
+def check_gzip_file_integrity(file: Path, gzip_bin: Path = Path("gzip")) -> FlagEntry:
+    """ Check gzip file integrity using 'gzip -t' as per https://www.gnu.org/software/gzip/manual/gzip.html """
+    output = subprocess.run(
+        [str(gzip_bin), "-t", str(file)], capture_output=True
+    )
+    stdout_string = output.stdout.decode()
+    if stdout_string == "":
+        code = FlagCode.GREEN
+        message = f"Gzip integrity test raised no issues"
+    else:
+        code = FlagCode.HALT
+        message = (
+            f"Gzip integrity test failed on this file with output: {stdout_string}"
+        )
+    return {"code": code, "message": message}    
 
 def check_bam_file_integrity(
     file: Path, samtools_bin: Path = Path("samtools")

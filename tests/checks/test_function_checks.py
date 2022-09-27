@@ -48,6 +48,23 @@ def test_check_bam_file_integrity(glds48_dataSystem):
         assert res["code"] == FlagCode.HALT
         assert res["message"]
 
+def test_check_gzip_file_integrity(glds48_dataSystem):
+    dataset = glds48_dataSystem.dataset
+
+    for sample in dataset.samples.values():
+        res = check_gzip_file_integrity(
+            file=sample.data_assets["raw reads fastq GZ"].path,
+        )
+        assert res["code"] == FlagCode.GREEN
+        assert res["message"]
+
+        res = check_bam_file_integrity(
+            file=sample.data_assets["aligned log Full"].path,
+        )
+
+        assert res["code"] == FlagCode.HALT
+        assert res["message"]
+
 
 def test_check_ERCC_group_represention(glds194_dataSystem):
     dataset = glds194_dataSystem.dataset

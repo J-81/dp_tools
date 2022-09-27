@@ -803,6 +803,9 @@ def validate_bulkRNASeq(
                                 "Raw Reads By Sample-check_fastqgz_file_contents"
                             ],
                         )
+                        vp.add(
+                            check_gzip_file_integrity,
+                        )
                     with vp.payload(
                         payloads=[
                             {
