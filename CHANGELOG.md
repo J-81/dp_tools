@@ -103,3 +103,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [1.1.3]: https://github.com/j-81/dp_tools/compare/1.1.2...1.1.3
 [1.1.4]: https://github.com/j-81/dp_tools/compare/1.1.3...1.1.4
 [1.1.5]: https://github.com/j-81/dp_tools/compare/1.1.4...1.1.5
+[1.1.6]: https://github.com/j-81/dp_tools/compare/1.1.5...1.1.6
