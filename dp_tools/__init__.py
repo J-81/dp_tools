@@ -28,7 +28,7 @@ This library is available for usage as prebuilt images located at [quay.io](http
 
 #### Using pip
 
-> pip install git+https://github.com/J-81/dp_tools.git@1.1.4
+> pip install git+https://github.com/J-81/dp_tools.git@1.1.5
 
 ## CLI Commands
 
