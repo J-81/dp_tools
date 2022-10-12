@@ -117,6 +117,13 @@ def get_assay_table_path(
         ]
         match_file = [Path(val) for val in match_row["Study Assay File Name"].values]
         matches.extend(match_file)
+        if match_file:
+            [match_index] = df.loc[
+                    (
+                        df[["Study Assay Measurement Type", "Study Assay Technology Type"]]
+                        == valid_combination
+                    ).all(axis="columns")
+                ].index.values
 
     # guard, one and only one should match
     assert (
@@ -132,14 +139,7 @@ def get_assay_table_path(
     ]
 
     if return_index:
-        for valid_combination in valid_measurements_and_technology_types:
-            [match_index] = df.loc[
-                (
-                    df[["Study Assay Measurement Type", "Study Assay Technology Type"]]
-                    == valid_combination
-                ).all(axis="columns")
-            ].index.values
-            return match_index
+        return match_index # Due to matches guard a few lines above, this shouldn't ever be unbound when reaching this block
 
     return assay_path
 
