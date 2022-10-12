@@ -9,6 +9,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Stdout logging for scripts, this better explains what is happening during the script
+
+### Fixed
+- Missing Microarray technology valid combination and handling of multiple valid combinations
 ## [1.1.5]
 
 ### Fixed
