@@ -50,6 +50,7 @@ def download_isa(accession: str) -> str:
 
 
 def main():
+    logging.basicConfig(level=logging.INFO)
     args = _parse_args()
     download_isa(args.accession)
 

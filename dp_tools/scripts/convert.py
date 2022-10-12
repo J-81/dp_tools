@@ -174,6 +174,7 @@ def _parse_args():
 
 
 def main():
+    logging.basicConfig(level=logging.INFO)
     args = _parse_args()
     assert (
         args.config_type in SUPPORTED_CONFIG_TYPES
@@ -448,5 +449,4 @@ def isa_to_runsheet(accession: str, isaArchive: Path, config: tuple[str, str]):
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO)
     main()
