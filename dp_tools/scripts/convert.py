@@ -222,6 +222,7 @@ def isa_to_runsheet(accession: str, isaArchive: Path, config: tuple[str, str]):
     a_table = pd.read_csv(
         get_assay_table_path(ISAarchive=isaArchive, configuration=configuration),
         sep="\t",
+        dtype=str
     )
     a_study_assays_index = get_assay_table_path(
         ISAarchive=isaArchive, configuration=configuration, return_index=True
@@ -229,7 +230,7 @@ def isa_to_runsheet(accession: str, isaArchive: Path, config: tuple[str, str]):
     [s_file] = (
         f for f in isa_archive.fetch_isa_files(isaArchive) if f.name.startswith("s_")
     )
-    s_table = pd.read_csv(s_file, sep="\t")
+    s_table = pd.read_csv(s_file, sep="\t", dtype=str)
     df_merged = s_table.merge(a_table, on="Sample Name").set_index(
         "Sample Name", drop=True
     )
