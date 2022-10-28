@@ -343,7 +343,7 @@ def isa_to_runsheet(accession: str, isaArchive: Path, config: tuple[str, str]):
                                 [
                                     scan_col.startswith("Parameter Value["),
                                     scan_col.startswith("Factor Value["),
-                                    scan_col.startswith("Characteristics ["),
+                                    scan_col.startswith("Characteristics["),
                                 ]
                             ):
                                 break
