@@ -117,6 +117,13 @@ def get_assay_table_path(
         ]
         match_file = [Path(val) for val in match_row["Study Assay File Name"].values]
         matches.extend(match_file)
+        if match_file:
+            [match_index] = df.loc[
+                    (
+                        df[["Study Assay Measurement Type", "Study Assay Technology Type"]]
+                        == valid_combination
+                    ).all(axis="columns")
+                ].index.values
 
     # guard, one and only one should match
     assert (
@@ -132,14 +139,7 @@ def get_assay_table_path(
     ]
 
     if return_index:
-        for valid_combination in valid_measurements_and_technology_types:
-            [match_index] = df.loc[
-                (
-                    df[["Study Assay Measurement Type", "Study Assay Technology Type"]]
-                    == valid_combination
-                ).all(axis="columns")
-            ].index.values
-            return match_index
+        return match_index # Due to matches guard a few lines above, this shouldn't ever be unbound when reaching this block
 
     return assay_path
 
@@ -174,6 +174,7 @@ def _parse_args():
 
 
 def main():
+    logging.basicConfig(level=logging.INFO)
     args = _parse_args()
     assert (
         args.config_type in SUPPORTED_CONFIG_TYPES
@@ -336,18 +337,18 @@ def isa_to_runsheet(accession: str, isaArchive: Path, config: tuple[str, str]):
                     original_series: pd.Series
                     for match_i, (df_i, col, original_series) in enumerate(match_cols):
                         # scan through following columns
-                        for scan_col in df_merged.iloc[:, df_i:].columns:
+                        for scan_col in df_merged.iloc[:, df_i+1:].columns:
                             # check if another 'owner' column is scanned, this means Unit was not found
                             if any(
                                 [
                                     scan_col.startswith("Parameter Value["),
                                     scan_col.startswith("Factor Value["),
-                                    scan_col.startswith("Characteristics ["),
+                                    scan_col.startswith("Characteristics["),
                                 ]
                             ):
                                 break
-                            if scan_col == entry.get("Append Column Following"):
-                                resolved_series = original_series + df_merged[scan_col]
+                            if scan_col.startswith(entry.get("Append Column Following")): # uses startswith to avoid naming issues due to pandas 'mangle_dupe_cols' behavior in read csv
+                                resolved_series = original_series.astype(str) + ' ' + df_merged[scan_col]
                                 match_cols[match_i] = df_i, col, resolved_series
                                 break
 
@@ -374,11 +375,9 @@ def isa_to_runsheet(accession: str, isaArchive: Path, config: tuple[str, str]):
                     target_col = get_column_name(df_merged, entry["ISA Field Name"])
                     series_to_add = df_merged[target_col]
                 if entry.get("GLDS URL Mapping"):
-                    urls = get_urls(accession=accession)
-
                     def map_url_to_filename(fn: str) -> str:
                         try:
-                            return urls.get(fn, dict())["url"]
+                            return retrieve_file_url(accession=accession, filename=fn)
                         except KeyError:
                             raise ValueError(
                                 f"{fn} does not have an associated url in {urls}"
@@ -450,5 +449,4 @@ def isa_to_runsheet(accession: str, isaArchive: Path, config: tuple[str, str]):
 
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO)
     main()

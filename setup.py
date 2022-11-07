@@ -12,7 +12,7 @@ long_description = (
 
 setup(
     name="dp_tools",
-    version="1.1.2",
+    version="1.1.7",
     description="Tooling for Data Processing Operations",
     author="Jonathan Oribello",
     author_email="jonathan.d.oribello@nasa.gov",
@@ -23,7 +23,7 @@ setup(
     },
     include_package_data=True,
     python_requires=">=3.10",
-    install_requires=["requests", "pyyaml", "pandas", "schema", "tabulate", "multiqc"],
+    install_requires=["requests", "pyyaml", "pandas==1.4.4", "schema", "tabulate", "multiqc"],
     setup_requires=[],
     tests_require=["pytest", "pytest-console_scripts"],
     entry_points={

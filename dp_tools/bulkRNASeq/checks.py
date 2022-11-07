@@ -32,7 +32,7 @@ def r_style_make_names(s: str) -> str:
     Returns:
         str: A string converted in the same way as R's make.names function
     """
-    EXTRA_WHITELIST_CHARACTERS = "_ΩπϴλθijkuΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡΣΤΥΦΧΨΩαβγδεζηθικλμνξοπρστυφχψω"
+    EXTRA_WHITELIST_CHARACTERS = "_ΩπϴλθijkuΑΒΓΔΕΖΗΘΙΚΛΜΝΞΟΠΡΣΤΥΦΧΨΩαβγδεζηθικλμνξοπρστυφχψω_µ" # Note: there are two "μμ" like characters one is greek letter mu, the other is the micro sign
     VALID_CHARACTERS = string.ascii_letters + string.digits + "." + EXTRA_WHITELIST_CHARACTERS
     REPLACEMENT_CHAR = "."
     new_string_chars = list()
@@ -199,6 +199,21 @@ def check_fastqgz_file_contents(file: Path, count_lines_to_check: int) -> FlagEn
 
     return {"code": code, "message": message}
 
+def check_gzip_file_integrity(file: Path, gzip_bin: Path = Path("gzip")) -> FlagEntry:
+    """ Check gzip file integrity using 'gzip -t' as per https://www.gnu.org/software/gzip/manual/gzip.html """
+    output = subprocess.run(
+        [str(gzip_bin), "-t", str(file)], capture_output=True
+    )
+    stdout_string = output.stdout.decode()
+    if stdout_string == "":
+        code = FlagCode.GREEN
+        message = f"Gzip integrity test raised no issues"
+    else:
+        code = FlagCode.HALT
+        message = (
+            f"Gzip integrity test failed on this file with output: {stdout_string}"
+        )
+    return {"code": code, "message": message}    
 
 def check_bam_file_integrity(
     file: Path, samtools_bin: Path = Path("samtools")
@@ -664,7 +679,7 @@ def utils_runsheet_to_expected_groups(
     map_to_lists: bool = False,
 ) -> Union[dict[str, str], dict[str, list[str]]]:
     df_rs = (
-        pd.read_csv(runsheet, index_col="Sample Name")
+        pd.read_csv(runsheet, index_col="Sample Name", dtype=str)
         .filter(regex="^Factor Value\[.*\]")
         .sort_index()
     )  # using only Factor Value columns
@@ -720,7 +735,7 @@ def check_sample_table_for_correct_group_assignments(
     df_sample = pd.read_csv(sampleTable, index_col=0).sort_index()
     # data specific preprocess
     df_rs = (
-        pd.read_csv(runsheet, index_col="Sample Name")
+        pd.read_csv(runsheet, index_col="Sample Name", dtype=str) # Ensure no factor value columns are misinterpreted as numeric
         .filter(regex="^Factor Value\[.*\]")
         .loc[df_sample.index]  # ensure only sampleTable groups are checked
         .sort_index()

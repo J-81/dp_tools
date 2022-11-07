@@ -14,7 +14,7 @@ def test_get_table_of_files():
 
     accession = "GLDS-1"
     df = get_table_of_files(accession)
-    assert len(df) == 92
+    assert len(df) == 72
 
 def test_retrieve_file_url():
     accession = "GLDS-194"

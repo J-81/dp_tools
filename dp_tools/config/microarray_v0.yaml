@@ -149,6 +149,8 @@ ISA Meta:
   Valid Study Assay Technology And Measurement Types:
     - measurement: "transcription profiling"
       technology: "DNA microarray"
+    - measurement: "transcription profiling"
+      technology: "microarray"
 
   # this is prepended to all file names in the curation assay table
   Global file prefix: "{datasystem}_rna_seq_"
