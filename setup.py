@@ -12,7 +12,7 @@ long_description = (
 
 setup(
     name="dp_tools",
-    version="1.1.7",
+    version="1.1.8",
     description="Tooling for Data Processing Operations",
     author="Jonathan Oribello",
     author_email="jonathan.d.oribello@nasa.gov",
