@@ -20,6 +20,7 @@ FILE_RETRIEVAL_URL_PREFIX = "https://genelab-data.ndc.nasa.gov{suffix}"
 @functools.cache
 def get_table_of_files(accession: str) -> pd.DataFrame:
     """Retrieve table of filenames associated with a GLDS accesion ID.
+    Converts 'GLDS' to 'OSD' as required by open sciences repository change
 
     Note: This function is cached to prevent extra api calls. This can desync from the GLDS repository in the rare case that the GLDS accession is updated in between related calls.
 
@@ -32,11 +33,13 @@ def get_table_of_files(accession: str) -> pd.DataFrame:
     log.info(f"Retrieving table of files for {accession}")
     url = GENELAB_DATASET_FILES.format(accession_number=accession.split("-")[1])
 
+    accession_osd = accession.replace("GLDS", "OSD") # this is the new study level accession ID
+
     # fetch data
     log.info(f"URL Source: {url}")
     with urlopen(url) as response:
         data = yaml.safe_load(response.read())
-        df = pd.DataFrame(data['studies'][accession]['study_files'])
+        df = pd.DataFrame(data['studies'][accession_osd]['study_files'])
     return df
 
 def find_matching_filenames(accession: str, filename_pattern: str) -> list[str]:
@@ -68,5 +71,6 @@ def retrieve_file_url(accession: str, filename: str) -> str:
         raise ValueError(
             f"Could not find filename: '{filename}'. Here as are found filenames for '{accession}': '{df['file_name'].unique()}'"
         )
-
-    return FILE_RETRIEVAL_URL_PREFIX.format(suffix=df.loc[df['file_name'] == filename, 'remote_url'].squeeze())
+    url = FILE_RETRIEVAL_URL_PREFIX.format(suffix=df.loc[df['file_name'] == filename, 'remote_url'].squeeze())
+    print(url)
+    return url
