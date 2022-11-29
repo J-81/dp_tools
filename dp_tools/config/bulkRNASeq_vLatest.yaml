@@ -915,7 +915,7 @@ data assets:
 
   sample table:
     processed location: 
-      - *normCountsDataDir
+      - *DGEDataDir
       - "SampleTable.csv"
 
     tags:
@@ -930,8 +930,9 @@ data assets:
 
   ERCC sample table:
     processed location: 
-      - *normCountsDataDir
-      - "ERCC_SampleTable.csv"
+      - *DGEDataDir
+      - &erccSubDir "ERCC_NormDGE"
+      - "ERCCnorm_SampleTable.csv"
 
     tags:
       - processed
@@ -961,7 +962,7 @@ data assets:
   ERCC normalized DESeq2 contrasts table:
     processed location: 
       - *DGEDataDir
-      - &erccSubDir "ERCC_NormDGE"
+      - *erccSubDir
       - "ERCCnorm_contrasts.csv"
 
     tags:

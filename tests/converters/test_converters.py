@@ -12,10 +12,10 @@ def test_paired_isa_to_runsheet(glds194_test_dir, tmpdir):
     isaPath = glds194_test_dir / "Metadata" / "GLDS-194_metadata_GLDS-194-ISA.zip"
     df_runsheet = isa_to_runsheet("GLDS-194", isaPath, config=("bulkRNASeq", "0"))
 
-    assert df_runsheet.shape == (13, 7)
+    assert df_runsheet.shape == (13, 8)
     assert (
         hashlib.sha1(pd.util.hash_pandas_object(df_runsheet).values).hexdigest()
-        == "0c5bba6e1194d5840bd801ad629e38d1cab54744"
+        == "e45962a61d0835a16ab0c905752114900515cf89"
     ), "Hash did not match, the means the contents changed. Manually validation and reset of test hash is in order"
 
 
