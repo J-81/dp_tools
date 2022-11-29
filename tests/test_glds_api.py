@@ -21,7 +21,7 @@ def test_retrieve_file_url():
     url = retrieve_file_url(accession, filename="GLDS-194_metadata_GLDS-194-ISA.zip")
     assert (
         url
-        == "https://genelab-data.ndc.nasa.gov/geode-py/ws/studies/GLDS-194/download?source=datamanager&file=GLDS-194_metadata_GLDS-194-ISA.zip"
+        == "https://genelab-data.ndc.nasa.gov/geode-py/ws/studies/OSD-194/download?source=datamanager&file=GLDS-194_metadata_GLDS-194-ISA.zip"
     )
 
     accession = "GLDS-1"
