@@ -34,4 +34,16 @@ runsheet = {
             }
         }
     ),
+    "methylSeq": Schema(
+        {
+            str: {
+                "Original Sample Name": str,
+                "organism": str,
+                "paired_end": bool,
+                "read1_path": str,
+                Optional("read2_path"): str,
+                str: object,  # this is used to pass other columns, chiefly Factor Value ones
+            }
+        }
+    ),
 }
