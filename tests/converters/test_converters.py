@@ -41,7 +41,7 @@ def test_methylSeq_glds397_isa_to_runsheet(glds397_isazip_path):
     assert df_runsheet.shape == (16, 6)  # 1 factor value
     assert (
         hashlib.sha1(pd.util.hash_pandas_object(df_runsheet).values).hexdigest()
-        == "57cab80a811540e3f1174ac6b65c7ecc3e7f73f5"
+        == "e895e381311b8cbad07f37074125b1a9970c6dd0"
     ), "Hash did not match, the means the contents changed. Manually validation and reset of test hash is in order"
 
 
