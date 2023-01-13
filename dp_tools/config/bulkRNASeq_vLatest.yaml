@@ -190,7 +190,7 @@ data assets:
   ISA Archive:
     processed location: 
       - "Metadata"
-      - "{dataset}_metadata_*-ISA.zip"
+      - "*-ISA.zip"
 
     tags:
       - raw
