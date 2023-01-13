@@ -2,6 +2,8 @@ import hashlib
 import os
 
 import pandas as pd
+import pandera as pa
+import pytest
 
 from dp_tools.scripts.convert import isa_to_runsheet
 
@@ -30,6 +32,16 @@ def test_single_isa_to_runsheet(glds48_test_dir, tmpdir):
         hashlib.sha1(pd.util.hash_pandas_object(df_runsheet).values).hexdigest()
         == "8322bdba7204e3f685b4af8affec5da9fc5bd526"
     ), "Hash did not match, the means the contents changed. Manually validation and reset of test hash is in order"
+
+def test_non_ready_dataset_to_runsheet(glds313_test_dir, tmpdir):
+    """This tests that an ISA archive with pending pre processing for FastQ concatenation correctly raises an exception """
+    os.chdir(tmpdir)
+    isaPath = glds313_test_dir / "Metadata" / "OSD-313_metadata_GLDS-313-ISA.zip"
+
+    with pytest.raises(pa.errors.SchemaError):
+        isa_to_runsheet("GLDS-313", isaPath, config=("bulkRNASeq", "1"))
+        
+
 
 
 def test_methylSeq_glds397_isa_to_runsheet(glds397_isazip_path):
