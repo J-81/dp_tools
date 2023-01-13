@@ -9,6 +9,7 @@ from dp_tools.glds_api.commons import retrieve_file_url
 
 
 import pandas as pd
+import schema
 
 import logging
 
@@ -426,7 +427,12 @@ def isa_to_runsheet(accession: str, isaArchive: Path, config: tuple[str, str]):
     # validate dataframe contents (incomplete but catches most required columns)
     # uses dataframe to dict index format: https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.to_dict.html
 
-    runsheet_schema.validate(df_final.to_dict(orient="index"))
+    # TODO: FUTURE- once converted from schema to pandera, remove this logic branch
+    if isinstance(runsheet_schema, schema.Schema):
+        runsheet_schema.validate(df_final.to_dict(orient="index"))
+    else: # Assume using pandera
+        runsheet_schema.validate(df_final)
+
     # ensure at least on Factor Value is extracted
     assert (
         len([col for col in df_final.columns if col.startswith("Factor Value[")]) != 0
