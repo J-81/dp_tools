@@ -5,6 +5,19 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## DRAFT[1.1.10]
+
+
+### Added
+
+- Pandera as dependency for better validation tooling
+
+### Changed
+
+- BulkRNASeq runsheet validation enhanced
+  - Upgraded from Schema to Pandera
+  - Added checks for dataset metadata columns like 'paired_end'
+  - Added sanity check for 'read2_path' column optional nature
 
 ## [1.1.9]
 
