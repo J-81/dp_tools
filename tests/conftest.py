@@ -17,11 +17,6 @@ def root_test_dir_microarray():
     return Path(os.environ["TEST_ASSETS_DIR"]) / "microarray"
 
 
-@pytest.fixture
-def root_test_dir_methylSeq():
-    """This should be development machine specific, path should be set by env variable for privacy"""
-    return Path(os.environ["TEST_ASSETS_DIR"]) / "methylSeq"
-
 
 @pytest.fixture
 def glds205_isazip_path(root_test_dir_microarray):
@@ -46,10 +41,10 @@ def glds123_isazip_path(root_test_dir_microarray):
 
 
 @pytest.fixture
-def glds397_isazip_path(root_test_dir_methylSeq):
+def glds397_isazip_path(root_test_dir):
     """This should be development machine specific, path should be set by env variable for privacy"""
     return (
-        root_test_dir_methylSeq
+        root_test_dir
         / "GLDS-397"
         / "Metadata"
         / "GLDS-397_metadata_GLDS-397-ISA.zip"
@@ -108,6 +103,10 @@ def glds194_runsheetPath(glds194_test_dir):
 @pytest.fixture
 def glds48_test_dir(root_test_dir):
     return root_test_dir / "GLDS-48"
+
+@pytest.fixture
+def glds313_test_dir(root_test_dir):
+    return root_test_dir / "GLDS-313"
 
 
 @pytest.fixture
