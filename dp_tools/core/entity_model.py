@@ -161,7 +161,10 @@ class Dataset:
         putative: bool,
     ) -> DataAsset:
         if "*" in asset.name:
-            [asset] = asset.parent.glob(asset.name)
+            try:
+                [asset] = asset.parent.glob(asset.name)
+            except ValueError as exc:
+                raise ValueError(f"Failed to locate data asset using glob pattern: '{asset.name}'") from exc
         if not putative:
             assert asset.exists(), f"Failed to load asset at path '{asset}'"
             self.loaded_assets_dicts.append(
