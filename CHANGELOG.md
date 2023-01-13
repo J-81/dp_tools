@@ -19,6 +19,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Added checks for dataset metadata columns like 'paired_end'
   - Added sanity check for 'read2_path' column optional nature
 
+### Fixed
+
+- [#19](https://github.com/J-81/dp_tools/issues/19)
+
 ## [1.1.9]
 
 ### Added
