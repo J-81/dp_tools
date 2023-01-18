@@ -36,6 +36,17 @@ def test_key_based_loader_GLDS194(root_test_dir, caplog):
     )
 
 
+def test_key_based_loader_GLDS367_microarray(root_test_dir):
+
+    ds = load_data(
+        key_sets=("glds metadata", "processed"),
+        config=("microarray", "Latest"),
+        root_path=(root_test_dir / "GLDS-367"),
+        runsheet_path=(
+            root_test_dir / "GLDS-367/Metadata/GLDS-367_microarray_v0_runsheet.csv"
+        ),
+    )
+
 def test_key_based_loader_bad_keys(root_test_dir):
     with pytest.raises(AssertionError):
         load_data(
