@@ -53,6 +53,14 @@ Staging:
             Mapping to the appropriate alignment reference and annotation databases.
           Example: Arabidopsis thaliana
 
+        - ISA Field Name: 
+            - Array Design REF
+          ISA Table Source: Assay
+          Runsheet Column Name: biomart_attribute
+          Processing Usage: >-
+            Used for identifying biomart attribute name for biomart mapping purposes
+          Example: agilent_wholegenome_4x44k_v1
+
         - ISA Field Name: Source Name
           ISA Table Source: Sample
           Runsheet Column Name: Source Name
