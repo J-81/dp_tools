@@ -7,6 +7,9 @@ import pytest
 from dp_tools.bulkRNASeq.vv_protocols import (
     validate_bulkRNASeq,
 )
+from dp_tools.microarray.vv_protocols import (
+    validate_Agilent1Channel,
+)
 from dp_tools.core.check_model import ValidationProtocol
 from dp_tools.core.loaders import load_data
 
@@ -267,6 +270,60 @@ def test_updated_protocol_model_single_end(
         expected_outlier_table_shape,
         expected_flag_table_fingerprint,
     )
+
+@pytest.mark.parametrize(
+    "data_asset_keys,components,expected_flag_table_shape,expected_outlier_table_shape,expected_flag_table_fingerprint,expected_halt_flag_count",
+    [
+        pytest.param(
+            ("glds metadata", "processed"),
+            ["Metadata", "DGE Metadata", "DGE Output"],
+            (35, 7),
+            (0, 0),
+            1047.2857142857142,
+            1, # Just missing 'Array Design REF' column expected for legacy runsheet
+            id="Run all checks",
+        ),
+    ],
+)
+def test_protocol_GLDS367_Agile1Channel(
+    glds367_test_dir,
+    data_asset_keys,
+    components,
+    expected_flag_table_shape,
+    expected_outlier_table_shape,
+    expected_flag_table_fingerprint,
+    expected_halt_flag_count,
+):
+    datasystem = load_data(
+        key_sets=data_asset_keys,
+        config=("microarray", "Latest"),
+        root_path=(glds367_test_dir),
+        runsheet_path=(
+            glds367_test_dir / "Metadata/GLDS-367_microarray_v0_runsheet.csv"
+        ),
+    )
+
+    report = validate_Agilent1Channel(
+        datasystem.dataset,
+        report_args={"include_skipped": False},
+        protocol_args={"run_components": components},
+    )
+
+    assert (
+        sum(report["flag_table"]["code_level"] >= 80) == expected_halt_flag_count
+    ), f"Found more than expected HALT+ flags: {report['flag_table'].loc[report['flag_table']['code_level'] >= 80].to_dict(orient = 'records')}"
+
+    assert (
+        report["flag_table"].shape,
+        report["outliers"].shape,
+        pseudo_fingerprint(report["flag_table"]),
+    ) == (
+        expected_flag_table_shape,
+        expected_outlier_table_shape,
+        expected_flag_table_fingerprint,
+    )
+
+
 
 
 def test_updated_protocol_model_skipping(glds48_dataSystem):
