@@ -5,11 +5,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## DRAFT[1.1.10]
-
+## [1.1.10]
 
 ### Added
 
+- Microarray (Agilent 1 Channel) V&V protocol
 - Pandera as dependency for better validation tooling
 
 ### Changed
@@ -144,3 +144,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [1.1.7]: https://github.com/j-81/dp_tools/compare/1.1.6...1.1.7
 [1.1.8]: https://github.com/j-81/dp_tools/compare/1.1.7...1.1.8
 [1.1.9]: https://github.com/j-81/dp_tools/compare/1.1.8...1.1.9
+[1.2.0]: https://github.com/j-81/dp_tools/compare/1.1.9...1.2.0
