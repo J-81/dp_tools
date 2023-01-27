@@ -94,6 +94,10 @@ def glds48_sample_names():
 def glds194_test_dir(root_test_dir):
     return root_test_dir / "GLDS-194"
 
+@pytest.fixture
+def glds367_test_dir(root_test_dir):
+    return root_test_dir / "GLDS-367"
+
 
 @pytest.fixture
 def glds194_runsheetPath(glds194_test_dir):
