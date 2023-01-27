@@ -35,8 +35,8 @@ jobs:
           conda install -c conda-forge -c bioconda python=3.10 pytest samtools
           export PATH=/usr/share/miniconda/bin:$PATH
           git clone -b  NF_RCP-F  --depth=1 https://github.com/J-81/test-datasets-extended.git --single-branch # Test assets for NF_RCP-F
-          git remote set-branches --add origin NF_AGILE1CH # Test assets for NF_AGILE1CH
           cd test-datasets-extended
+          git remote set-branches --add origin NF_AGILE1CH # Test assets for NF_AGILE1CH
           git fetch
           git checkout origin/NF_AGILE1CH -- testdata
           cd -
