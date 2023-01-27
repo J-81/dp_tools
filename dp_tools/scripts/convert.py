@@ -169,6 +169,13 @@ def _parse_args():
         required=True,
         help="Local location of ISA archive file. Can be downloaded from the GLDS repository with 'dpt-get-isa-archive'",
     )
+    parser.add_argument(
+        "--inject",
+        required=False,
+        nargs='+',
+        default=[],
+        help="A set of key value pairs to inject into the runsheet.  Useful to add data that is not present in the ISA archive. Format: 'Column_Name=Value'",
+    )
 
     args = parser.parse_args()
     return args
@@ -181,7 +188,10 @@ def main():
         args.config_type in SUPPORTED_CONFIG_TYPES
     ), f"Invalid config type supplied: '{args.config_type}' Supported config types: {SUPPORTED_CONFIG_TYPES} "
     config = (args.config_type, args.config_version)
-    isa_to_runsheet(args.accession, Path(args.isa_archive), config)
+
+    inject = {key_value_pair.split("=")[0]:key_value_pair.split("=")[1] for key_value_pair in args.inject} # Format key value pairs
+
+    isa_to_runsheet(args.accession, Path(args.isa_archive), config, inject = inject)
 
 
 def get_column_name(df: pd.DataFrame, target: Union[str, list]) -> str:
@@ -210,7 +220,7 @@ def get_column_name(df: pd.DataFrame, target: Union[str, list]) -> str:
 
 
 # TODO: Needs heavy refactoring and log messaging
-def isa_to_runsheet(accession: str, isaArchive: Path, config: tuple[str, str]):
+def isa_to_runsheet(accession: str, isaArchive: Path, config: tuple[str, str], inject: dict[str, str] = {}):
     ################################################################
     ################################################################
     # SETUP CONFIG AND INPUT TABLES
@@ -406,6 +416,11 @@ def isa_to_runsheet(accession: str, isaArchive: Path, config: tuple[str, str]):
     # to preserve the original sample name for post processing
     # make a new column
     df_final["Original Sample Name"] = df_final.index
+
+    # Inject any columns supplied
+    for col_name, value in inject.items():
+        log.info(f"INJECTION: Column '{col_name}' being set to '{value}'")
+        df_final[col_name] = value
 
     # then modify the index as needed
     df_final.index = df_final.index.str.replace(" ", "_")
