@@ -17,7 +17,7 @@ from dp_tools.microarray.checks import *  # normally this isn't ideal, however, 
 
 CONFIG = {
     "Metadata-check_metadata_attributes_exist": {
-        "expected_attrs": ["Array Design REF", "organism"]
+        "expected_attrs": ["biomart_attribute", "organism"]
     },
 }
 
