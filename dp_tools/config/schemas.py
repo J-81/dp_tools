@@ -34,33 +34,16 @@ runsheet = {
         # define checks at the DataFrameSchema-level
         checks=check_read2_path_populated_if_paired_end
     ),
-    "microarray": Schema(
-        {
-            str: {
-                "Original Sample Name": str,
-                "organism": str,
-                "Study Assay Measurement": str,
-                "Study Assay Technology Type": str,
-                "Study Assay Technology Platform": str,
-                "Source Name": str,
-                "Label": str,
-                "Hybridization Assay Name": str,
-                "Array Data File Name": str,
-                "Array Data File Path": str,
-                str: object,  # this is used to pass other columns, chiefly Factor Value ones
-            }
-        }
-    ),
-    "methylSeq": Schema(
-        {
-            str: {
-                "Original Sample Name": str,
-                "organism": str,
-                "paired_end": bool,
-                "read1_path": str,
-                schema_Optional("read2_path"): str,
-                str: object,  # this is used to pass other columns, chiefly Factor Value ones
-            }
-        }
-    ),
+    "methylSeq": pa.DataFrameSchema(
+        columns={
+            "Original Sample Name": pa.Column(str),
+            "has_ERCC": pa.Column(bool, check_single_value),
+            "organism": pa.Column(str, check_single_value),
+            "paired_end": pa.Column(bool, check_single_value),
+            "read1_path": pa.Column(str),
+            "read2_path": pa.Column(str, required=False), # Expect if paired_end is True
+        },
+        # define checks at the DataFrameSchema-level
+        checks=check_read2_path_populated_if_paired_end
+    )
 }
