@@ -2,6 +2,7 @@ import argparse
 from pathlib import Path
 import re
 from typing import List, Union
+
 from dp_tools.config import schemas
 from dp_tools.core.configuration import load_config
 from dp_tools.core.files import isa_archive
@@ -9,7 +10,7 @@ from dp_tools.glds_api.commons import retrieve_file_url
 
 
 import pandas as pd
-import schema
+from pandera import DataFrameSchema
 
 import logging
 
@@ -220,7 +221,7 @@ def get_column_name(df: pd.DataFrame, target: Union[str, list]) -> str:
 
 
 # TODO: Needs heavy refactoring and log messaging
-def isa_to_runsheet(accession: str, isaArchive: Path, config: tuple[str, str], inject: dict[str, str] = {}):
+def isa_to_runsheet(accession: str, isaArchive: Path, config: Union[tuple[str, str], Path], inject: dict[str, str] = {}, schema: Union[DataFrameSchema, None] = None):
     ################################################################
     ################################################################
     # SETUP CONFIG AND INPUT TABLES
@@ -228,7 +229,10 @@ def isa_to_runsheet(accession: str, isaArchive: Path, config: tuple[str, str], i
     ################################################################
     log.info("Setting up to generate runsheet dataframe")
     configuration = load_config(config=config)
-    runsheet_schema = schemas.runsheet[config[0]]
+    if schema is None:
+        runsheet_schema = schemas.runsheet[config[0]]
+    else:
+        runsheet_schema = schema
     i_tables = isa_investigation_subtables(isaArchive)
     a_table = pd.read_csv(
         get_assay_table_path(ISAarchive=isaArchive, configuration=configuration),
@@ -442,11 +446,7 @@ def isa_to_runsheet(accession: str, isaArchive: Path, config: tuple[str, str], i
     # validate dataframe contents (incomplete but catches most required columns)
     # uses dataframe to dict index format: https://pandas.pydata.org/docs/reference/api/pandas.DataFrame.to_dict.html
 
-    # TODO: FUTURE- once converted from schema to pandera, remove this logic branch
-    if isinstance(runsheet_schema, schema.Schema):
-        runsheet_schema.validate(df_final.to_dict(orient="index"))
-    else: # Assume using pandera
-        runsheet_schema.validate(df_final)
+    runsheet_schema.validate(df_final)
 
     # ensure at least on Factor Value is extracted
     assert (
