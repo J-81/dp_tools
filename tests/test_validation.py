@@ -7,9 +7,7 @@ import pytest
 from dp_tools.bulkRNASeq.vv_protocols import (
     validate_bulkRNASeq,
 )
-from dp_tools.microarray.vv_protocols import (
-    validate_Agilent1Channel,
-)
+
 from dp_tools.core.check_model import ValidationProtocol
 from dp_tools.core.loaders import load_data
 
