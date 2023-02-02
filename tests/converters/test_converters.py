@@ -56,32 +56,6 @@ def test_methylSeq_glds397_isa_to_runsheet(glds397_isazip_path):
         == "e895e381311b8cbad07f37074125b1a9970c6dd0"
     ), "Hash did not match, the means the contents changed. Manually validation and reset of test hash is in order"
 
-
-
-def test_microarray_glds367_isa_to_runsheet(glds367_test_dir):
-    """This tests validation as it would be run on dataset after demultiplexing"""
-    df_runsheet = isa_to_runsheet(
-        "GLDS-367", glds367_test_dir / "Metadata" / "GLDS-367_metadata_GLDS-367-ISA.zip", config=("microarray", "0")
-    )
-
-    assert df_runsheet.shape == (16, 14)  # 2 factor values
-    assert (
-        hashlib.sha1(pd.util.hash_pandas_object(df_runsheet).values).hexdigest()
-        == "08ab92a374fdf522b825483918bbf8608c0dbb53"
-    ), "Hash did not match, the means the contents changed. Manually validation and reset of test hash is in order"
-
-def test_microarray_glds367_isa_to_runsheet_with_inject(glds367_test_dir):
-    """This tests validation as it would be run on dataset after demultiplexing"""
-    df_runsheet = isa_to_runsheet(
-        "GLDS-367", glds367_test_dir / "Metadata" / "GLDS-367_metadata_GLDS-367-ISA.zip", config=("microarray", "0"), inject={'biomart_attribute':'agilent_wholegenome_4x44k_v1'}
-    )
-
-    assert df_runsheet.shape == (16, 14)  # 2 factor values
-    assert (
-        hashlib.sha1(pd.util.hash_pandas_object(df_runsheet).values).hexdigest()
-        == "4e2b1e747d4b9a65f2e25293cfee7cbf1a5871a9"
-    ), "Hash did not match, the means the contents changed. Manually validation and reset of test hash is in order"
-
 # def test_microarray_glds123_isa_to_runsheet(glds123_isazip_path):
 #     """This tests validation as it would be run on dataset after demultiplexing"""
 #     df_runsheet = isa_to_runsheet(

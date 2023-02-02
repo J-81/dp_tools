@@ -58,7 +58,8 @@ def load_config(config: Union[tuple[str, str], Path]) -> dict:
             )
         case Path():
             log.info(f"Loading config (direct path): {config}")
-            conf_full = yaml.safe_load(config.open())
+            with config.open() as f:
+                conf_full = yaml.safe_load(f)
 
     log.debug(f"Final config loaded: {conf_full}")
 
