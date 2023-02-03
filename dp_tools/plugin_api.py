@@ -25,12 +25,9 @@ def load_plugin(plugin_dir: Path):
     sys.path.append(str(plugin_dir))
 
     print ("DP TOOLS VALIDATION PLUGIN LOADER starting.  loading plugins:")
-    plugins = {}
     print(f"- {plugin_str}")
     if re.search('^dp_tools__', plugin_str):
         module_name = plugin_str
         module = importlib.import_module(module_name)
-        module_key = re.sub('^dp_tools__', '', module_name)
-        plugins[module_key] = module
-        print ("   %s" % ( module_name ))
-    return plugins
+        return module
+    raise ValueError(f"Could not find validate plugin in {plugin_dir}")
