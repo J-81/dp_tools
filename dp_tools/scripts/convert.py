@@ -7,6 +7,7 @@ from dp_tools.config import schemas
 from dp_tools.core.configuration import load_config
 from dp_tools.core.files import isa_archive
 from dp_tools.glds_api.commons import retrieve_file_url
+from dp_tools import plugin_api
 
 
 import pandas as pd
@@ -159,7 +160,7 @@ def _parse_args():
     )
     parser.add_argument(
         "--config-type",
-        required=True,
+        required=False,
         help=f"Packaged config type to use. Currently supports: {SUPPORTED_CONFIG_TYPES}",
     )
     parser.add_argument(
@@ -177,6 +178,11 @@ def _parse_args():
         default=[],
         help="A set of key value pairs to inject into the runsheet.  Useful to add data that is not present in the ISA archive. Format: 'Column_Name=Value'",
     )
+    parser.add_argument(
+        "--plugin-dir",
+        help=f"Plugin directory to load",
+        default=False,
+    )
 
     args = parser.parse_args()
     return args
@@ -185,14 +191,23 @@ def _parse_args():
 def main():
     logging.basicConfig(level=logging.INFO)
     args = _parse_args()
-    assert (
-        args.config_type in SUPPORTED_CONFIG_TYPES
-    ), f"Invalid config type supplied: '{args.config_type}' Supported config types: {SUPPORTED_CONFIG_TYPES} "
-    config = (args.config_type, args.config_version)
-
     inject = {key_value_pair.split("=")[0]:key_value_pair.split("=")[1] for key_value_pair in args.inject} # Format key value pairs
 
-    isa_to_runsheet(args.accession, Path(args.isa_archive), config, inject = inject)
+    if args.plugin_dir == False:
+        assert (
+            args.config_type in SUPPORTED_CONFIG_TYPES
+        ), f"Invalid config type supplied: '{args.config_type}' Supported config types: {SUPPORTED_CONFIG_TYPES} "
+        config = (args.config_type, args.config_version)
+        isa_to_runsheet(args.accession, Path(args.isa_archive), config, inject = inject)
+    else:
+        plugin = plugin_api.load_plugin(Path(args.plugin_dir))
+        isa_to_runsheet(
+            args.accession, 
+            Path(args.isa_archive), 
+            config=plugin.config, 
+            schema=plugin.schemas.runsheet,
+            inject = inject
+            )
 
 
 def get_column_name(df: pd.DataFrame, target: Union[str, list]) -> str:
