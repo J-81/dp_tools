@@ -9,6 +9,7 @@ from typing import (
     Callable,
     TypedDict,
     Union,
+    Literal
 )
 import logging
 
@@ -483,16 +484,27 @@ class ValidationProtocol:
         self,
         include_individual_checks: bool = True,
         include_skipped_components: bool = False,
+        long_description: bool = False,
+        INDENT_CHAR: str = " ",
+        COMPONENT_PREFIX: str = "↳"
     ) -> str:
         """Returns a print-friendly string describing the queued checks.
 
         Args:
             include_individual_checks (bool, optional): Controls whether individual checks should be included. Defaults to True.
+            include_skipped_components (bool, optional): Controls whether skipped checks should be included. Defaults to False.
+            long_description (bool, optional): Controls the kind of description to print. Defaults to False (i.e. use 'description' field). If set to True, the 'full_description' is used instead
+            INDENT_CHAR (str, optional): Controls the character for indenting increasing levels of component scopes. Defaults to the ' ' character.
+            COMPONENT_PREFIX (str, optional): Controls the character for to prefix all component names. Defaults to the '↳' character.
 
         Returns:
             str: A human friendly description of the queued checks.
         """
-        INDENT_CHAR = " "
+        description_field: Literal['full_description'] | Literal['description']
+        if long_description:
+            description_field = "full_description"
+        else:
+            description_field = "description"
 
         # create by component dictionary
         check_by_component: dict[
@@ -520,7 +532,7 @@ class ValidationProtocol:
             if include_individual_checks:
                 check_lines = Counter(
                     [
-                        f"{INDENT_STR} > {check['description']}"
+                        f"{INDENT_STR} > {check[description_field]}"
                         for check in check_by_component[component]
                         if check["to_run"]
                     ]
@@ -676,11 +688,16 @@ class ValidationProtocol:
         if combine_with_flags is not None:
             unpreprocessed_df_data.extend(combine_with_flags)
 
-        # Preprocess all 'message' and 'description' fit on one table line to ensure they fit on 
+        # Preprocesing flags before tabulating
         df_data: list[dict] = list()
         for flag_result in unpreprocessed_df_data:
+            # Preprocess all 'message' and 'description' fit on one table line to ensure they fit on 
             flag_result['message'] = flag_result['message'].replace("\n","::NEWLINE::")
             flag_result['description'] = flag_result['description'].replace("\n","::NEWLINE::")
+
+            # REMOVE full_description from tabulated report
+            flag_result.pop('full_description')
+
             df_data.append(flag_result)
         df_data.reverse() # ensure same order as unpreprocessed data
 
