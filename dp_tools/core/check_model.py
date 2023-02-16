@@ -653,19 +653,27 @@ class ValidationProtocol:
 
         self.results = dict(self.results)
         data = list(self._get_report_data(self._root_component))
-        df_data: list[dict] = list()
+        unpreprocessed_df_data: list[dict] = list()
         for component in data:
             for index, flags in component.items():
                 for flag in flags:
                     entry = {
                         "index": index,
                     } | flag
-                    df_data.append(entry)
+                    unpreprocessed_df_data.append(entry)
 
         # Add additiona flags if supplied
         # Most immediately useful for ingesting data asset loading logs
         if combine_with_flags is not None:
-            df_data.extend(combine_with_flags)
+            unpreprocessed_df_data.extend(combine_with_flags)
+
+        # Preprocess all 'message' and 'description' fit on one table line to ensure they fit on 
+        df_data: list[dict] = list()
+        for flag_result in unpreprocessed_df_data:
+            flag_result['message'] = flag_result['message'].replace("\n","::NEWLINE::")
+            flag_result['description'] = flag_result['description'].replace("\n","::NEWLINE::")
+            df_data.append(flag_result)
+        df_data.reverse() # ensure same order as unpreprocessed data
 
         df = pd.DataFrame(df_data).set_index("index")
 
