@@ -279,6 +279,9 @@ class ValidationProtocol:
         description: str
         """ A user friendly description of the specific check, useful when a general check function where the function name alone is too non-specific"""
 
+        full_description: str
+        """ A long (possibly multiline) description of the check. This is NOT included in the flag table; however, can be printed using queued check"""
+
         payload: dict
         """ The keyword arguments that will be supplied to the function if it is run. Considered 'dynamic' compared to the config (e.g. the specifc log file path for a validation protocol execution is best defined as a payload) """
 
@@ -425,6 +428,7 @@ class ValidationProtocol:
         skip: bool = False,
         config: dict = None,
         description: str = None,
+        full_description: str = None
     ):
         """Adds the check to the queue for each payload.
         Payload can be either supplied directly on the add invocation
@@ -439,6 +443,8 @@ class ValidationProtocol:
                 These are considered independent of the items that need validation (which should be supplied via payload)
             description (str, optional): A description of the check function. Defaults to function name.
                 Should be used if the function name doesn't adequately describe what is being checked.
+            full_description (str, optional): A long, potentially multiline description of the check function. Defaults to function name.
+                NOT included in flag table but used to 
         """
         # override payload with one supplied directly to run
         if payloads:
@@ -454,6 +460,9 @@ class ValidationProtocol:
                     "check_fcn": fcn,
                     "function": fcn.__name__,
                     "description": description
+                    if description is not None
+                    else fcn.__name__,
+                    "full_description": description
                     if description is not None
                     else fcn.__name__,
                     "payload": payload,
