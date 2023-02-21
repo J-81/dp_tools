@@ -23,13 +23,14 @@ setup(
     },
     include_package_data=True,
     python_requires=">=3.10",
-    install_requires=["requests", "pyyaml", "pandas==1.4.4", "schema", "tabulate", "multiqc", "pandera"],
+    install_requires=["requests", "pyyaml", "pandas==1.4.4", "schema", "tabulate", "multiqc", "pandera", "click"],
     setup_requires=[],
     tests_require=["pytest", "pytest-console_scripts"],
     entry_points={
         "console_scripts": [
             "dpt-get-isa-archive=dp_tools.glds_api.isa:main",
             "dpt-isa-to-runsheet=dp_tools.scripts.convert:main",
+            "dpt=dp_tools.scripts.vv_interface:cli",
         ]
     },
 )
