@@ -1,6 +1,4 @@
-#########################################################################
-# FLAG (A validation report message)
-#########################################################################
+import textwrap
 from collections import Counter, defaultdict
 from contextlib import contextmanager
 import enum
@@ -21,6 +19,56 @@ log = logging.getLogger(__name__)
 ALLOWED_DEV_EXCEPTIONS = (
     Exception  # Hooking into this with monkeypatch can be handy for testing
 )
+
+def run_manual_check(start_instruction, pass_or_fail_questions, pass_or_flag_questions) -> 'FlagEntry':
+    input(f"Manual Check Start Instructions: \n\t{start_instruction}.\nPress Enter to continue to questions..")
+    top_level_code = FlagCode.GREEN
+
+    def pass_or_fail_prompt(question: str):
+        ALLOWED = { # Lambda used to ensure both static and analyst responses can be supplied
+            "Y": (lambda: "Yes", FlagCode.GREEN),
+            "JF": (lambda: input("Expand on reason for failure: ").replace("\n",":::NEWLINE:::"), FlagCode.HALT),
+            "UF": (lambda: "No",FlagCode.HALT)
+        }
+        
+        while True:
+            try:
+                resp = ALLOWED[input(f"{question} (Y/JF/UF) : ").upper()]
+                return (resp[0](), resp[1]) # evalute in case justification is provided
+            except KeyError:
+                print(f"Invalid response! Only {list(ALLOWED)} values are allowed")
+                continue
+        
+    def pass_or_flag_prompt(question: str):
+        ALLOWED = { # Lambda used to ensure both static and analyst responses can be supplied
+            "Y": (lambda: "Yes", FlagCode.GREEN),
+            "JF": (lambda: input("Expand on reason for failure: ").replace("\n",":::NEWLINE:::"), FlagCode.RED),
+            "UF": (lambda: "No",FlagCode.RED)
+        }
+        
+        while True:
+            try:
+                resp = ALLOWED[input(f"{question} (Y/JF/UF) : ").upper()]
+                return (resp[0](), resp[1]) # evalute in case justification is provided
+            except KeyError:
+                print(f"Invalid response! Only {list(ALLOWED)} values are allowed")
+                continue
+        
+    responses: dict[str, dict[str, list[tuple[str, FlagCode]]]] = {
+        "pass/fail": {}, 
+        "pass/flag": {}, 
+    } 
+    for question in pass_or_fail_questions:
+        responses['pass/fail'][question] = pass_or_fail_prompt(question)
+        if responses['pass/fail'][question][1] == FlagCode.HALT:
+            top_level_code = FlagCode.HALT
+        
+    for question in pass_or_flag_questions:
+        responses['pass/flag'][question] = pass_or_flag_prompt(question)
+        if responses['pass/flag'][question][1] == FlagCode.RED:
+            top_level_code = max([top_level_code, FlagCode.RED])
+
+    return {"code": top_level_code, "message" : str(responses)}
 
 
 class FlagCode(enum.Enum):
@@ -53,6 +101,8 @@ class FlagCode(enum.Enum):
     """Denotes the results of a check without an issue catching mechanism. May be used to report information in the flag table."""
     SKIPPED = 1
     """Never used directly, instead is the flag code for skipped checks"""
+    MANUAL = 2
+    """Never used directly, instead is the flag code for checks that are not automated"""
 
     # allow comparing flag codes
     # used to determine if a code is of higher severity
@@ -295,6 +345,9 @@ class ValidationProtocol:
         to_run: bool
         """ Defines whether the check will be executed on protocol run (and whether the payload will be evaluated in the case of lambda style payloads). """
 
+        automated: bool
+        """ Defines whether the check will be executed autonomously or manually (i.e. with a analyst's input) """
+
     class _ALL_COMPONENTS(list):
         """Dummy list that works as a default whitelist of all components"""
 
@@ -333,8 +386,11 @@ class ValidationProtocol:
         self._root_component = ValidationProtocol._Component(name="ROOT", parent=None)  # type: ignore
         self.cur_component = self._root_component
 
-        # will hold all pending checks
+        # will hold all pending automated checks
         self._check_queue: list[ValidationProtocol._QueuedCheck] = list()
+
+        # will hold all pending manual checks
+        self._manual_check_queue: list[ValidationProtocol._QueuedCheck] = list()
 
     ##############################################
     ### METHODS FOR PLANNING VALIDATION CHECKS
@@ -429,7 +485,8 @@ class ValidationProtocol:
         skip: bool = False,
         config: dict = None,
         description: str = None,
-        full_description: str = None
+        full_description: str = None,
+        automated: bool = True
     ):
         """Adds the check to the queue for each payload.
         Payload can be either supplied directly on the add invocation
@@ -465,7 +522,6 @@ class ValidationProtocol:
                     else fcn.__name__,
                     "full_description": full_description
                     if full_description is not None
-                    if description is not None
                     else fcn.__name__,
                     "payload": payload,
                     "config": config,
@@ -473,8 +529,61 @@ class ValidationProtocol:
                     # don't run if either this add call specifies skip
                     # or if the component is being skipped
                     "to_run": not any([skip, self.cur_component.skip]),
+                    "automated": automated
                 }
             )
+        return self
+
+    def add_manual(
+        self,
+        description: str,
+        start_instructions: str,
+        skip: bool = False,
+        pass_fail_questions: list[str] = list(),
+        pass_flag_questions: list[str] = list()
+    ):
+        """Adds the check to the queue for each payload.
+        Payload can be either supplied directly on the add invocation
+        or in a wrapping 'ValidationProtocol.payload' block.
+
+        Args:
+            fcn (Callable[..., FlagEntry]): The function to queue for each payload.
+            payloads (dict, optional): A direct payload to supply to the fcn, defaults to None.
+                Falls back to a wrapped 'ValidationProtocol.payload' if available
+            skip (bool, optional): Denotes whether the queued check will be skipped. Defaults to False
+            config (dict, optional): Additional function keyword arguments. Defaults to None.
+                These are considered independent of the items that need validation (which should be supplied via payload)
+            description (str, optional): A description of the check function. Defaults to function name.
+                Should be used if the function name doesn't adequately describe what is being checked.
+            full_description (str, optional): A long, potentially multiline description of the check function. Defaults to function name.
+                NOT included in flag table but used to 
+        """
+        # Generate markdown style full description based on questions
+        pass_or_fail_block = '\n'.join([f"                              - {q}" for q in pass_fail_questions])
+        pass_or_flag_block = '\n'.join([f"                              - {q}" for q in pass_flag_questions])
+        pass_or_fail_section = "" if not pass_fail_questions else f"- Pass or Fail Questions:\n{pass_or_fail_block}"
+        pass_or_flag_section = "" if not pass_flag_questions else f"- Pass or Flag Questions:\n{pass_or_flag_block}"
+        full_description = textwrap.dedent(f"""
+                        - Manual Check: {description}
+                            {pass_or_fail_section}
+                            {pass_or_flag_section}
+                    """)
+
+        self._manual_check_queue.append(
+            {
+                "check_fcn": "MANUAL_CHECK", # type: ignore
+                "function": "MANUAL_CHECK",
+                "description": description,
+                "full_description": full_description,
+                "payload": {"start_instruction":start_instructions,"pass_or_fail_questions":pass_fail_questions, "pass_or_flag_questions":pass_flag_questions},
+                "config": {},
+                "component": self.cur_component,
+                # don't run if either this add call specifies skip
+                # or if the component is being skipped
+                "to_run": not any([skip, self.cur_component.skip]),
+                "automated": False
+            }
+        )
         return self
 
     ##################################################################
@@ -485,6 +594,7 @@ class ValidationProtocol:
         self,
         include_individual_checks: bool = True,
         include_skipped_components: bool = False,
+        include_manual_checks: bool = False,
         long_description: bool = False,
         INDENT_CHAR: str = " ",
         COMPONENT_PREFIX: str = "↳",
@@ -517,6 +627,9 @@ class ValidationProtocol:
         ] = defaultdict(list)
         for check in self._check_queue:
             check_by_component[check["component"]].append(check)
+        if include_manual_checks:
+            for check in self._manual_check_queue:
+                check_by_component[check["component"]].append(check)
 
         def sum_all_children(component: ValidationProtocol._Component) -> int:
             sum = len(check_by_component[component])
@@ -570,9 +683,13 @@ class ValidationProtocol:
                 will not halt the generation of the overall protocol report.
                 Defaults to False which means the protocol will raise the exception and stop midway.
         """
-        for queued in self._check_queue:
+        all_queued = self._check_queue + self._manual_check_queue
+        for queued in all_queued:
             fcn = queued["check_fcn"]
-            fcn_name = fcn.__name__
+            if queued['automated']:
+                fcn_name = fcn.__name__
+            else:
+                fcn_name = "MANUAL_CHECK"
 
             if not queued["to_run"]:
                 # case: skipping compute
@@ -587,6 +704,21 @@ class ValidationProtocol:
                     "kwargs": queued["payload"] | queued["config"],
                     "config": queued["config"],
                 }
+
+            if not queued["automated"]:
+                # case: requires human analyst
+                packed_result = {
+                    "code": FlagCode.MANUAL,
+                    "message": "Not automated: Pending analyst review",
+                    "function": fcn_name,
+                    "description": queued["description"],
+                    # NOTE: This is intentionally the unevaluated payload
+                    #     This assumes skipped checks may contain inputs that fail on evaluation
+                    #     One example being data models that aren't fully loaded for skipped checks
+                    "kwargs": queued["payload"] | queued["config"],
+                    "config": queued["config"],
+                }
+
             else:
                 # case: to_compute is true
                 # try computing, works
@@ -660,6 +792,7 @@ class ValidationProtocol:
     def report(
         self,
         include_skipped: bool = True,
+        include_manual: bool = True,
         combine_with_flags: list[dict] = None,
     ) -> "ValidationProtocol.Report":
         """Tabulates the results of the executed protocol.
@@ -702,9 +835,6 @@ class ValidationProtocol:
             # Preprocess all 'message' and 'description' fit on one table line to ensure they fit on 
             flag_result['message'] = flag_result['message'].replace("\n","::NEWLINE::")
             flag_result['description'] = flag_result['description'].replace("\n","::NEWLINE::")
-
-            # REMOVE full_description from tabulated report
-            flag_result.pop('full_description')
 
             df_data.append(flag_result)
         df_data.reverse() # ensure same order as unpreprocessed data
