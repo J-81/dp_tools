@@ -27,6 +27,10 @@ def load_data(
     log.info(f"Attempting to load data for {len(keys)} data asset keys")
     log.debug(f"Attempting to load data for these data asset keys: {keys}")
 
+    # fallback to loading all data asset keys if none are requested
+    if len(keys) == 0:
+        keys = list(conf["data assets"])
+
     # create data system
     dataSystem = dataSystem_from_runsheet(runsheet_path=runsheet_path)
 
