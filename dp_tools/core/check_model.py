@@ -705,7 +705,7 @@ class ValidationProtocol:
                     "config": queued["config"],
                 }
 
-            if not queued["automated"]:
+            elif not queued["automated"]:
                 # case: requires human analyst
                 packed_result = {
                     "code": FlagCode.MANUAL,
