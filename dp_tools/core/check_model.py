@@ -463,7 +463,8 @@ class ValidationProtocol:
                     "description": description
                     if description is not None
                     else fcn.__name__,
-                    "full_description": description
+                    "full_description": full_description
+                    if full_description is not None
                     if description is not None
                     else fcn.__name__,
                     "payload": payload,
@@ -486,7 +487,11 @@ class ValidationProtocol:
         include_skipped_components: bool = False,
         long_description: bool = False,
         INDENT_CHAR: str = " ",
-        COMPONENT_PREFIX: str = "↳"
+        COMPONENT_PREFIX: str = "↳",
+        CHECK_PREFIX: str = " > ",
+        INDENT_CHECKS_STR: str = " ",
+        include_checks_counters: bool = True,
+        WRAP_COMPONENT_NAME_CHAR: str = "'"
     ) -> str:
         """Returns a print-friendly string describing the queued checks.
 
@@ -526,19 +531,22 @@ class ValidationProtocol:
             INDENT_STR = INDENT_CHAR * (len(component.ancestor_line) - 1)
             count_str = f"[{sum_all_children(component)}"
             count_str2 = f"[{len(check_by_component[component])}"
-            lead_str = f"{INDENT_STR}↳'{component.name}'{'-> !SKIPPED!' if component.skip else ''}"
-            buffer = f"{lead_str : <55}DIRECT:{count_str2 : >4}] ALL:{count_str : >5}]"
+            lead_str = f"{INDENT_STR}{COMPONENT_PREFIX}{WRAP_COMPONENT_NAME_CHAR}{component.name}{WRAP_COMPONENT_NAME_CHAR}{'-> !SKIPPED!' if component.skip else ''}"
+            if include_checks_counters:
+                buffer = f"{lead_str : <55}DIRECT:{count_str2 : >4}] ALL:{count_str : >5}]"
+            else:
+                buffer = lead_str
 
             if include_individual_checks:
                 check_lines = Counter(
                     [
-                        f"{INDENT_STR} > {check[description_field]}"
+                        f"{INDENT_CHECKS_STR}{CHECK_PREFIX}{check[description_field]}"
                         for check in check_by_component[component]
                         if check["to_run"]
                     ]
                 )
                 check_line_print = [
-                    f"{line} x {line_count}" for line, line_count in check_lines.items()
+                    f"{line} x {line_count}" if line_count > 1 else line for line, line_count in check_lines.items()
                 ]
                 if check_lines:
                     buffer += "\n" + "\n".join(check_line_print)
