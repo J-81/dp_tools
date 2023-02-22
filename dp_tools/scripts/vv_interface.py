@@ -141,8 +141,6 @@ def spec(plug_in_dir, output, data_dir, runsheet_path):
                 include_manual_checks = True
                 )
 
-    click.echo(specification)
-
     with open(output, "w") as f:
         f.write(specification)
 
