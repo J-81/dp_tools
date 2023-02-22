@@ -5,6 +5,23 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.3.0]
+
+### Added
+
+- Improved V&V interface
+  - Plugin support for protocols & checks
+  - Specification generation via `dpt validation spec`
+  - Generalized validation runner via `dpt validation run`
+  - Manual check interface via `dpt validation manual-checks`
+  - CLI interface implemented using [click](https://click.palletsprojects.com/en/8.1.x/)
+
+- Started to use logging via [loguru](https://github.com/Delgan/loguru)
+
+### Removed
+
+- Microarray specific protocols/checks (now implemented as plugins outside dp_tools)
+
 ## [1.2.1]
 
 ### Added
@@ -152,3 +169,4 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 [1.1.9]: https://github.com/j-81/dp_tools/compare/1.1.8...1.1.9
 [1.2.0]: https://github.com/j-81/dp_tools/compare/1.1.9...1.2.0
 [1.2.1]: https://github.com/j-81/dp_tools/compare/1.2.0...1.2.1
+[1.3.0]: https://github.com/j-81/dp_tools/compare/1.2.1...1.3.0
