@@ -846,7 +846,6 @@ class ValidationProtocol:
             flag_result['description'] = flag_result['description'].replace("\n","::NEWLINE::")
 
             df_data.append(flag_result)
-        df_data.reverse() # ensure same order as unpreprocessed data
 
         df = pd.DataFrame(df_data).set_index("index")
 
