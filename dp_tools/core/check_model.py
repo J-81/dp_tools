@@ -9,11 +9,11 @@ from typing import (
     Union,
     Literal
 )
-import logging
-
 import pandas as pd
 
-log = logging.getLogger(__name__)
+from loguru import logger as log
+
+
 
 
 ALLOWED_DEV_EXCEPTIONS = (
@@ -625,10 +625,14 @@ class ValidationProtocol:
         check_by_component: dict[
             ValidationProtocol._Component, list[ValidationProtocol._QueuedCheck]
         ] = defaultdict(list)
+        log.info("Adding automated checks to specification")
         for check in self._check_queue:
+            log.debug(f"Adding {check}")
             check_by_component[check["component"]].append(check)
         if include_manual_checks:
+            log.info("Adding manual checks to specification")
             for check in self._manual_check_queue:
+                log.debug(f"Adding {check}")
                 check_by_component[check["component"]].append(check)
 
         def sum_all_children(component: ValidationProtocol._Component) -> int:
