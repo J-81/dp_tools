@@ -569,6 +569,12 @@ class ValidationProtocol:
                             {pass_or_flag_section}
                     """)
 
+        # Sanitize questions to ensure json serializable
+        # Remove any single and double quotes from body and replace with tick marks
+        pass_fail_questions = [q.replace("'","`").replace('"',"`") for q in pass_fail_questions]
+        pass_flag_questions = [q.replace("'","`").replace('"',"`") for q in pass_flag_questions]
+
+
         self._manual_check_queue.append(
             {
                 "check_fcn": "MANUAL_CHECK", # type: ignore
