@@ -78,7 +78,7 @@ def manual_checks(validation_report):
         if int(row['code_level']) == FlagCode.MANUAL.value:
             manual_checks_count += 1
 
-    click.echo("Found {len(manual_checks)} manual checks pending... Starting manual review")
+    click.echo(f"Found {manual_checks_count} manual checks pending... Starting manual review")
 
     analyst_id = False
     while not analyst_id:
