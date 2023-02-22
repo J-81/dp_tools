@@ -802,7 +802,6 @@ class ValidationProtocol:
     def report(
         self,
         include_skipped: bool = True,
-        include_manual: bool = True,
         combine_with_flags: list[dict] = None,
     ) -> "ValidationProtocol.Report":
         """Tabulates the results of the executed protocol.
