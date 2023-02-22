@@ -2,6 +2,7 @@ from pathlib import Path
 import json
 
 import click
+from loguru import logger
 import pandas as pd
 
 from dp_tools.plugin_api import load_plugin
@@ -74,7 +75,6 @@ def manual_checks(validation_report):
 
     manual_checks_count = 0
     for _, row in df.iterrows():
-        print(row)
         if int(row['code_level']) == FlagCode.MANUAL.value:
             manual_checks_count += 1
 
@@ -86,11 +86,13 @@ def manual_checks(validation_report):
 
     new_rows = list()
     for _, row in df.iterrows():
+        logger.debug(f"Processsing: {row}")
         # Pass through if not manual
         if int(row['code_level']) != FlagCode.MANUAL.value:
             new_rows.append(dict(row))
         else:
             # Manual check
+            logger.debug(f"""Loading as json string: {row['kwargs'].replace("'",'"')}""")
             result = run_manual_check(**json.loads(row['kwargs'].replace("'",'"')))
             # replace original manual check notice with filled results
             row = dict(row) | result
