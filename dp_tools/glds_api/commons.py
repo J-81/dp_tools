@@ -4,12 +4,10 @@ Python functions the retrieve data from GeneLab. Uses the GeneLab public APIs (h
 
 import functools
 from urllib.request import urlopen
-import logging
 
+from loguru import logger as log
 import yaml
 import pandas as pd
-
-log = logging.getLogger(__name__)
 
 GENELAB_DATASET_FILES = "https://genelab-data.ndc.nasa.gov/genelab/data/glds/files/{accession_number}"
 """ Template URL to access json of files for a single GLDS accession ID """
