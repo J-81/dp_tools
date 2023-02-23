@@ -618,6 +618,10 @@ class ValidationProtocol:
             long_description (bool, optional): Controls the kind of description to print. Defaults to False (i.e. use 'description' field). If set to True, the 'full_description' is used instead
             INDENT_CHAR (str, optional): Controls the character for indenting increasing levels of component scopes. Defaults to the ' ' character.
             COMPONENT_PREFIX (str, optional): Controls the character for to prefix all component names. Defaults to the '↳' character.
+            INDENT_CHECKS_STR (str, optional): Control character used to indent check lines. Defaults to ' ' character.
+            include_checks_counters (bool, optional): Controls whether to include check counter (e.g. 'x 2') for duplicate check descriptions. Defaults to True.
+            WRAP_COMPONENT_NAME_CHAR (str, optional): Character to wrap component names in. Defaults to "'" (single quote) character.
+            include_data_asset_load_report (dict, optional): Formats data asset loading 'checks' as a preamble before checks on those data assets. Defaults to None.
 
         Returns:
             str: A human friendly description of the queued checks.
