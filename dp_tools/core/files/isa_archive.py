@@ -3,11 +3,9 @@
 from pathlib import Path
 import tempfile
 import zipfile
-import logging
+from loguru import logger as log
 
 import pandas as pd
-
-log = logging.getLogger(__name__)
 
 ISA_INVESTIGATION_HEADERS = {
     "ONTOLOGY SOURCE REFERENCE",
