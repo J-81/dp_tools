@@ -10,15 +10,8 @@ from dp_tools.core.loaders import load_data
 from dp_tools.core.check_model import ValidationProtocol, FlagCode, run_manual_check
 
 @click.group()
-def cli():
-    pass
-
-
-@click.group()
 def validation():
     pass
-
-cli.add_command(validation)
 
 @click.command()
 @click.option('--output', default="VV_report.tsv", help="Name of report output file", show_default=True)
