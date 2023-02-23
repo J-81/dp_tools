@@ -127,7 +127,10 @@ def spec(plug_in_dir, output, data_dir, runsheet_path):
         runsheet_path=runsheet_path,
     )
 
-    vp = plugin.protocol.validate(
+    logger.trace(dir(datasystem.dataset))
+    logger.trace(datasystem.dataset.loaded_assets_report.iloc[1]['kwargs'])
+
+    vp: ValidationProtocol = plugin.protocol.validate(
         datasystem.dataset,
         report_args={"include_skipped": True},
         defer_run=True,
@@ -140,8 +143,10 @@ def spec(plug_in_dir, output, data_dir, runsheet_path):
                 INDENT_CHAR = "#",
                 WRAP_COMPONENT_NAME_CHAR = "",
                 include_checks_counters = False,
-                include_manual_checks = True
+                include_manual_checks = True,
+                include_data_asset_load_report = datasystem.dataset.loaded_assets_report
                 )
+
 
     with open(output, "w") as f:
         f.write(specification)
