@@ -37,7 +37,10 @@ def get_table_of_files(accession: str) -> pd.DataFrame:
     log.info(f"URL Source: {url}")
     with urlopen(url) as response:
         data = yaml.safe_load(response.read())
-        df = pd.DataFrame(data['studies'][accession_osd]['study_files'])
+        try:
+            df = pd.DataFrame(data['studies'][accession_osd]['study_files'])
+        except KeyError:
+            raise ValueError(f"{accession_osd} is not reachable on OSD website. This study likely does not exist")
     return df
 
 def find_matching_filenames(accession: str, filename_pattern: str) -> list[str]:
