@@ -607,7 +607,8 @@ class ValidationProtocol:
         CHECK_PREFIX: str = " > ",
         INDENT_CHECKS_STR: str = " ",
         include_checks_counters: bool = True,
-        WRAP_COMPONENT_NAME_CHAR: str = "'"
+        WRAP_COMPONENT_NAME_CHAR: str = "'",
+        include_data_asset_load_report: dict | None = None
     ) -> str:
         """Returns a print-friendly string describing the queued checks.
 
@@ -679,7 +680,35 @@ class ValidationProtocol:
                     buffer += "\n" + render_self_and_children(child)
             return buffer
 
-        return render_self_and_children(self._root_component)
+        def format_data_asset_load_report(data_asset_load_report: pd.DataFrame) -> str:
+            """ Formats a preamble describing data assets.
+            Note: Duplicate strings (e.g. when loading samplewise) are removed
+            """
+
+            log.trace(data_asset_load_report)
+
+            preamble = "The following data assets must exist:\n"
+            asset_strings: list[str] = list()
+
+            for index, asset in data_asset_load_report.iterrows():
+                log.trace(asset['kwargs'])
+                expected_location = "/".join(asset['kwargs']['config']['processed location'])
+                data_asset_name = index[-1]
+                log.trace((data_asset_name, expected_location))
+                asset_string = f"- {data_asset_name}: {expected_location}"
+                if asset_string not in asset_strings:
+                    asset_strings.append(asset_string)
+            
+            for asset_string in asset_strings:
+                preamble += asset_string + "\n"
+
+            return preamble + '\n'
+
+        if include_data_asset_load_report is not None:
+            preamble = format_data_asset_load_report(include_data_asset_load_report)
+        else:
+            preamble = ""
+        return preamble + render_self_and_children(self._root_component)
 
     ##################################################################
     ### METHODS FOR RUNNING VALIDATION CHECKS
