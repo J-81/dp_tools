@@ -73,5 +73,4 @@ def retrieve_file_url(accession: str, filename: str) -> str:
             f"Could not find filename: '{filename}'. Here as are found filenames for '{accession}': '{df['file_name'].unique()}'"
         )
     url = FILE_RETRIEVAL_URL_PREFIX.format(suffix=df.loc[df['file_name'] == filename, 'remote_url'].squeeze())
-    print(url)
     return url
