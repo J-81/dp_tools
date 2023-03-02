@@ -30,7 +30,7 @@ setup(
         "console_scripts": [
             "dpt-get-isa-archive=dp_tools.glds_api.isa:main",
             "dpt-isa-to-runsheet=dp_tools.scripts.convert:main",
-            "dpt=dp_tools.scripts.vv_interface:cli",
+            "dpt=dp_tools.scripts.top_level_cli:cli",
         ]
     },
 )
