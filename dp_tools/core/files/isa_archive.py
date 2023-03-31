@@ -7,7 +7,7 @@ import logging
 
 import pandas as pd
 
-log = logging.getLogger(__name__)
+from loguru import logger as log
 
 ISA_INVESTIGATION_HEADERS = {
     "ONTOLOGY SOURCE REFERENCE",
