@@ -43,19 +43,29 @@ def isa_investigation_subtables(isaArchive: Path) -> dict[str, pd.DataFrame]:
     [i_file] = (
         f for f in fetch_isa_files(isaArchive) if f.name.startswith("i_")
     )
-    with open(i_file, "r") as f:
-        for line in [l.rstrip() for l in f.readlines()]:
-            # search for header
-            if line in ISA_INVESTIGATION_HEADERS:
-                if key != None:
-                    tables[key] = pd.DataFrame(
-                        table_lines
-                    ).T  # each subtable is transposed in the i_file
-                    table_lines = list()
-                key = line  # set next table key
-            else:
-                tokens = line.split("\t")  # tab separated
-                table_lines.append(tokens)
+    # Default to 'utf-8'
+    try:
+        log.trace("Decoding ISA with 'utf-8")
+        with open(i_file, "r", encoding = "utf-8") as f:
+            lines = f.readlines()
+    # Fallback to "ISO-8859-1" if 'utf-8' fails
+    except UnicodeDecodeError:
+        log.warning("Failed using 'utf-8'. Decoding ISA with 'ISO-8859-1'")
+        with open(i_file, "r", encoding = "ISO-8859-1") as f:
+            lines = f.readlines()
+    for line in lines:
+        line = line.rstrip()
+        # search for header
+        if line in ISA_INVESTIGATION_HEADERS:
+            if key != None:
+                tables[key] = pd.DataFrame(
+                    table_lines
+                ).T  # each subtable is transposed in the i_file
+                table_lines = list()
+            key = line  # set next table key
+        else:
+            tokens = line.split("\t")  # tab separated
+            table_lines.append(tokens)
     tables[key] = pd.DataFrame(
         table_lines
     ).T  # each subtable is transposed in the i_file
