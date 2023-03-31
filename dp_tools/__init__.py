@@ -28,7 +28,7 @@ This library is available for usage as prebuilt images located at [quay.io](http
 
 #### Using pip
 
-> pip install git+https://github.com/J-81/dp_tools.git@1.3.0
+> pip install git+https://github.com/J-81/dp_tools.git@1.3.1
 
 ## CLI Commands
 
@@ -74,7 +74,7 @@ options:
 ``` bash
 # First two lines tell Singularity to run the dp_tools container in the current working directory
 singularity exec --bind $(pwd):$(pwd) \\
-  docker://quay.io/j_81/dp_tools:1.3.0 \\
+  docker://quay.io/j_81/dp_tools:1.3.1 \\
   dpt-get-isa-archive --accession GLDS-168 # command we want to run
 ```
 
@@ -82,7 +82,7 @@ singularity exec --bind $(pwd):$(pwd) \\
 ``` bash
 # First two lines tell Singularity to run the dp_tools container in the current working directory
 singularity exec --bind $(pwd):$(pwd) \\
-  docker://quay.io/j_81/dp_tools:1.3.0 \\
+  docker://quay.io/j_81/dp_tools:1.3.1 \\
   dpt-isa-to-runsheet --accession GLDS-168 \\
                       --config-type bulkRNASeq \\
                       --config-version Latest \\
@@ -90,4 +90,4 @@ singularity exec --bind $(pwd):$(pwd) \\
 ```
 
 """
-__version__ = "1.3.0"
+__version__ = "1.3.1"
