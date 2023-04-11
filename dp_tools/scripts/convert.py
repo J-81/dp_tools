@@ -6,6 +6,7 @@ from typing import List, Union
 from dp_tools.config import schemas
 from dp_tools.core.configuration import load_config
 from dp_tools.core.files import isa_archive
+from dp_tools.core.files.isa_archive import isa_investigation_subtables
 from dp_tools.glds_api.commons import retrieve_file_url
 from dp_tools import plugin_api
 
@@ -21,66 +22,6 @@ log = logging.getLogger(__name__)
 
 class BulkRNASeqMetadataComponent:
     pass
-
-
-# TODO: refactor this with the analogous metadata component method
-def isa_investigation_subtables(ISAarchive: Path) -> dict[str, pd.DataFrame]:
-    tables: dict[str, pd.DataFrame] = dict()
-
-    # track sub table lines
-    table_lines: List[list] = list()
-    key: str = None  # type: ignore
-
-    try:
-        [i_file] = (
-            f
-            for f in isa_archive.fetch_isa_files(ISAarchive)
-            if f.name.startswith("i_")
-        )
-    except ValueError:
-        raise FileNotFoundError(
-            f"Could not find an i_* file inside: {ISAarchive.name}, is this an ISA archive?"
-        )
-    with open(i_file, "r") as f:
-        for line in [l.rstrip() for l in f.readlines()]:
-            # search for header
-            if line in isa_archive.ISA_INVESTIGATION_HEADERS:
-                if key != None:
-                    tables[key] = pd.DataFrame(
-                        table_lines
-                    ).T  # each subtable is transposed in the i_file
-                    table_lines = list()
-                key = line  # set next table key
-            else:
-                tokens = line.split("\t")  # tab separated
-                table_lines.append(tokens)
-    tables[key] = pd.DataFrame(
-        table_lines
-    ).T  # each subtable is transposed in the i_file
-
-    # reformat each table
-    def clean_quotes(string: str) -> str:
-        SINGLE_OR_DOUBLE_QUOTES = "\"'"
-        # don't perform on non-string elements
-        if not isinstance(string, str):
-            return string
-        else:
-            return string.lstrip(SINGLE_OR_DOUBLE_QUOTES).rstrip(
-                SINGLE_OR_DOUBLE_QUOTES
-            )
-
-    df: pd.DataFrame
-    for key, df in tables.items():
-
-        # note: as a ref, no reassign needed
-        tables[key] = (
-            df.rename(columns=df.iloc[0]).drop(df.index[0]).applymap(clean_quotes)
-        )
-
-    # ensure all expected subtables present
-    assert set(tables.keys()) == isa_archive.ISA_INVESTIGATION_HEADERS
-
-    return tables
 
 
 def get_assay_table_path(
