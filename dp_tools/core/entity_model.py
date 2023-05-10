@@ -164,7 +164,9 @@ class Dataset:
             try:
                 [asset] = asset.parent.glob(asset.name)
             except ValueError as exc:
-                raise ValueError(f"Failed to locate data asset using glob pattern: '{asset.name}'") from exc
+                raise ValueError(
+                    f"Failed to locate data asset using glob pattern: '{asset.name}'"
+                ) from exc
         if not putative:
             assert asset.exists(), f"Failed to load asset at path '{asset}'"
             self.loaded_assets_dicts.append(
@@ -192,7 +194,9 @@ class Dataset:
                     "config": {},
                 }
             )
-        return DataAsset(key=key, path=asset, config=config, owner=owner, putative=putative)
+        return DataAsset(
+            key=key, path=asset, config=config, owner=owner, putative=putative
+        )
 
     @property
     def loaded_assets_report(self) -> pd.DataFrame:

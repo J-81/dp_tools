@@ -3,72 +3,84 @@ from collections import Counter, defaultdict
 from contextlib import contextmanager
 import enum
 
-from typing import (
-    Callable,
-    TypedDict,
-    Union,
-    Literal
-)
+from typing import Callable, TypedDict, Union, Literal
 import pandas as pd
 
 from loguru import logger as log
-
-
 
 
 ALLOWED_DEV_EXCEPTIONS = (
     Exception  # Hooking into this with monkeypatch can be handy for testing
 )
 
-def run_manual_check(start_instruction, pass_or_fail_questions, pass_or_flag_questions) -> 'FlagEntry':
-    input(f"Manual Check Start Instructions: \n\t{start_instruction}.\nPress Enter to continue to questions..")
+
+def run_manual_check(
+    start_instruction, pass_or_fail_questions, pass_or_flag_questions
+) -> "FlagEntry":
+    input(
+        f"Manual Check Start Instructions: \n\t{start_instruction}.\nPress Enter to continue to questions.."
+    )
     top_level_code = FlagCode.GREEN
 
     def pass_or_fail_prompt(question: str):
-        ALLOWED = { # Lambda used to ensure both static and analyst responses can be supplied
-            "Y": (lambda: "Yes", FlagCode.GREEN),
-            "JF": (lambda: input("Expand on reason for failure: ").replace("\n",":::NEWLINE:::"), FlagCode.HALT),
-            "UF": (lambda: "No",FlagCode.HALT)
-        }
-        
+        ALLOWED = (
+            {  # Lambda used to ensure both static and analyst responses can be supplied
+                "Y": (lambda: "Yes", FlagCode.GREEN),
+                "JF": (
+                    lambda: input("Expand on reason for failure: ").replace(
+                        "\n", ":::NEWLINE:::"
+                    ),
+                    FlagCode.HALT,
+                ),
+                "UF": (lambda: "No", FlagCode.HALT),
+            }
+        )
+
         while True:
             try:
                 resp = ALLOWED[input(f"{question} (Y/JF/UF) : ").upper()]
-                return (resp[0](), resp[1]) # evalute in case justification is provided
+                return (resp[0](), resp[1])  # evalute in case justification is provided
             except KeyError:
                 print(f"Invalid response! Only {list(ALLOWED)} values are allowed")
                 continue
-        
+
     def pass_or_flag_prompt(question: str):
-        ALLOWED = { # Lambda used to ensure both static and analyst responses can be supplied
-            "Y": (lambda: "Yes", FlagCode.GREEN),
-            "JF": (lambda: input("Expand on reason for failure: ").replace("\n",":::NEWLINE:::"), FlagCode.RED),
-            "UF": (lambda: "No",FlagCode.RED)
-        }
-        
+        ALLOWED = (
+            {  # Lambda used to ensure both static and analyst responses can be supplied
+                "Y": (lambda: "Yes", FlagCode.GREEN),
+                "JF": (
+                    lambda: input("Expand on reason for failure: ").replace(
+                        "\n", ":::NEWLINE:::"
+                    ),
+                    FlagCode.RED,
+                ),
+                "UF": (lambda: "No", FlagCode.RED),
+            }
+        )
+
         while True:
             try:
                 resp = ALLOWED[input(f"{question} (Y/JF/UF) : ").upper()]
-                return (resp[0](), resp[1]) # evalute in case justification is provided
+                return (resp[0](), resp[1])  # evalute in case justification is provided
             except KeyError:
                 print(f"Invalid response! Only {list(ALLOWED)} values are allowed")
                 continue
-        
+
     responses: dict[str, dict[str, list[tuple[str, FlagCode]]]] = {
-        "pass/fail": {}, 
-        "pass/flag": {}, 
-    } 
+        "pass/fail": {},
+        "pass/flag": {},
+    }
     for question in pass_or_fail_questions:
-        responses['pass/fail'][question] = pass_or_fail_prompt(question)
-        if responses['pass/fail'][question][1] == FlagCode.HALT:
+        responses["pass/fail"][question] = pass_or_fail_prompt(question)
+        if responses["pass/fail"][question][1] == FlagCode.HALT:
             top_level_code = FlagCode.HALT
-        
+
     for question in pass_or_flag_questions:
-        responses['pass/flag'][question] = pass_or_flag_prompt(question)
-        if responses['pass/flag'][question][1] == FlagCode.RED:
+        responses["pass/flag"][question] = pass_or_flag_prompt(question)
+        if responses["pass/flag"][question][1] == FlagCode.RED:
             top_level_code = max([top_level_code, FlagCode.RED])
 
-    return {"code": top_level_code, "message" : str(responses)}
+    return {"code": top_level_code, "message": str(responses)}
 
 
 class FlagCode(enum.Enum):
@@ -321,7 +333,7 @@ class ValidationProtocol:
     class _QueuedCheck(TypedDict):
         """A queued check including checks that will be skipped"""
 
-        check_fcn: Callable[..., Union[FlagEntry,FlagEntryWithOutliers]]
+        check_fcn: Callable[..., Union[FlagEntry, FlagEntryWithOutliers]]
         """ A callable function that returns a flag entry or a string placeholder"""
 
         function: str
@@ -486,7 +498,7 @@ class ValidationProtocol:
         config: dict = None,
         description: str = None,
         full_description: str = None,
-        automated: bool = True
+        automated: bool = True,
     ):
         """Adds the check to the queue for each payload.
         Payload can be either supplied directly on the add invocation
@@ -502,7 +514,7 @@ class ValidationProtocol:
             description (str, optional): A description of the check function. Defaults to function name.
                 Should be used if the function name doesn't adequately describe what is being checked.
             full_description (str, optional): A long, potentially multiline description of the check function. Defaults to function name.
-                NOT included in flag table but used to 
+                NOT included in flag table but used to
         """
         # override payload with one supplied directly to run
         if payloads:
@@ -529,7 +541,7 @@ class ValidationProtocol:
                     # don't run if either this add call specifies skip
                     # or if the component is being skipped
                     "to_run": not any([skip, self.cur_component.skip]),
-                    "automated": automated
+                    "automated": automated,
                 }
             )
         return self
@@ -540,7 +552,7 @@ class ValidationProtocol:
         start_instructions: str,
         skip: bool = False,
         pass_fail_questions: list[str] = list(),
-        pass_flag_questions: list[str] = list()
+        pass_flag_questions: list[str] = list(),
     ):
         """Adds the check to the queue for each payload.
         Payload can be either supplied directly on the add invocation
@@ -556,38 +568,59 @@ class ValidationProtocol:
             description (str, optional): A description of the check function. Defaults to function name.
                 Should be used if the function name doesn't adequately describe what is being checked.
             full_description (str, optional): A long, potentially multiline description of the check function. Defaults to function name.
-                NOT included in flag table but used to 
+                NOT included in flag table but used to
         """
         # Generate markdown style full description based on questions
-        pass_or_fail_block = '\n'.join([f"                              - {q}" for q in pass_fail_questions])
-        pass_or_flag_block = '\n'.join([f"                              - {q}" for q in pass_flag_questions])
-        pass_or_fail_section = "" if not pass_fail_questions else f"- Pass or Fail Questions:\n{pass_or_fail_block}"
-        pass_or_flag_section = "" if not pass_flag_questions else f"- Pass or Flag Questions:\n{pass_or_flag_block}"
-        full_description = textwrap.dedent(f"""
+        pass_or_fail_block = "\n".join(
+            [f"                              - {q}" for q in pass_fail_questions]
+        )
+        pass_or_flag_block = "\n".join(
+            [f"                              - {q}" for q in pass_flag_questions]
+        )
+        pass_or_fail_section = (
+            ""
+            if not pass_fail_questions
+            else f"- Pass or Fail Questions:\n{pass_or_fail_block}"
+        )
+        pass_or_flag_section = (
+            ""
+            if not pass_flag_questions
+            else f"- Pass or Flag Questions:\n{pass_or_flag_block}"
+        )
+        full_description = textwrap.dedent(
+            f"""
                         - Manual Check: {description}
                             {pass_or_fail_section}
                             {pass_or_flag_section}
-                    """)
+                    """
+        )
 
         # Sanitize questions to ensure json serializable
         # Remove any single and double quotes from body and replace with tick marks
-        pass_fail_questions = [q.replace("'","`").replace('"',"`") for q in pass_fail_questions]
-        pass_flag_questions = [q.replace("'","`").replace('"',"`") for q in pass_flag_questions]
-
+        pass_fail_questions = [
+            q.replace("'", "`").replace('"', "`") for q in pass_fail_questions
+        ]
+        pass_flag_questions = [
+            q.replace("'", "`").replace('"', "`") for q in pass_flag_questions
+        ]
 
         self._manual_check_queue.append(
             {
-                "check_fcn": "MANUAL_CHECK", # type: ignore
+                "check_fcn": "MANUAL_CHECK",  # type: ignore
                 "function": "MANUAL_CHECK",
                 "description": description,
                 "full_description": full_description,
-                "payload": {"start_instruction":start_instructions,"pass_or_fail_questions":pass_fail_questions, "pass_or_flag_questions":pass_flag_questions},
+                "payload": {
+                    "start_instruction": start_instructions,
+                    "pass_or_fail_questions": pass_fail_questions,
+                    "pass_or_flag_questions": pass_flag_questions,
+                },
                 "config": {},
                 "component": self.cur_component,
                 # don't run if either this add call specifies skip
                 # or if the component is being skipped
                 "to_run": not any([skip, self.cur_component.skip]),
-                "automated": False
+                "automated": False,
             }
         )
         return self
@@ -607,7 +640,7 @@ class ValidationProtocol:
         CHECK_PREFIX: str = " > ",
         INDENT_CHECKS_STR: str = " ",
         include_checks_counters: bool = True,
-        WRAP_COMPONENT_NAME_CHAR: str = "'"
+        WRAP_COMPONENT_NAME_CHAR: str = "'",
     ) -> str:
         """Returns a print-friendly string describing the queued checks.
 
@@ -621,7 +654,7 @@ class ValidationProtocol:
         Returns:
             str: A human friendly description of the queued checks.
         """
-        description_field: Literal['full_description'] | Literal['description']
+        description_field: Literal["full_description"] | Literal["description"]
         if long_description:
             description_field = "full_description"
         else:
@@ -656,7 +689,9 @@ class ValidationProtocol:
             count_str2 = f"[{len(check_by_component[component])}"
             lead_str = f"{INDENT_STR}{COMPONENT_PREFIX}{WRAP_COMPONENT_NAME_CHAR}{component.name}{WRAP_COMPONENT_NAME_CHAR}{'-> !SKIPPED!' if component.skip else ''}"
             if include_checks_counters:
-                buffer = f"{lead_str : <55}DIRECT:{count_str2 : >4}] ALL:{count_str : >5}]"
+                buffer = (
+                    f"{lead_str : <55}DIRECT:{count_str2 : >4}] ALL:{count_str : >5}]"
+                )
             else:
                 buffer = lead_str
 
@@ -669,7 +704,8 @@ class ValidationProtocol:
                     ]
                 )
                 check_line_print = [
-                    f"{line} x {line_count}" if line_count > 1 else line for line, line_count in check_lines.items()
+                    f"{line} x {line_count}" if line_count > 1 else line
+                    for line, line_count in check_lines.items()
                 ]
                 if check_lines:
                     buffer += "\n" + "\n".join(check_line_print)
@@ -696,7 +732,7 @@ class ValidationProtocol:
         all_queued = self._check_queue + self._manual_check_queue
         for queued in all_queued:
             fcn = queued["check_fcn"]
-            if queued['automated']:
+            if queued["automated"]:
                 fcn_name = fcn.__name__
             else:
                 fcn_name = "MANUAL_CHECK"
@@ -746,7 +782,7 @@ class ValidationProtocol:
                     # peel off outlier data and keep track
                     # using current component name as the top level key
                     # Type ignored since FlagEntry dicts will return None as desired for this conditional
-                    if fcn_outliers := result.pop("outliers", None): # type: ignore
+                    if fcn_outliers := result.pop("outliers", None):  # type: ignore
                         self.outliers[queued["component"].name] = (
                             self.outliers[queued["component"].name] | fcn_outliers
                         )
@@ -776,8 +812,9 @@ class ValidationProtocol:
                         }
                     else:
                         raise RuntimeError(
-                            f"Function failed: {fcn_name} part of {queued['component']}"
+                            f"Function failed: {fcn_name} part of {queued['component']} with original error message: {e}"
                         ) from e
+
             # add result (including skip flag) to component
             queued["component"].flags.append(packed_result)
 
@@ -841,9 +878,11 @@ class ValidationProtocol:
         # Preprocesing flags before tabulating
         df_data: list[dict] = list()
         for flag_result in unpreprocessed_df_data:
-            # Preprocess all 'message' and 'description' fit on one table line to ensure they fit on 
-            flag_result['message'] = flag_result['message'].replace("\n","::NEWLINE::")
-            flag_result['description'] = flag_result['description'].replace("\n","::NEWLINE::")
+            # Preprocess all 'message' and 'description' fit on one table line to ensure they fit on
+            flag_result["message"] = flag_result["message"].replace("\n", "::NEWLINE::")
+            flag_result["description"] = flag_result["description"].replace(
+                "\n", "::NEWLINE::"
+            )
 
             df_data.append(flag_result)
 
