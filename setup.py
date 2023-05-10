@@ -12,7 +12,7 @@ long_description = (
 
 setup(
     name="dp_tools",
-    version="1.3.2",
+    version="1.3.3",
     description="Tooling for Data Processing Operations",
     author="Jonathan Oribello",
     author_email="jonathan.d.oribello@gmail.com",
@@ -23,7 +23,17 @@ setup(
     },
     include_package_data=True,
     python_requires=">=3.10",
-    install_requires=["requests", "pyyaml", "pandas==1.4.4", "schema", "tabulate", "multiqc", "pandera", "click", "loguru"],
+    install_requires=[
+        "requests",
+        "pyyaml",
+        "pandas==1.4.4",
+        "schema",
+        "tabulate",
+        "multiqc",
+        "pandera",
+        "click",
+        "loguru",
+    ],
     setup_requires=[],
     tests_require=["pytest", "pytest-console_scripts"],
     entry_points={
