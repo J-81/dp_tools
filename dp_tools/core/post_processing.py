@@ -224,7 +224,7 @@ def generate_new_column_dicts(
                 )
 
         # now remap those processing sample names to their orignal names,
-        # required for joining to orignal assay table
+        # required for fing to orignal assay table
         processing_to_orignal_mapping = pd.read_csv(
             dataset.data_assets["runsheet"].path, index_col="Sample Name"
         )["Original Sample Name"].to_dict()
@@ -264,7 +264,7 @@ def generate_new_column_dicts(
     #  joining by comma
     for header, header_wise in new_cols.items():
         for sample, sample_wise in header_wise.items():
-            new_value = ", ".join(sorted(list(new_cols[header][sample])))
+            new_value = ",".join(sorted(list(new_cols[header][sample])))
 
             new_cols[header][sample] = new_value
 
