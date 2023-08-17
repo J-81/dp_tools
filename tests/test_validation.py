@@ -191,7 +191,7 @@ def test_updated_protocol_model_paired_end(
             ["RSeQC output for single end data"],
             ["RSeQC", "RSeQC By Sample"],
             (69, 7),
-            (14, 1),
+            (13, 1),
             1943.8695652173913,
             0,
             id="RSeQC Checks Only",
@@ -227,7 +227,7 @@ def test_updated_protocol_model_paired_end(
             ["is single end full"],
             None,  # This evaluates to meaning running all components
             (509, 7),
-            (22, 5),
+            (21, 5),
             14825.082514734773,
             2,  # test data does not have parity between DGE counts and RSEM counts / Encounters rare false positive for check_aggregate_star_unnormalized_counts_table_values_against_samplewise_tables that should only occur when gene counts are zero for multiple strand assessment types
             id="Run all checks",

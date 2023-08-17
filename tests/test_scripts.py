@@ -7,7 +7,7 @@ import os
 def test_dpt_get_isa_archive(script_runner, tmpdir):
     os.chdir(tmpdir)
 
-    ret = script_runner.run("dpt-get-isa-archive", "--accession", "GLDS-194")
+    ret = script_runner.run(["dpt-get-isa-archive", "--accession", "GLDS-194"])
     assert ret.success
 
 
@@ -16,7 +16,7 @@ def test_dpt_isa_to_runsheet(script_runner, tmpdir, glds194_test_dir):
     isaPath = glds194_test_dir / "Metadata" / "GLDS-194_metadata_GLDS-194-ISA.zip"
 
     ret = script_runner.run(
-        "dpt-isa-to-runsheet",
+        ["dpt-isa-to-runsheet",
         "--accession",
         "GLDS-194",
         "--config-type",
@@ -24,6 +24,6 @@ def test_dpt_isa_to_runsheet(script_runner, tmpdir, glds194_test_dir):
         "--config-version",
         "Latest",
         "--isa-archive",
-        str(isaPath),
+        str(isaPath),]
     )
     assert ret.success

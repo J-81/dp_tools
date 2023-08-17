@@ -10,18 +10,18 @@ from dp_tools.glds_api.commons import (
 def test_get_table_of_files():
     accession = "GLDS-194"
     df = get_table_of_files(accession)
-    assert len(df) == 285
+    assert len(df) == 290
 
     accession = "GLDS-1"
     df = get_table_of_files(accession)
-    assert len(df) == 72
+    assert len(df) == 73
 
 def test_retrieve_file_url():
     accession = "GLDS-194"
-    url = retrieve_file_url(accession, filename="GLDS-194_metadata_GLDS-194-ISA.zip")
+    url = retrieve_file_url(accession, filename="OSD-194_metadata_OSD-194-ISA.zip")
     assert (
         url
-        == "https://genelab-data.ndc.nasa.gov/geode-py/ws/studies/OSD-194/download?source=datamanager&file=GLDS-194_metadata_GLDS-194-ISA.zip"
+        == "https://genelab-data.ndc.nasa.gov/geode-py/ws/studies/OSD-194/download?source=datamanager&file=OSD-194_metadata_OSD-194-ISA.zip"
     )
 
     accession = "GLDS-1"
@@ -36,5 +36,5 @@ def test_find_matching_filenames():
     filenames = find_matching_filenames(accession, filename_pattern=".*-ISA.zip")
     assert (
         filenames
-        == ['GLDS-194_metadata_GLDS-194-ISA.zip']
+        == ['OSD-194_metadata_OSD-194-ISA.zip']
     )
