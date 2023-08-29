@@ -60,6 +60,8 @@ def load_config(config: Union[tuple[str, str], Path]) -> dict:
             log.info(f"Loading config (direct path): {config}")
             with config.open() as f:
                 conf_full = yaml.safe_load(f)
+        case _:
+            raise ValueError(f"Invalid config type: {type(config)}. Expected either a tuple (legacy builtin configurations) or Path object.")
 
     log.debug(f"Final config loaded: {conf_full}")
 

@@ -1,0 +1,98 @@
+Extraction Settings:
+  root search directory: "/workspace/test-datasets-extended/testdata/GLDS-194"
+  sections:
+    - name: "raw reads" 
+      enabled: True
+      multiQC:
+        search recursively: False
+        logs directory: 
+          - "00-RawData"
+          - "FastQC_Reports"
+        logs pattern(s):
+          - "*fastqc.zip"
+        modules:
+          - "fastqc"
+
+    - name: "trimmed reads"
+      enabled: True
+      multiQC:
+        search recursively: False
+        logs directory: 
+          - "01-TG_Preproc"
+          - "FastQC_Reports"
+        logs pattern(s):
+          - "*fastqc.zip"
+        modules:
+          - "fastqc"
+
+    - name: "aligned reads"
+      enabled: True
+      multiQC:
+        search recursively: True
+        logs directory: 
+          - "02-STAR_Alignment"
+        logs pattern(s):
+          - "*Log.final.out"
+        modules:
+          - "star"
+
+    - name: "rseqc: genebody coverage"
+      enabled: False # Due to truncated data causing error
+      multiQC:
+        search recursively: True
+        logs directory: 
+          - "RSeQC_Analyses"
+          - "02_geneBody_coverage"
+        logs pattern(s):
+          - "*.geneBodyCoverage.txt"
+        modules:
+          - "rseqc"
+
+    - name: "rseqc: infer experiment"
+      enabled: False # Due to truncated data causing error
+      multiQC:
+        search recursively: True
+        logs directory: 
+          - "RSeQC_Analyses"
+          - "03_infer_experiment"
+        logs pattern(s):
+          - "*infer_expt.out"
+        modules:
+          - "rseqc"
+
+    - name: "rseqc: inner distance"
+      enabled: False # Due to truncated data causing error
+      multiQC:
+        search recursively: True
+        logs directory: 
+          - "RSeQC_Analyses"
+          - "04_inner_distance"
+        logs pattern(s):
+          - "*inner_distance.txt"
+        modules:
+          - "rseqc"
+
+    - name: "rseqc: read distribution"
+      enabled: False # Due to truncated data causing error
+      multiQC:
+        search recursively: True
+        logs directory: 
+          - "RSeQC_Analyses"
+          - "05_read_distribution"
+        logs pattern(s):
+          - "*read_dist.out"
+        modules:
+          - "rseqc"
+
+
+    - name: "rsem count"
+      enabled: True # Due to truncated data causing error
+      multiQC:
+        search recursively: True
+        logs directory: 
+          - "03-RSEM_Counts"
+        logs pattern(s):
+          - "*.stat"
+        modules:
+          - "rsem"
+

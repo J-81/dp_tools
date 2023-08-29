@@ -177,7 +177,7 @@ def get_column_name(df: pd.DataFrame, target: Union[str, list]) -> str:
 
 
 # TODO: Needs heavy refactoring and log messaging
-def isa_to_runsheet(accession: str, isaArchive: Path, config: Union[tuple[str, str], Path], inject: dict[str, str] = {}, schema: Union[DataFrameSchema, None] = None):
+def isa_to_runsheet(accession: str, isaArchive: Path, config: Union[tuple[str, str], Path], inject: dict[str, str] = {}, schema: Union[DataFrameSchema, None] = None, assert_factor_values: bool = True):
     ################################################################
     ################################################################
     # SETUP CONFIG AND INPUT TABLES
@@ -404,10 +404,11 @@ def isa_to_runsheet(accession: str, isaArchive: Path, config: Union[tuple[str, s
 
     runsheet_schema.validate(df_final)
 
-    # ensure at least on Factor Value is extracted
-    assert (
-        len([col for col in df_final.columns if col.startswith("Factor Value[")]) != 0
-    ), f"Must extract at least one factor value column but only has the following columns: {df_final.columns}"
+    if assert_factor_values:
+        # ensure at least on Factor Value is extracted
+        assert (
+            len([col for col in df_final.columns if col.startswith("Factor Value[")]) != 0
+        ), f"Must extract at least one factor value column but only has the following columns: {df_final.columns}"
 
     ################################################################
     ################################################################

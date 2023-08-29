@@ -12,15 +12,13 @@ import pandas as pd
 
 # iterable to remove suffixes and add them as subsource descriptors
 SUBSOURCES = [
-    "_R1_raw",
-    "_R2_raw",
     "_R1",
     "_R2",
     "__STARpass1",
 ]
 
 # iterable to remove suffixes that does NOT add them as subsource descriptors (often due to the name being redundantly associated with columns)
-SCRUB_SAMPLES = ["_read_dist", "_infer_expt"]
+SCRUB_SAMPLES = ["_read_dist", "_infer_expt", "_raw"]
 
 
 def clean_messy_sample(messy_sample: str):
@@ -93,8 +91,8 @@ def get_parsed_data(
     log.info(f"Using MQC to parse: {input_f}")
     try:
         # a workaround for flushing handlers in MQC version 1.11
-        logger = log.getLogger("multiqc")
-        [logger.removeHandler(h) for h in logger.handlers]
+        # logger = log.getLogger("multiqc")
+        # [logger.removeHandler(h) for h in logger.handlers]
         mqc_ret = multiqc.run(
             input_f, 
             no_data_dir=True, 
