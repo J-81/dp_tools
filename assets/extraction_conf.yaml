@@ -1,0 +1,130 @@
+Extraction Settings:
+  root search directory: "."
+  sections:
+    - name: "raw reads" 
+      enabled: True
+      multiQC:
+        from json:
+          - "raw_multiqc_report"
+          - "raw_multiqc_data"
+          - "multiqc_data.json"
+        search recursively: True
+        logs directory: 
+          - "00-RawData"
+          - "FastQC_Reports"
+        logs pattern(s):
+          - "*fastqc.zip"
+        modules:
+          - "fastqc"
+
+    - name: "trimmed reads"
+      enabled: True
+      multiQC:
+        from json:
+          - "trimmed_multiqc_report"
+          - "trimmed_multiqc_data"
+          - "multiqc_data.json"
+        search recursively: False
+        logs directory: 
+          - "01-TG_Preproc"
+          - "FastQC_Reports"
+        logs pattern(s):
+          - "*fastqc.zip"
+        modules:
+          - "fastqc"
+
+    - name: "aligned reads"
+      enabled: True
+      multiQC:
+        from json:
+          - "align_multiqc_report"
+          - "align_multiqc_data"
+          - "multiqc_data.json"
+        search recursively: True
+        logs directory: 
+          - "02-STAR_Alignment"
+        logs pattern(s):
+          - "*Log.final.out"
+        modules:
+          - "star"
+
+    - name: "rseqc: genebody coverage"
+      enabled: True
+      multiQC:
+        from json:
+          - "geneBody_cov_multiqc_report"
+          - "geneBody_cov_multiqc_data"
+          - "multiqc_data.json"        
+        search recursively: True
+        logs directory: 
+          - "RSeQC_Analyses"
+          - "02_geneBody_coverage"
+        logs pattern(s):
+          - "*.geneBodyCoverage.txt"
+        modules:
+          - "rseqc"
+
+    - name: "rseqc: infer experiment"
+      enabled: True
+      multiQC:
+        from json:
+          - "infer_exp_multiqc_report"
+          - "infer_exp_multiqc_data"
+          - "multiqc_data.json"
+        search recursively: True
+        logs directory: 
+          - "RSeQC_Analyses"
+          - "03_infer_experiment"    
+        logs pattern(s):
+          - "*infer_expt.out"
+        modules:
+          - "rseqc"
+
+    - name: "rseqc: inner distance"
+      enabled: True
+      multiQC:
+        from json:
+          - "inner_dist_multiqc_report"
+          - "inner_dist_multiqc_data"
+          - "multiqc_data.json"   
+        search recursively: True
+        logs directory: 
+          - "RSeQC_Analyses"
+          - "04_inner_distance"
+        logs pattern(s):
+          - "*inner_distance.txt"
+        modules:
+          - "rseqc"
+
+    - name: "rseqc: read distribution"
+      enabled: True
+      multiQC:
+        from json:
+          - "read_dist_multiqc_report"
+          - "read_dist_multiqc_data"
+          - "multiqc_data.json"   
+        search recursively: True
+        logs directory: 
+          - "RSeQC_Analyses"
+          - "05_read_distribution"
+        logs pattern(s):
+          - "*read_dist.out"
+        modules:
+          - "rseqc"
+
+
+    - name: "rsem count"
+      enabled: True
+      multiQC:
+        from json:
+          - "read_dist_multiqc_report"
+          - "read_dist_multiqc_data"
+          - "multiqc_data.json"           
+        search recursively: True
+        logs directory: 
+          - "03-RSEM_Counts"
+        logs pattern(s):
+          - "*.stat"
+        modules:
+          - "rsem"
+

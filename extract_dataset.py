@@ -1,5 +1,7 @@
 from pathlib import Path
 
+import click
+
 from dp_tools.core.utilites.metrics_extractor import (
     generate_extractor_from_yaml_config,
     AssayType,
@@ -7,22 +9,28 @@ from dp_tools.core.utilites.metrics_extractor import (
 
 
 CONFIG_YAML = "extraction_conf.yaml"
-ACCESSION = "OSD-511"
-ISA_PATH = "OSD-511_metadata_OSD-511-ISA.zip"
 ISA_PARSE_PATH = "isa_config.yaml"
 
-metricsExtractor = generate_extractor_from_yaml_config(config=CONFIG_YAML)
+@click.command()
+@click.option("--osd-id", help='OSD Accession ID. e.g. "OSD-194"', required=True)
+def main(osd_id):
+    ISA_PATH = list(Path.cwd().glob("*ISA*.zip"))[0]
 
-metricsExtractor.extract_data_from_isa(
-    accession=ACCESSION,
-    isa_archive=ISA_PATH,
-    config=Path(ISA_PARSE_PATH),
-)
+    metricsExtractor = generate_extractor_from_yaml_config(config=CONFIG_YAML)
 
-# metricsExtractor.append_manual_yaml_data(target_yaml=test_yaml)
+    metricsExtractor.extract_data_from_isa(
+        accession=osd_id,
+        isa_archive=ISA_PATH,
+        config=Path(ISA_PARSE_PATH),
+    )
 
-metricsExtractor.extract_sections()
+    # metricsExtractor.append_manual_yaml_data(target_yaml=test_yaml)
 
-metricsExtractor.metrics.to_csv("metrics.csv")
+    metricsExtractor.extract_sections()
 
-metricsExtractor.process_metrics(assay_type=AssayType.bulkRNASeq).to_csv("summary.csv")
+    metricsExtractor.metrics.to_csv(f"{osd_id}_metrics.csv")
+
+    metricsExtractor.process_metrics(assay_type=AssayType.bulkRNASeq).to_csv(f"{osd_id}_summary.csv")
+
+if __name__ == '__main__':
+    main()

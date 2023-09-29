@@ -11,10 +11,10 @@ import pandas as pd
 
 log = logging.getLogger(__name__)
 
-GENELAB_DATASET_FILES = "https://genelab-data.ndc.nasa.gov/genelab/data/glds/files/{accession_number}"
+GENELAB_DATASET_FILES = "https://osdr.nasa.gov/genelab/data/glds/files/{accession_number}"
 """ Template URL to access json of files for a single GLDS accession ID """
 
-FILE_RETRIEVAL_URL_PREFIX = "https://genelab-data.ndc.nasa.gov{suffix}"
+FILE_RETRIEVAL_URL_PREFIX = "https://osdr.nasa.gov{suffix}"
 """ Used to retrieve files using remote url suffixes listed in the 'Data Query' API """
 
 @functools.cache
