@@ -5,6 +5,7 @@ from types import ModuleType
 from typing import List, TypedDict
 
 import logging
+
 log = logging.getLogger(__name__)
 
 import multiqc
@@ -94,9 +95,9 @@ def get_parsed_data(
         # logger = log.getLogger("multiqc")
         # [logger.removeHandler(h) for h in logger.handlers]
         mqc_ret = multiqc.run(
-            input_f, 
-            no_data_dir=True, 
-            module=modules, 
+            input_f,
+            no_data_dir=True,
+            module=modules,
             quiet=True,
             no_ansi=True,
         )  # note: empty list for modules falls back on all modules
@@ -168,15 +169,20 @@ class MQCRunDict(TypedDict):
 def get_general_stats(mqc_run_output: MQCRunDict) -> dict[str, dict]:
     returnDict = dict()
     report = mqc_run_output["report"]
-    mqc_modules = [list(header_entry.values())[0]['namespace'] for header_entry in report.general_stats_headers]
+    mqc_modules = [
+        list(header_entry.values())[0]["namespace"]
+        for header_entry in report.general_stats_headers
+    ]
     for mqc_module, single_module_data in zip(mqc_modules, report.general_stats_data):
         returnDict[mqc_module] = single_module_data
     return returnDict
 
 
-def format_plots_as_dataframe(mqc_rep: MQCRunDict) -> pd.DataFrame:
+def format_plots_as_dataframe(mqc_rep: MQCRunDict | dict) -> pd.DataFrame:
     log.info(f"Formatting to dataframe")
-    mqc_rep = mqc_rep["report"]
+    if getattr(mqc_rep, "report", False):
+        mqc_rep = mqc_rep["report"]
+
     # ingest plot data
     flat_plot_dict = format_plot_data(mqc_rep)
     # reformat to flatten list of dicts into single dict
@@ -276,9 +282,11 @@ def __parse_xy_line_graph_to_flat_dict(plot_data):
 
 
 def format_plot_data(mqc_rep: dict):
-    log.info(f"Attempting to extract data from {len(mqc_rep.plot_data)} plots")
+    if mqc_rep.get("report"):
+        mqc_rep = mqc_rep.get("report").plot_data
+    log.info(f"Attempting to extract data from {len(mqc_rep)} plots")
     all_clean_data = dict()
-    for plot_key, plot_data in mqc_rep.plot_data.items():
+    for plot_key, plot_data in mqc_rep.items():
         log.info(
             f"Attempting to extract data from plot with Title: {plot_data['config']['title']}"
         )

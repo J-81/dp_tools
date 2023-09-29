@@ -37,6 +37,7 @@ def get_table_of_files(accession: str) -> pd.DataFrame:
 
     # fetch data
     log.info(f"URL Source: {url}")
+    print(url)
     with urlopen(url) as response:
         data = yaml.safe_load(response.read())
         df = pd.DataFrame(data['studies'][accession_osd]['study_files'])

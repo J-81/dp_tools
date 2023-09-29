@@ -4,6 +4,12 @@ Extraction Settings:
     - name: "raw reads" 
       enabled: True
       multiQC:
+        from json:
+          - "00-RawData"
+          - "FastQC_Reports"
+          - "raw_multiqc_report"
+          - "raw_multiqc_data"
+          - "multiqc_data.json"
         search recursively: False
         logs directory: 
           - "00-RawData"
@@ -16,6 +22,12 @@ Extraction Settings:
     - name: "trimmed reads"
       enabled: True
       multiQC:
+        from json:
+          - "01-TG_Preproc"
+          - "FastQC_Reports"
+          - "trimmed_multiqc_report"
+          - "trimmed_multiqc_data"
+          - "multiqc_data.json"
         search recursively: False
         logs directory: 
           - "01-TG_Preproc"
@@ -28,6 +40,11 @@ Extraction Settings:
     - name: "aligned reads"
       enabled: True
       multiQC:
+        from json:
+          - "02-STAR_Alignment"
+          - "align_multiqc_report"
+          - "align_multiqc_data"
+          - "multiqc_data.json"
         search recursively: True
         logs directory: 
           - "02-STAR_Alignment"
@@ -37,8 +54,14 @@ Extraction Settings:
           - "star"
 
     - name: "rseqc: genebody coverage"
-      enabled: False # Due to truncated data causing error
+      enabled: True
       multiQC:
+        from json:
+          - "RSeQC_Analyses"
+          - "02_geneBody_coverage"
+          - "geneBody_cov_multiqc_report"
+          - "geneBody_cov_multiqc_data"
+          - "multiqc_data.json"        
         search recursively: True
         logs directory: 
           - "RSeQC_Analyses"
@@ -49,20 +72,32 @@ Extraction Settings:
           - "rseqc"
 
     - name: "rseqc: infer experiment"
-      enabled: False # Due to truncated data causing error
+      enabled: True
       multiQC:
+        from json:
+          - "RSeQC_Analyses"
+          - "03_infer_experiment"
+          - "infer_exp_multiqc_report"
+          - "infer_exp_multiqc_data"
+          - "multiqc_data.json"
         search recursively: True
         logs directory: 
           - "RSeQC_Analyses"
-          - "03_infer_experiment"
+          - "03_infer_experiment"    
         logs pattern(s):
           - "*infer_expt.out"
         modules:
           - "rseqc"
 
     - name: "rseqc: inner distance"
-      enabled: False # Due to truncated data causing error
+      enabled: True
       multiQC:
+        from json:
+          - "RSeQC_Analyses"
+          - "04_inner_distance"
+          - "inner_dist_multiqc_report"
+          - "inner_dist_multiqc_data"
+          - "multiqc_data.json"   
         search recursively: True
         logs directory: 
           - "RSeQC_Analyses"
@@ -73,8 +108,14 @@ Extraction Settings:
           - "rseqc"
 
     - name: "rseqc: read distribution"
-      enabled: False # Due to truncated data causing error
+      enabled: True
       multiQC:
+        from json:
+          - "RSeQC_Analyses"
+          - "05_read_distribution"
+          - "read_dist_multiqc_report"
+          - "read_dist_multiqc_data"
+          - "multiqc_data.json"   
         search recursively: True
         logs directory: 
           - "RSeQC_Analyses"

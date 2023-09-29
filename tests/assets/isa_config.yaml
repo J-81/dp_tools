@@ -54,7 +54,7 @@ Staging:
           ISA Table Source: Assay
           Runsheet Column Name: Tissue Type
           Processing Usage: >-
-            Used to metrics table
+            Used for metrics table
           Example: Left retina
 
         - ISA Field Name: 
@@ -63,7 +63,7 @@ Staging:
           ISA Table Source: Sample
           Runsheet Column Name: Library Prep Method
           Processing Usage: >-
-            Used to metrics table
+            Used for metrics table
           Example: Left retina
 
         - ISA Field Name: Sample Name
@@ -81,7 +81,7 @@ Staging:
           Runsheet Column Name: PE or SE
           Remapping: {"PAIRED":'PE', "Paired":'PE', "SINGLE":'SE'}
           Processing Usage: >-
-            Used to metrics table
+            Used for metrics table
           Example: 'PE'
     
         - ISA Field Name: 
@@ -91,7 +91,7 @@ Staging:
           Runsheet Column Name: Stranded or Unstranded
           # Remapping: {"PAIRED":'PE', "Paired":'PE', "SINGLE":'SE'}
           Processing Usage: >-
-            Used to metrics table
+            Used for metrics table
           Example: 'STRANDED'
     
         - ISA Field Name: 
@@ -101,7 +101,7 @@ Staging:
           Runsheet Column Name: '% rRNA contamination'
           # Append Column Following: "Unit"
           Processing Usage: >-
-            Used to metrics table
+            Used for metrics table
           Example: '13.212 percent'
     
         # this entry denotes the following:

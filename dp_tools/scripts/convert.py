@@ -252,6 +252,7 @@ def isa_to_runsheet(accession: str, isaArchive: Path, config: Union[tuple[str, s
     ]
     for entry in assay_source_entries:
         assert list(df_final.index) == list(df_merged.index)
+        use_fallback_value = False
         if entry.get("Runsheet Index"):
             # already set and checked above
             continue
@@ -344,8 +345,17 @@ def isa_to_runsheet(accession: str, isaArchive: Path, config: Union[tuple[str, s
                             index=df_merged.index,
                         )
                 else:
-                    target_col = get_column_name(df_merged, entry["ISA Field Name"])
-                    series_to_add = df_merged[target_col]
+                    try:
+                        target_col = get_column_name(df_merged, entry["ISA Field Name"])
+                        series_to_add = df_merged[target_col]
+                    except ValueError as e: # Raised when a column is not present
+                        if entry.get("Fallback Value"):
+                            # Create series of same row length as df_merged
+                           series_to_add = pd.Series([entry.get("Fallback Value") for _ in range(len(df_merged))])
+                           use_fallback_value = True
+                           log.warn(f"Could not find column: {entry['ISA Field Name']}. Using configured fallback value: {entry.get('Fallback Value')}")
+                        else:
+                            raise(e)
                 if entry.get("GLDS URL Mapping"):
                     def map_url_to_filename(fn: str) -> str:
                         try:
@@ -359,7 +369,9 @@ def isa_to_runsheet(accession: str, isaArchive: Path, config: Union[tuple[str, s
                         map_url_to_filename
                     )  # inplace operation doesn't seem to work
                     series_to_add = _swap
-                if entry.get("Remapping"):
+                if use_fallback_value:
+                    df_final[entry["Runsheet Column Name"]] = entry["Fallback Value"]
+                elif entry.get("Remapping"):
                     df_final[entry["Runsheet Column Name"]] = series_to_add.map(
                         lambda val: entry.get("Remapping")[val]
                     )
