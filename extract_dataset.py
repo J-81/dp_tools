@@ -8,7 +8,7 @@ from dp_tools.core.utilites.metrics_extractor import (
 )
 
 
-CONFIG_YAML = "extraction_conf.yaml"
+CONFIG_YAML = "extraction_settings.yaml"
 ISA_PARSE_PATH = "isa_config.yaml"
 
 @click.command()
