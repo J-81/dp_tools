@@ -899,69 +899,36 @@ class MetricsExtractor:
                     return df_samplewise
 
                 df_samplewise_raw = _process_fastqc_data(df_interim, "raw reads")
-                df_samplewise_trimmed = _process_fastqc_data(
-                    df_interim, "trimmed reads"
-                )
+                # df_samplewise_trimmed = _process_fastqc_data(
+                #     df_interim, "trimmed reads"
+                # )
 
-                df_samplewise_align = _process_align_data(df_interim, "aligned reads")
+                # df_samplewise_align = _process_align_data(df_interim, "aligned reads")
 
-                df_samplewise_rseqc_genebody_coverage = (
-                    _process_rseqc_genebody_coverage_data(
-                        df_interim, "rseqc: genebody coverage"
-                    )
-                )
+                # df_samplewise_rseqc_genebody_coverage = (
+                #     _process_rseqc_genebody_coverage_data(
+                #         df_interim, "rseqc: genebody coverage"
+                #     )
+                # )
 
-                df_samplewise_rseqc_infer_experiment = (
-                    _process_rseqc_infer_experiment_data(
-                        df_interim, "rseqc: infer experiment"
-                    )
-                )
+                # df_samplewise_rseqc_infer_experiment = (
+                #     _process_rseqc_infer_experiment_data(
+                #         df_interim, "rseqc: infer experiment"
+                #     )
+                # )
 
-                df_samplewise_rseqc_inner_distance = _process_rseqc_inner_distance_data(
-                    df_interim, "rseqc: inner distance"
-                )
+                # df_samplewise_rseqc_inner_distance = _process_rseqc_inner_distance_data(
+                #     df_interim, "rseqc: inner distance"
+                # )
 
-                df_samplewise_rseqc_read_distribution = (
-                    _process_rseqc_read_distribution_data(
-                        df_interim, "rseqc: read distribution"
-                    )
-                )
+                # df_samplewise_rseqc_read_distribution = (
+                #     _process_rseqc_read_distribution_data(
+                #         df_interim, "rseqc: read distribution"
+                #     )
+                # )
 
                 # Merge all
-                df_merged = (
-                    df_samplewise_raw.merge(
-                        df_samplewise_trimmed,
-                        left_index=True,
-                        right_index=True,
-                        suffixes=(" Raw", " Trimmed"),
-                    )
-                    .merge(
-                        df_samplewise_align,
-                        left_index=True,
-                        right_index=True,
-                    )
-                    .merge(
-                        df_samplewise_rseqc_genebody_coverage,
-                        left_index=True,
-                        right_index=True,
-                    )
-                    .merge(
-                        df_samplewise_rseqc_infer_experiment,
-                        left_index=True,
-                        right_index=True,
-                    )
-                    .merge(
-                        df_samplewise_rseqc_inner_distance,
-                        left_index=True,
-                        right_index=True,
-                    )
-                    .merge(
-                        df_samplewise_rseqc_read_distribution,
-                        left_index=True,
-                        right_index=True,
-                    )
-                    .sort_index()
-                )
+                df_merged = df_samplewise_raw
 
                 return df_merged
 
