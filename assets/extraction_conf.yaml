@@ -80,21 +80,6 @@ Extraction Settings:
         modules:
           - "rseqc"
 
-    - name: "rseqc: inner distance"
-      enabled: True
-      multiQC:
-        from json:
-          - "inner_dist_multiqc_report"
-          - "inner_dist_multiqc_data"
-          - "multiqc_data.json"   
-        search recursively: True
-        logs directory: 
-          - "RSeQC_Analyses"
-          - "04_inner_distance"
-        logs pattern(s):
-          - "*inner_distance.txt"
-        modules:
-          - "rseqc"
 
     - name: "rseqc: read distribution"
       enabled: True
