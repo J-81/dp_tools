@@ -917,9 +917,9 @@ class MetricsExtractor:
                     )
                 )
 
-                df_samplewise_rseqc_inner_distance = _process_rseqc_inner_distance_data(
-                    df_interim, "rseqc: inner distance"
-                )
+                # df_samplewise_rseqc_inner_distance = _process_rseqc_inner_distance_data(
+                #     df_interim, "rseqc: inner distance"
+                # )
 
                 df_samplewise_rseqc_read_distribution = (
                     _process_rseqc_read_distribution_data(
@@ -947,11 +947,6 @@ class MetricsExtractor:
                     )
                     .merge(
                         df_samplewise_rseqc_infer_experiment,
-                        left_index=True,
-                        right_index=True,
-                    )
-                    .merge(
-                        df_samplewise_rseqc_inner_distance,
                         left_index=True,
                         right_index=True,
                     )
