@@ -81,7 +81,7 @@ Extraction Settings:
           - "rseqc"
 
     - name: "rseqc: inner distance"
-      enabled: True
+      enabled: False
       multiQC:
         from json:
           - "inner_dist_multiqc_report"
