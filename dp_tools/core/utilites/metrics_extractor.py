@@ -348,9 +348,10 @@ class MetricsExtractor:
 
                 def _process_fastqc_data(df_full: pd.DataFrame, section_name: str):
                     df_samplewise = pd.DataFrame()
+                    print(df_full.head())
                     # Raw reads
                     df_fastqc_subset = df_full.xs(
-                        key=(section_name, "_raw"),
+                        key=(section_name, ""),
                         axis="rows",
                         level=["name", "sample subcomponent"],
                     )
@@ -974,7 +975,7 @@ class MetricsExtractor:
 
                 # Raw reads
                 raw_reads = df_interim.xs(
-                    key=("raw reads", "_raw"),
+                    key=("raw reads", ""),
                     axis="rows",
                     level=["name", "sample subcomponent"],
                 )
