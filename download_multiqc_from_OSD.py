@@ -19,9 +19,9 @@ def main(osd_id, output_dir):
         find_matching_filenames(accession=osd_id, filename_pattern=".*ISA.*.zip")
     )
 
-    if not any(["read_dist" in f for f in files]):
+    if not any(["align_" in f for f in files]):
         print(
-            "Did not locate read distribution RSeQC report zip.  Inferring this isn't a dataset to be used."
+            "Did not locate align_multiqc_report zip.  Inferring this isn't a dataset to be used."
         )
         sys.exit(0)
 
