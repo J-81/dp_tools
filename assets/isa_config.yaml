@@ -56,7 +56,7 @@ Staging:
           Processing Usage: >-
             Used to metrics table
           Example: Left retina
-          Fallback Value: "NOT FOUND IN ISA COLUMNS"
+          #Fallback Value: "NOT FOUND IN ISA COLUMNS"
 
         - ISA Field Name: 
             - Parameter Value[library selection]
@@ -66,7 +66,7 @@ Staging:
           Processing Usage: >-
             Used to metrics table
           Example: Left retina
-          Fallback Value: "NOT FOUND IN ISA COLUMNS"
+          #Fallback Value: "NOT FOUND IN ISA COLUMNS"
 
         - ISA Field Name: Sample Name
           ISA Table Source: Assay
@@ -95,7 +95,7 @@ Staging:
           Processing Usage: >-
             Used to metrics table
           Example: 'STRANDED'
-          Fallback Value: "NOT FOUND IN ISA COLUMNS"
+          #Fallback Value: "NOT FOUND IN ISA COLUMNS"
 
         - ISA Field Name: 
             - Parameter Value[rRNA Contamination]
