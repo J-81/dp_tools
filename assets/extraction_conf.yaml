@@ -117,8 +117,8 @@ Extraction Settings:
       enabled: True
       multiQC:
         from json:
-          - "read_dist_multiqc_report"
-          - "read_dist_multiqc_data"
+          - "RSEM_count_multiqc_report"
+          - "RSEM_count_multiqc_data"
           - "multiqc_data.json"           
         search recursively: True
         logs directory: 
