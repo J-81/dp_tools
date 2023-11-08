@@ -898,6 +898,62 @@ class MetricsExtractor:
 
                     return df_samplewise
 
+                def _process_rsem_data(df_full: pd.DataFrame, section_name: str):
+                    df_samplewise = pd.DataFrame()
+                    print(list(df_full.columns))
+                    df_align_subset = (
+                        df_full.xs(
+                            key=section_name,
+                            axis="rows",
+                            level="name",
+                        )
+                        .xs(key=section_name, axis="columns", level=0)
+                        .droplevel("sample subcomponent", axis="rows")
+                    )
+
+                    df_samplewise.index = df_align_subset.index
+                    df_samplewise["% Aligned uniquely to a gene"] = df_align_subset[
+                        ("multiqc_rsem", "general_stats", "Unique")
+                    ].astype(float)
+
+                    df_samplewise["% Aligned to multiple genes"] = df_align_subset[
+                        ("multiqc_rsem", "general_stats", "Multi")
+                    ].astype(float)
+
+                    df_samplewise[
+                        "% Filtered due to too many alignments"
+                    ] = df_align_subset[
+                        (
+                            "multiqc_rsem",
+                            "general_stats",
+                            "Filtered",
+                        )
+                    ].astype(
+                        float
+                    )
+
+                    df_samplewise["% Unalignable reads"] = df_align_subset[
+                        (
+                            "multiqc_rsem",
+                            "general_stats",
+                            "Unalignable",
+                        )
+                    ].astype(float)
+
+                    # At this point, all in counts
+                    # Convert all to percents by summing across row and dividing each by sum
+                    df_samplewise = df_samplewise.apply(
+                        lambda col: col / df_align_subset[
+                        (
+                            "multiqc_rsem",
+                            "general_stats",
+                            "Total",
+                        )
+                    ].astype(float) * 100
+                    )
+
+                    return df_samplewise                
+                
                 df_samplewise_raw = _process_fastqc_data(df_interim, "raw reads")
                 df_samplewise_trimmed = _process_fastqc_data(
                     df_interim, "trimmed reads"
@@ -927,6 +983,8 @@ class MetricsExtractor:
                 #    )
                 #)
 
+                df_samplewise_rsem = _process_rsem_data(df_interim, "rsem count")
+
                 # Merge all
                 df_merged = (
                     df_samplewise_raw.merge(
@@ -937,6 +995,11 @@ class MetricsExtractor:
                     )
                     .merge(
                         df_samplewise_align,
+                        left_index=True,
+                        right_index=True,
+                    )
+                    .merge(
+                        df_samplewise_rsem,
                         left_index=True,
                         right_index=True,
                     )
