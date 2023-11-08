@@ -671,7 +671,7 @@ class MetricsExtractor:
                         (
                             "multiqc_star",
                             "general_stats",
-                            "unmapped_other",
+                            "unmapped_other_percent",
                         )
                     ].astype(float)
 
