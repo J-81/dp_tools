@@ -1,5 +1,5 @@
 Extraction Settings:
-  root search directory: "/CHANGEME/TO/WHERE/MQC/ARE"
+  root search directory: "."
   sections:
     - name: "raw reads" 
       enabled: True
