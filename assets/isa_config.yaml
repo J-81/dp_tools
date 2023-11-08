@@ -60,6 +60,7 @@ Staging:
 
         - ISA Field Name: 
             - Parameter Value[library selection]
+            - Parameter Value[Library Selection] # Alternative casing found first in OSD-120
             # - Characteristics[organism]
           ISA Table Source: Sample
           Runsheet Column Name: Library Prep Method
