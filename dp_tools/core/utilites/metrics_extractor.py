@@ -871,7 +871,7 @@ class MetricsExtractor:
                         TARGET_LABELS("TSS_up_1kb-5kb (# Tags)", "% TSS_up_1kb-5kb"),
                         TARGET_LABELS("TSS_up_5kb-10kb (# Tags)", "% TSS_up_5kb-10kb"),
                         TARGET_LABELS("TES_down_1kb (# Tags)", "% TES_down_1kb"),
-                        TARGET_LABELS("TES_down_1kb-50kb (# Tags)", "% TES_down_1kb-5kb"),
+                        TARGET_LABELS("TES_down_1kb-5kb (# Tags)", "% TES_down_1kb-5kb"),
                         TARGET_LABELS("TES_down_5kb-10kb", "% TES_down_5kb-10kb"),
                         TARGET_LABELS(
                             "Other_intergenic (# Tags)", "% Other_intergenic"
