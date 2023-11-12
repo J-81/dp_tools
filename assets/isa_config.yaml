@@ -50,6 +50,8 @@ Staging:
 
         - ISA Field Name: 
             - Characteristics[Material Type]
+            - Characteristics[Organism part]
+            - Factor Value[Organism part]
             # - Characteristics[organism]
           ISA Table Source: Assay
           Runsheet Column Name: Tissue Type
@@ -60,6 +62,8 @@ Staging:
 
         - ISA Field Name: 
             - Parameter Value[library selection]
+            - Parameter Value[library Selection] # Alternative casing found first in OSD-120
+            - Parameter Value[Library Selection]
             # - Characteristics[organism]
           ISA Table Source: Sample
           Runsheet Column Name: Library Prep Method
